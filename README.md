@@ -1,145 +1,36 @@
-# Customer Sentiment Analysis Dashboard (PRJ_382)
-> **Course / Project ID:** CSE7102 • PRJ_382 Review-1 Technical Implementation  
-> **Institution:** Presidency University  
-> **Architecture:** 3-Tier Production Architecture (FastAPI + Streamlit + SQLAlchemy Dual-Model NLP)
+﻿# 🧠 Customer Sentiment Analysis Dashboard
+
+> **Course / Project ID:** CSE7102 · PRJ_382 — Review-1 Technical Implementation
+> **Institution:** Presidency University
+> **Architecture:** 3-Tier Production Architecture (FastAPI + Streamlit + Dual-Model NLP)
+
+![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.115%2B-009688?style=for-the-badge&logo=fastapi&logoColor=white)
+![Streamlit](https://img.shields.io/badge/Streamlit-1.35%2B-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
 ---
 
-## 🚀 Key Highlights & Architecture
+## 📌 Overview
 
-```mermaid
-graph TD
-    subgraph Presentation_Layer["Presentation Layer (Streamlit Dashboard :8501)"]
-        UI_KPI["KPI Metric Cards"]
-        UI_Charts["Donut Polarity Share & Trendlines"]
-        UI_Cloud["Aspect & Word Cloud Visualization"]
-        UI_Upload["CSV / Excel Feedback Ingestor"]
-        UI_Live["Live Sentiment & Aspect Playground"]
-        UI_Compare["Dual-Path Model Comparator & Benchmark"]
-        UI_Auth["JWT Auth & Role-Based UI"]
-    end
-
-    subgraph Application_Layer["Application Layer (FastAPI Backend :8000)"]
-        API_GW["REST Gateway & CORS"]
-        Security["JWT Auth + RBAC + Pydantic v2 Validation"]
-        
-        subgraph NLP_Engine["NLP & ML Engine"]
-            Preprocess["Preprocessing (Clean, Tokenize, Lemmatize)"]
-            DualPath{"Dual-Path Router"}
-            DistilBERT["Primary: DistilBERT Classifier (<250ms)"]
-            TFIDF_LR["Fallback: TF-IDF + Logistic Regression (<30ms)"]
-            KeyBERT["Aspect/Topic Extractor (KeyBERT)"]
-        end
-        
-        Analytics_Svc["Analytics Aggregation Service"]
-    end
-
-    subgraph Data_Layer["Data & Benchmark Tier"]
-        DB[(SQLAlchemy ORM: SQLite / PostgreSQL)]
-        Amazon_Data["Amazon Customer Reviews Sample"]
-        Yelp_Data["Yelp Open Dataset Sample"]
-    end
-
-    UI_KPI --> API_GW
-    UI_Charts --> API_GW
-    UI_Cloud --> API_GW
-    UI_Upload --> API_GW
-    UI_Live --> API_GW
-    UI_Compare --> API_GW
-    UI_Auth --> API_GW
-
-    API_GW --> Security
-    Security --> NLP_Engine
-    Security --> Analytics_Svc
-    
-    Preprocess --> DualPath
-    DualPath --> DistilBERT
-    DualPath --> TFIDF_LR
-    Preprocess --> KeyBERT
-    
-    DistilBERT --> DB
-    TFIDF_LR --> DB
-    KeyBERT --> DB
-    Analytics_Svc --> DB
-    Amazon_Data --> DB
-    Yelp_Data --> DB
-```
-
-### 1. Dual-Path Machine Learning Engine
-* **Primary Path**: DistilBERT 3-class sentiment transformer for deep contextual nuance with sub-250ms latency.
-* **Fast-Path Fallback**: TF-IDF N-gram vectorizer + Logistic Regression classifier with ultra-fast sub-30ms execution time (10x-15x acceleration).
-* **Smart Auto-Failover**: Automatically routes requests to the fast-path if transformer latency exceeds threshold SLA or compute constraints occur.
-
-### 2. Aspect-Based Sentiment Extraction
-* Candidate phrase extraction and syntactic noun chunk mining.
-* Granular aspect-level sentiment polarity assignment (e.g. *battery life: negative*, *sound quality: positive*).
-
-### 3. Role-Based Access Control (RBAC) & Security
-* JWT Bearer authentication with HMAC-SHA256 tokens and bcrypt password hashing.
-* Roles: `ADMIN` (Full Control), `ANALYST` (Ingestion & Evaluation), `VIEWER` (Read-only Analytics).
-
-### 4. Interactive Streamlit Dashboard
-* **Executive KPI Cards**: Real-time totals, positive/negative/neutral share, average inference latency, and Macro F1 status.
-* **Interactive Charts**: Donut polarity distribution, multi-line temporal sentiment trends, and aspect-sentiment matrices.
-* **Word Cloud**: Visual sentiment keyword distributions with colormap filters.
-* **Live Playground**: Real-time text tester with instant token-level confidence bars and aspect chips.
-* **Batch Ingestion Hub**: Drag-and-drop CSV/Excel file upload with column mapping and progress tracker.
-* **Benchmark Center**: Live comparative evaluation on Amazon & Yelp review datasets with 3x3 confusion matrices and latency profilers.
+A full-stack, production-grade **NLP sentiment analysis platform** that classifies customer reviews as **Positive / Neutral / Negative** using a dual-path ML engine. Built with a REST API backend, interactive Streamlit dashboard, JWT-secured role-based access control, and real-time benchmarking across Amazon & Yelp datasets.
 
 ---
 
-## 🛠️ Quick Start & Running Locally
+## ✨ Key Features
 
-### Prerequisites
-* Python 3.10+ installed
-
-### 1. Install Dependencies
-```bash
-pip install -r requirements.txt
-```
-
-### 2. Launch System (Backend + Frontend)
-Run the one-click launcher:
-```bash
-python scripts/run_all.py
-```
-
-Or run services independently:
-
-**Start FastAPI Backend:**
-```bash
-python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --reload
-```
-* Interactive API Documentation: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
-
-**Start Streamlit Dashboard:**
-```bash
-python -m streamlit run frontend/app.py --server.port 8501
-```
-* Dashboard UI: [http://localhost:8501](http://localhost:8501)
+| Feature | Description |
+|---|---|
+| 🤖 **Dual-Path NLP Engine** | DistilBERT (primary, <250ms) + TF-IDF/LR (fallback, <30ms) with smart auto-failover |
+| 🔍 **Aspect-Based Extraction** | KeyBERT-powered keyword & aspect-level sentiment tagging |
+| 🔐 **JWT + RBAC Security** | Admin / Analyst / Viewer roles with bcrypt password hashing |
+| 📊 **Interactive Dashboard** | Live KPI cards, donut charts, trendlines, word clouds & confusion matrices |
+| 📂 **Batch Ingestion** | CSV/Excel drag-and-drop uploader with column mapping |
+| 🏁 **Live Benchmark Center** | Real-time F1, precision, recall & latency profiling on Amazon/Yelp datasets |
 
 ---
 
-## 👤 Default User Accounts
-
-| Role | Email | Password | Access Level |
-|---|---|---|---|
-| **Admin** | `admin@sentiment.io` | `admin123` | Full access (CRUD, Benchmark, Ingest, Manage) |
-| **Analyst** | `analyst@sentiment.io` | `analyst123` | Analytics, CSV Ingestion, Benchmarks |
-| **Viewer** | `viewer@sentiment.io` | `viewer123` | Read-only Dashboard & Reports |
-
----
-
-## 🧪 Running Automated Tests
-
-Run the complete test suite verifying NLP pipelines, REST endpoints, and benchmark thresholds:
-```bash
-python -m pytest tests/ -v
-```
-
----
-
-## 📂 Project Directory Structure
+## 📂 Project Structure
 
 ```
 miniproj/
@@ -148,61 +39,197 @@ miniproj/
 │   │   ├── api/
 │   │   │   ├── deps.py                  # JWT Auth & DB dependencies
 │   │   │   └── endpoints/
-│   │   │       ├── auth.py              # /api/v1/auth (login, register, me)
-│   │   │       ├── predict.py           # /api/v1/predict, /api/v1/predict/batch
-│   │   │       ├── feedback.py          # /api/v1/feedback, /api/v1/feedback/upload
+│   │   │       ├── auth.py              # /api/v1/auth  (login, register, me)
+│   │   │       ├── predict.py           # /api/v1/predict  (single & batch)
+│   │   │       ├── feedback.py          # /api/v1/feedback  (CRUD + CSV upload)
 │   │   │       ├── analytics.py         # /api/v1/analytics (KPIs, trends, aspects)
-│   │   │       └── benchmark.py         # /api/v1/benchmark (model latency & F1 tests)
+│   │   │       └── benchmark.py         # /api/v1/benchmark (latency & F1 tests)
 │   │   ├── core/
 │   │   │   ├── config.py                # Pydantic Settings (.env, JWT secrets)
-│   │   │   └── security.py              # Password hashing & JWT token generators
+│   │   │   └── security.py              # Password hashing & JWT generators
 │   │   ├── db/
 │   │   │   ├── base.py
 │   │   │   ├── session.py               # Engine & sessionmaker (SQLite/Postgres)
-│   │   │   └── init_db.py               # Database seeder (admin user & benchmark datasets)
+│   │   │   └── init_db.py               # Seeder (admin user & benchmark data)
 │   │   ├── models/
-│   │   │   ├── user.py                  # User & Role models
+│   │   │   ├── user.py                  # User & Role ORM models
 │   │   │   ├── feedback.py              # FeedbackRecord & AspectTag models
 │   │   │   └── benchmark.py             # BenchmarkRun metrics model
 │   │   ├── schemas/
 │   │   │   ├── user.py                  # UserCreate, UserLogin, Token schemas
-│   │   │   ├── feedback.py              # FeedbackInput, FeedbackResponse, BatchUpload schemas
+│   │   │   ├── feedback.py              # FeedbackInput, BatchUpload schemas
 │   │   │   └── analytics.py             # KPISummary, SentimentDistribution schemas
 │   │   ├── services/
-│   │   │   ├── nlp_pipeline.py          # DualPathClassifier orchestrator & fallback logic
+│   │   │   ├── nlp_pipeline.py          # DualPathClassifier orchestrator & failover
 │   │   │   ├── preprocessor.py          # Text cleaner, contractions, lemmatizer
 │   │   │   ├── transformer_model.py     # DistilBERT classifier implementation
-│   │   │   ├── fast_model.py            # TF-IDF + Logistic Regression classifier implementation
-│   │   │   ├── aspect_extractor.py      # Aspect & keyword extractor
-│   │   │   └── evaluator.py             # Macro F1, precision, recall & latency profiler
-│   │   └── main.py                      # FastAPI application entrypoint with CORS
+│   │   │   ├── fast_model.py            # TF-IDF + Logistic Regression classifier
+│   │   │   ├── aspect_extractor.py      # Aspect & keyword extraction (KeyBERT)
+│   │   │   └── evaluator.py             # Macro F1, precision, recall & latency
+│   │   └── main.py                      # FastAPI entrypoint with CORS
+│   └── saved_models/                    # Auto-generated model artifacts (git-ignored)
 ├── frontend/
-│   ├── app.py                           # Streamlit multi-page dashboard application
+│   ├── app.py                           # Streamlit multi-page dashboard
 │   ├── components/
 │   │   ├── auth_view.py                 # Login / Register / Role selector UI
-│   │   ├── kpi_cards.py                 # Metric cards (Volume, Sentiment %, Latency, F1)
-│   │   ├── charts.py                    # Donut chart, trendlines, aspect frequency bars
+│   │   ├── kpi_cards.py                 # Metric cards (Volume, Sentiment %, F1)
+│   │   ├── charts.py                    # Donut chart, trendlines, aspect bars
 │   │   ├── wordcloud_view.py            # Word cloud & topic frequency generator
-│   │   ├── batch_upload.py              # CSV/Excel drag-and-drop ingestion & progress bar
-│   │   ├── live_tester.py               # Single feedback tester with instant aspect tags
-│   │   └── model_benchmark_view.py      # Dual-path performance comparator & metrics view
+│   │   ├── batch_upload.py              # CSV/Excel drag-and-drop ingestion
+│   │   ├── live_tester.py               # Single feedback tester with aspect tags
+│   │   └── model_benchmark_view.py      # Dual-path comparator & metrics view
 │   ├── utils/
 │   │   └── api_client.py                # HTTP client calling FastAPI endpoints
 │   └── styles/
-│       └── custom.css                   # Modern dark glassmorphic styling
+│       └── custom.css                   # Dark glassmorphic UI styling
 ├── data/
 │   ├── amazon_reviews_sample.csv        # Amazon Customer Reviews benchmark dataset
 │   └── yelp_reviews_sample.csv          # Yelp Open Dataset benchmark sample
 ├── tests/
-│   ├── test_nlp_pipeline.py             # Unit tests for preprocessing & dual-path models
-│   ├── test_api_endpoints.py            # Integration tests for FastAPI endpoints
-│   └── test_benchmarks.py               # Latency & Macro F1 automated assertions
+│   ├── test_nlp_pipeline.py             # Unit tests: preprocessing & dual-path models
+│   ├── test_api_endpoints.py            # Integration tests: FastAPI endpoints
+│   └── test_benchmarks.py              # Latency & Macro F1 automated assertions
 ├── scripts/
-│   ├── train_fast_model.py              # Script to train & serialize TF-IDF + LR model
-│   ├── seed_data.py                     # Script to seed database with benchmark reviews
-│   └── run_all.py                       # One-click launcher for Backend & Frontend
+│   ├── train_fast_model.py              # Train & serialize TF-IDF + LR model
+│   ├── seed_data.py                     # Seed database with benchmark reviews
+│   └── run_all.py                       # One-click launcher (Backend + Frontend)
 ├── .env.example
 ├── .gitignore
 ├── requirements.txt
 └── README.md
 ```
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Python **3.10+**
+
+### 1 · Clone the Repository
+
+```bash
+git clone https://github.com/YOUR_USERNAME/YOUR_REPO.git
+cd YOUR_REPO
+```
+
+### 2 · Set Up Environment
+
+```bash
+# Create and activate virtual environment
+python -m venv .venv
+.venv\Scripts\activate        # Windows
+# source .venv/bin/activate   # macOS / Linux
+
+# Install all dependencies
+pip install -r requirements.txt
+
+# Download spaCy language model
+python -m spacy download en_core_web_sm
+```
+
+### 3 · Configure Environment Variables
+
+```bash
+copy .env.example .env
+# Edit .env and set your SECRET_KEY and DATABASE_URL
+```
+
+### 4 · Launch
+
+**One-click launcher (recommended):**
+```bash
+python scripts/run_all.py
+```
+
+**Or run independently:**
+```bash
+# Terminal 1 — FastAPI Backend
+python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --reload
+
+# Terminal 2 — Streamlit Dashboard
+python -m streamlit run frontend/app.py --server.port 8501
+```
+
+| Service | URL |
+|---|---|
+| 📡 FastAPI REST API | http://127.0.0.1:8000 |
+| 📖 Swagger Docs | http://127.0.0.1:8000/docs |
+| 🖥️ Dashboard | http://localhost:8501 |
+
+---
+
+## 👤 Default User Accounts
+
+| Role | Email | Password | Access |
+|---|---|---|---|
+| 🔴 **Admin** | admin@sentiment.io | admin123 | Full CRUD, Benchmark, Manage |
+| 🟡 **Analyst** | analyst@sentiment.io | analyst123 | Analytics, Ingestion, Benchmarks |
+| 🟢 **Viewer** | viewer@sentiment.io | viewer123 | Read-only Dashboard |
+
+> ⚠️ Change all default passwords before deploying to production.
+
+---
+
+## 🧪 Running Tests
+
+```bash
+python -m pytest tests/ -v
+```
+
+Covers: NLP pipeline unit tests · REST endpoint integration · Latency SLA & F1 assertions
+
+---
+
+## 🤖 NLP Engine
+
+### Dual-Path Routing
+
+| Path | Model | Latency | Use Case |
+|---|---|---|---|
+| **Primary** | DistilBERT (distilbert-base-uncased-finetuned-sst-2-english) | < 250 ms | High-accuracy contextual inference |
+| **Fallback** | TF-IDF N-gram + Logistic Regression | < 30 ms | High-speed / compute-constrained |
+
+Auto-failover kicks in if transformer exceeds the SLA threshold.
+
+### Aspect Extraction
+KeyBERT + spaCy noun-chunk mining for granular aspect-level sentiment:
+```
+"battery life: negative"  |  "sound quality: positive"  |  "build quality: neutral"
+```
+
+---
+
+## ⚙️ Environment Variables
+
+| Variable | Default | Description |
+|---|---|---|
+| SECRET_KEY | — | JWT HMAC-SHA256 signing key |
+| ACCESS_TOKEN_EXPIRE_MINUTES | 1440 | Token lifetime (minutes) |
+| DATABASE_URL | sqlite:///sentiment_analytics.db | SQLite or PostgreSQL URL |
+| DISTILBERT_MODEL_NAME | distilbert-base-uncased-finetuned-sst-2-english | HuggingFace model ID |
+| TRANSFORMER_TIMEOUT_MS | 250.0 | Latency SLA threshold (ms) |
+| TARGET_MACRO_F1 | 0.88 | Minimum acceptable Macro F1 |
+
+---
+
+## 📦 Tech Stack
+
+| Layer | Technology |
+|---|---|
+| **API Backend** | FastAPI, Uvicorn, Pydantic v2 |
+| **Frontend** | Streamlit, Plotly, WordCloud, Matplotlib |
+| **NLP / ML** | HuggingFace Transformers, scikit-learn, spaCy, KeyBERT |
+| **Auth** | python-jose, passlib, bcrypt, PyJWT |
+| **Database** | SQLAlchemy 2.0, SQLite (dev) / PostgreSQL (prod) |
+| **Testing** | pytest, httpx |
+
+---
+
+## 📄 License
+
+This project is licensed under the **MIT License**.
+
+---
+
+<div align="center">Made with ❤️ for CSE7102 · Presidency University</div>
