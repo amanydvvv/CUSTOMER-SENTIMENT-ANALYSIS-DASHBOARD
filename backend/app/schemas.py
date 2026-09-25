@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional, List
 from datetime import datetime
 
@@ -14,13 +14,11 @@ class PredictionResponse(BaseModel):
     model_used: str
 
 class ReviewResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id: int
     text: str
     product: Optional[str]
     timestamp: datetime
-    
-    class Config:
-        from_attributes = True
 
 class ModelMetricResponse(BaseModel):
     model_name: str

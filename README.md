@@ -1,123 +1,173 @@
 # Customer Sentiment Analysis Dashboard
+**CSE7102 Mini Project — Presidency University**
 
-## 1. Project Title
-**Customer Sentiment Analysis Dashboard**
-A B.Tech CSE/ISE mini-project focused on analyzing customer feedback using Natural Language Processing (NLP) and Machine Learning to classify sentiments into Positive, Negative, and Neutral.
+A fully decoupled 3-tier NLP system: FastAPI backend + SQLite database + Streamlit frontend.
 
-## 2. Problem Statement
-Businesses receive thousands of customer reviews across various products. Manually reading and analyzing these reviews is time-consuming and inefficient. There is a need for an automated system capable of analyzing large volumes of customer text to derive actionable business insights and monitor brand reputation.
+---
 
-## 3. Objectives
-- Build an end-to-end NLP pipeline for text preprocessing and feature extraction.
-- Train and evaluate multiple Machine Learning classification models on customer review data.
-- Deploy the best-performing model as part of an interactive web dashboard.
-- Provide live sentiment prediction capabilities for new reviews.
-- Generate aggregated business insights based on product and sentiment categories.
+## Architecture
 
-## 4. Features
-- **Data Preprocessing:** Handles missing values, removes HTML tags, normalizes case, and preserves negations while removing standard stopwords.
-- **TF-IDF Feature Extraction:** Utilizes unigram and bigram features for accurate text representation.
-- **Machine Learning Models:** Logistic Regression, Balanced Logistic Regression, and LinearSVC.
-- **Interactive Dashboard:** Built using Streamlit, featuring real-time KPI metrics, sentiment distributions, and interactive filtering.
-- **Live Prediction:** A dedicated module for predicting sentiment on unseen user input, complete with confidence scores.
-- **Review Explorer:** Allows direct inspection of processed reviews to cross-check predictions.
+```
+mini/
+├── backend/
+│   ├── app/
+│   │   ├── main.py                  # FastAPI entrypoint
+│   │   ├── api/
+│   │   │   ├── predict.py           # POST /predict
+│   │   │   ├── reviews.py           # GET /reviews
+│   │   │   └── stats.py             # GET /stats
+│   │   ├── ml/
+│   │   │   ├── preprocessing.py     # Text cleaning + negation handling
+│   │   │   ├── features.py          # TF-IDF (unigram+bigram, max 10k)
+│   │   │   ├── train.py             # LR, Balanced LR, LinearSVC
+│   │   │   ├── evaluate.py          # accuracy, macro-F1, latency
+│   │   │   └── keywords.py          # top-N keywords per class from coefficients
+│   │   ├── db/
+│   │   │   ├── database.py          # SQLAlchemy engine + session
+│   │   │   ├── models.py            # reviews, predictions, model_metrics tables
+│   │   │   └── crud.py              # DB read/write helpers
+│   │   └── schemas.py               # Pydantic request/response schemas
+│   ├── tests/
+│   │   ├── test_api.py              # API endpoint tests (FastAPI TestClient)
+│   │   └── test_preprocessing.py   # NLP cleaning unit tests
+│   ├── data/
+│   │   ├── raw/Dataset-SA.csv
+│   │   └── processed/app.db        # SQLite database
+│   ├── models/                      # joblib artifacts
+│   ├── init_db.py                   # creates tables + seeds model_metrics
+│   └── requirements.txt
+├── frontend/
+│   ├── streamlit_app.py             # Home page
+│   ├── pages/
+│   │   ├── 1_overview.py            # KPIs
+│   │   ├── 2_live_prediction.py     # Live inference
+│   │   ├── 3_keyword_insights.py    # Per-class top keywords
+│   │   └── 4_model_comparison.py   # Accuracy + latency charts
+│   └── api_client.py               # All HTTP calls to backend (single place)
+└── notebooks/EDA.ipynb
+```
 
-## 5. Architecture
-The project follows a standard 2-tier architecture separating the Data Science/Machine Learning pipeline from the Application layer.
-1. **ML Pipeline (`src/`):** Processes the raw dataset, extracts features, trains models, evaluates performance, and saves serialized artifacts.
-2. **Dashboard Application (`app.py`):** A Streamlit front-end that loads the pre-trained models and cached datasets to deliver a highly interactive user experience without redundant training.
+---
 
-## 6. Dataset Description
-The dataset contains synthetic E-Commerce reviews.
-- **Number of Records:** ~150,000 to ~200,000 depending on preprocessing.
-- **Columns:** `product_name`, `product_price`, `Rate`, `Review`, `Summary`, `Sentiment`.
-- **Classes:** Positive, Negative, Neutral.
+## Setup & Run
 
-## 7. Technologies Used
-- **Language:** Python
-- **Data Manipulation:** Pandas, NumPy
-- **Machine Learning:** Scikit-Learn
-- **Natural Language Processing:** NLTK
-- **Visualizations:** Plotly, Matplotlib
-- **Web Framework:** Streamlit
-- **Serialization:** Joblib
-
-## 8. Machine Learning Approach
-1. **Cleaning:** Dropping duplicates and NaNs, concatenating `Review` and `Summary`.
-2. **Text Normalization:** Lowercasing, removing special characters, and filtering stopwords while carefully keeping negations (e.g., *don't*, *wasn't*).
-3. **Vectorization:** TF-IDF Vectorizer with `max_features=10000` and `ngram_range=(1, 2)`.
-4. **Splitting:** 80:20 Stratified Split using a fixed `random_state=42`.
-5. **Training:** Supervised classification over the TF-IDF matrix.
-
-## 9. Model Comparison
-
-| Model | Accuracy | Macro F1 | Weighted F1 |
-|-------|----------|----------|-------------|
-| Logistic Regression | 1.00 | 1.00 | 1.00 |
-| Balanced Logistic Regression | 1.00 | 1.00 | 1.00 |
-| LinearSVC | 1.00 | 1.00 | 1.00 |
-
-*(Note: The models achieve perfect metrics due to the highly structured, synthetic nature of the generated text dataset. In a real-world messy dataset, these metrics would naturally vary. LinearSVC or Logistic Regression are highly effective for these sparse TF-IDF spaces.)*
-
-## 10. Dashboard Screenshots
-*(Add screenshots of your dashboard here before submitting the project)*
-- `Dashboard_Overview.png`
-- `Live_Prediction.png`
-- `Customer_Insights.png`
-
-## 11. Installation
-Ensure you have Python 3.8+ installed.
-
-1. Clone or extract the project repository.
-2. Open a terminal/command prompt in the project root folder.
-3. Install the required dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-## 12. Running Instructions
-**Step 1: Data Generation (If necessary)**
-If `data/raw/Dataset-SA.csv` is missing, you may need to run the dataset generation script first (if provided in your workspace).
-
-**Step 2: Train the Models**
-From the project root, navigate to the source directory and run the training pipeline:
+### 1. Install dependencies
 ```bash
-cd src
-python train.py
-python evaluate.py
-cd ..
+pip install -r backend/requirements.txt
 ```
 
-**Step 3: Launch the Dashboard**
+### 2. Train models (only needed once, or if you delete backend/models/)
 ```bash
-streamlit run app.py
-```
-The application will launch in your default web browser at `http://localhost:8501`.
-
-## 13. Project Structure
-```
-customer-sentiment-dashboard/
-├── data/
-│   ├── raw/                 # Contains the raw CSV datasets
-│   └── processed/           # Contains generated metrics CSV
-├── models/                  # Serialized joblib models and TF-IDF vectorizers
-├── src/
-│   ├── preprocessing.py     # NLP cleaning functions
-│   ├── train.py             # ML training pipeline
-│   ├── evaluate.py          # Model evaluation script
-│   └── prediction.py        # Live inference logic
-├── app.py                   # Streamlit dashboard application
-├── requirements.txt         # Project dependencies
-└── README.md                # Project documentation
+cd backend
+python -m app.ml.train
 ```
 
-## 14. Team Contributions
-- **Member 1:** Data Collection & NLP Preprocessing Pipeline.
-- **Member 2:** Machine Learning Model Training & Evaluation.
-- **Member 3:** Streamlit Dashboard Design & Integration.
+### 3. Initialise the database
+```bash
+# still inside backend/
+python init_db.py
+```
+This creates `data/processed/app.db` and populates `model_metrics` from the actual evaluation run — no hardcoded numbers.
 
-## 15. Future Enhancements
-- **Aspect-Based Sentiment Analysis:** Identifying sentiments directed specifically at 'Delivery', 'Price', or 'Quality'.
-- **Database Integration:** Moving from static CSVs to a live relational database (SQLite/PostgreSQL) with SQLAlchemy.
-- **Advanced NLP:** Exploring Transformer-based models like BERT or DistilBERT for contextual embeddings.
-- **FastAPI Backend:** Fully decoupling the ML inference logic into an independent REST API.
+### 4. Start the backend API
+```bash
+# still inside backend/
+uvicorn app.main:app --reload --port 8000
+```
+Interactive docs → http://127.0.0.1:8000/docs
+
+### 5. Start the frontend (new terminal)
+```bash
+cd frontend
+streamlit run streamlit_app.py
+```
+Dashboard → http://localhost:8501
+
+---
+
+## API Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/` | Health check |
+| `POST` | `/predict/` | Run sentiment inference + log to DB |
+| `GET` | `/reviews/` | List logged reviews (filterable by `product`) |
+| `GET` | `/stats/` | KPIs + model metrics + top keywords per class |
+
+### Example — predict
+```bash
+curl -X POST http://127.0.0.1:8000/predict/ \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Absolutely loved this product!", "model_name": "linearsvc"}'
+```
+```json
+{"review_id": 1, "sentiment": "positive", "confidence": null, "model_used": "linearsvc"}
+```
+
+### Example — stats
+```bash
+curl http://127.0.0.1:8000/stats/
+```
+
+---
+
+## ML Pipeline
+
+| Step | Detail |
+|------|--------|
+| Split | 80:20 stratified, `random_state=42` |
+| Vectoriser | TF-IDF, `ngram_range=(1,2)`, `max_features=10000` |
+| Models | Logistic Regression, Balanced LR, LinearSVC |
+| Serialisation | `joblib` — vectoriser + each model saved separately |
+| Keywords | Top-N features per class from `model.coef_[i]` (LR) |
+
+> **Note on 100% accuracy:** the synthetic dataset uses a small, fixed vocabulary per class, so separation is trivial for TF-IDF models. Real-world messy data will produce lower, more meaningful metrics.
+
+---
+
+## Tests
+
+```bash
+cd backend
+python -m pytest tests/ -v
+```
+
+```
+tests/test_api.py::test_root                        PASSED
+tests/test_api.py::test_predict_sentiment           PASSED
+tests/test_api.py::test_predict_empty_text          PASSED
+tests/test_api.py::test_get_stats                   PASSED
+tests/test_preprocessing.py::test_clean_text_removes_html        PASSED
+tests/test_preprocessing.py::test_clean_text_preserves_negation  PASSED
+tests/test_preprocessing.py::test_clean_text_removes_stopwords   PASSED
+tests/test_preprocessing.py::test_clean_text_empty_string        PASSED
+tests/test_preprocessing.py::test_clean_text_removes_urls        PASSED
+
+9 passed in 8.91s
+```
+
+---
+
+## Viva Q&A Notes
+
+**Q: Why three models?**
+LR is interpretable (coefficients = keyword weights). Balanced LR handles class imbalance. LinearSVC is typically fastest at inference on sparse TF-IDF matrices.
+
+**Q: Why TF-IDF and not word2vec/BERT?**
+Scope is intentionally kept at classical ML. TF-IDF + bigrams is sufficient for this dataset and keeps the pipeline fully explainable to non-ML reviewers.
+
+**Q: Where does the frontend get its data?**
+Entirely over HTTP from the FastAPI backend. The frontend imports zero ML code — true tier separation.
+
+**Q: How are model metrics in the database populated?**
+`init_db.py` calls `evaluate_models()` at startup, which loads the saved test split (`test_data.joblib`) and runs actual inference. Nothing is hardcoded.
+
+---
+
+## Team Contributions
+
+| Member | Responsibility |
+|--------|----------------|
+| Member 1 | Data pipeline: `preprocessing.py`, `features.py`, `train.py` |
+| Member 2 | Backend API: `main.py`, `api/`, `db/`, `schemas.py`, `tests/` |
+| Member 3 | Frontend: `streamlit_app.py`, `pages/`, `api_client.py` |
