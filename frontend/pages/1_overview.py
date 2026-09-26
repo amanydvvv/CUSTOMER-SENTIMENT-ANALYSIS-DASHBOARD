@@ -1,272 +1,445 @@
+"""
+1_overview.py
+─────────────
+Main Customer Feedback Intelligence page.
+Structured around customer intelligence decision-support:
+REVIEWS → SENTIMENT → ASPECT → PROBLEM → PRIORITY → ACTION
+
+Tabs:
+ 1. 📊 Historical Customer Reviews — Amazon Reviews 2023 dataset, fully local
+ 2. 🔬 Unseen Review Analysis     — Held-out test split (Model Validation)
+ 3. 📝 Manual Review Analyzer     — Single review inference & batch testing
+ 4. 🌐 Live Google Reviews        — OPTIONAL / future feature (requires API key)
+"""
+
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
-from frontend.api_client import (
-    load_stats,
-    load_sentiment_distribution,
-    load_rating_distribution,
-    load_product_stats,
-)
+import importlib
+
+from frontend.ui_utils import render_html
+from frontend.data_loader import load_historical_dataset, filter_dataset
+from frontend.components.sentiment_pulse import render_sentiment_pulse
+from frontend.components.review_feed import render_review_feed
+from frontend.components.pain_point_section import render_pain_point_section, analyze_negative_aspects
+from frontend.components.mismatch_section import render_mismatch_section
+from frontend.components.aspect_analyzer import extract_aspects_and_issues
+from frontend.unseen_review_loader import load_unseen_reviews
 
 
-def render_metric_card(icon_svg: str, value: str, label: str, trend: str = None, trend_class: str = None):
-    trend_html = ""
-    if trend and trend_class:
-        trend_html = f'<div class="metric-trend {trend_class}">{trend}</div>'
+def _star_icons(rating: float) -> str:
+    try:
+        r = int(round(float(rating)))
+    except Exception:
+        r = 5
+    r = max(1, min(5, r))
+    return "★" * r + "☆" * (5 - r)
 
-    st.markdown(f"""
-    <div class="metric-card">
-        <div class="metric-icon" style="background: var(--primary-light); color: var(--primary);">
-            {icon_svg}
+
+def _render_historical():
+    df_raw = load_historical_dataset()
+
+    if df_raw.empty:
+        st.error("Cannot load dataset. Ensure backend/data/processed/amazon_all_beauty_reviews.csv exists.")
+        return
+
+    # Compact sidebar filters
+    with st.sidebar:
+        render_html('<div class="nav-label">FILTER REVIEWS</div>')
+
+        if st.button("🔄 Reset Filters", use_container_width=True):
+            for k in ["filter_products", "filter_ratings", "filter_sentiments", "filter_verified", "filter_search"]:
+                st.session_state.pop(k, None)
+            st.rerun()
+
+        top_products = ["All"] + sorted(df_raw["product"].value_counts().head(20).index.tolist())
+        selected_prods = st.multiselect(
+            "Product ASIN", options=top_products,
+            default=st.session_state.get("filter_products", ["All"]),
+            key="filter_products"
+        )
+        selected_ratings = st.multiselect(
+            "Star Rating", options=["All", "5.0", "4.0", "3.0", "2.0", "1.0"],
+            default=st.session_state.get("filter_ratings", ["All"]),
+            key="filter_ratings"
+        )
+        selected_sentiments = st.multiselect(
+            "Sentiment Class", options=["All", "Positive", "Neutral", "Negative"],
+            default=st.session_state.get("filter_sentiments", ["All"]),
+            key="filter_sentiments"
+        )
+        verified_only = st.checkbox(
+            "Verified Purchases Only",
+            value=st.session_state.get("filter_verified", False),
+            key="filter_verified"
+        )
+        search_query = st.text_input(
+            "Keyword search",
+            value=st.session_state.get("filter_search", ""),
+            placeholder="e.g. rash, broken, delivery...",
+            key="filter_search"
+        )
+
+    df = filter_dataset(
+        df_raw,
+        selected_products=selected_prods,
+        selected_ratings=selected_ratings,
+        selected_sentiments=selected_sentiments,
+        verified_only=verified_only,
+        search_query=search_query,
+    )
+
+    total = len(df)
+    if total == 0:
+        st.warning("No reviews match the current filters. Please adjust or reset filters.")
+        return
+
+    pos_count = (df["sentiment"] == "positive").sum()
+    neg_count = (df["sentiment"] == "negative").sum()
+    neu_count = (df["sentiment"] == "neutral").sum()
+
+    pos_pct = (pos_count / total) * 100
+    neg_pct = (neg_count / total) * 100
+    neu_pct = (neu_count / total) * 100
+    avg_rating = df["rating"].mean()
+    verified_pct = (df["verified_purchase"].sum() / total) * 100 if "verified_purchase" in df.columns else 0.0
+
+    # Extract top complaint aspect dynamically for the executive summary
+    neg_df = df[df["sentiment"] == "negative"]
+    aspect_summary, _, _ = analyze_negative_aspects(neg_df)
+    top_aspect = aspect_summary[0]["aspect"] if aspect_summary else "General"
+    top_aspect_share = aspect_summary[0]["share_pct"] if aspect_summary else 0.0
+    top_aspect_issue = aspect_summary[0]["issue"] if aspect_summary else "General Feedback"
+
+    # Dynamic interpretation generation based STRICTLY on filtered reviews (Objective & concise)
+    exec_summary_text = (
+        f"<b>{pos_pct:.1f}%</b> of filtered reviews are classified as positive and <b>{neg_pct:.1f}%</b> as negative. "
+        f"<b>{top_aspect}</b> ({top_aspect_share:.1f}% of complaints) is currently the most frequently associated concern among negative reviews."
+    )
+
+    # ── 1. EXECUTIVE SUMMARY (4 COMPACT KPI CARDS) ──────────────────────────────
+    summary_card_html = f"""
+    <div style="background:#11151D;border:1px solid #242A35;border-radius:10px;padding:1rem 1.15rem;margin-bottom:1rem;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.65rem;">
+            <div style="font-size:0.72rem;font-weight:700;color:#7C5CFF;text-transform:uppercase;letter-spacing:0.08em;">
+                CUSTOMER FEEDBACK SUMMARY
+            </div>
+            <div style="font-size:0.7rem;color:#98A2B3;">
+                Verified Buyers: <b style="color:#22D3EE;">{verified_pct:.1f}%</b>
+            </div>
         </div>
-        <div class="metric-value">{value}</div>
-        <div class="metric-label">{label}</div>
-        {trend_html}
+
+        <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:0.65rem;margin-bottom:0.75rem;">
+            <div style="background:#151A24;border:1px solid #242A35;border-radius:8px;padding:0.85rem 0.95rem;">
+                <div style="font-size:0.65rem;font-weight:700;color:#98A2B3;text-transform:uppercase;letter-spacing:0.05em;">REVIEWS</div>
+                <div style="font-size:1.4rem;font-weight:800;color:#F5F7FA;margin:0.15rem 0;">{total:,}</div>
+                <div style="font-size:0.68rem;color:#667085;">Filtered sample</div>
+            </div>
+            <div style="background:#151A24;border:1px solid rgba(34,197,94,0.25);border-radius:8px;padding:0.85rem 0.95rem;">
+                <div style="font-size:0.65rem;font-weight:700;color:#22C55E;text-transform:uppercase;letter-spacing:0.05em;">POSITIVE</div>
+                <div style="font-size:1.4rem;font-weight:800;color:#22C55E;margin:0.15rem 0;">{pos_pct:.1f}%</div>
+                <div style="font-size:0.68rem;color:#667085;">{pos_count:,} reviews</div>
+            </div>
+            <div style="background:#151A24;border:1px solid rgba(239,68,68,0.25);border-radius:8px;padding:0.85rem 0.95rem;">
+                <div style="font-size:0.65rem;font-weight:700;color:#EF4444;text-transform:uppercase;letter-spacing:0.05em;">NEGATIVE</div>
+                <div style="font-size:1.4rem;font-weight:800;color:#EF4444;margin:0.15rem 0;">{neg_pct:.1f}%</div>
+                <div style="font-size:0.68rem;color:#667085;">{neg_count:,} reviews</div>
+            </div>
+            <div style="background:#151A24;border:1px solid rgba(245,158,11,0.25);border-radius:8px;padding:0.85rem 0.95rem;">
+                <div style="font-size:0.65rem;font-weight:700;color:#F59E0B;text-transform:uppercase;letter-spacing:0.05em;">AVG RATING</div>
+                <div style="font-size:1.4rem;font-weight:800;color:#F59E0B;margin:0.15rem 0;">{avg_rating:.2f} ★</div>
+                <div style="font-size:0.68rem;color:#F59E0B;">{_star_icons(avg_rating)}</div>
+            </div>
+        </div>
+
+        <div style="background:#151A24;border-left:3px solid #7C5CFF;border-radius:0 6px 6px 0;padding:0.55rem 0.8rem;font-size:0.78rem;color:#D0D5DD;line-height:1.45;">
+            {exec_summary_text}
+        </div>
     </div>
-    """, unsafe_allow_html=True)
+    """
+    render_html(summary_card_html)
+
+    # ── 2. SENTIMENT PULSE | SENTIMENT COMPOSITION ─────────────────────────────
+    render_sentiment_pulse(df, df_raw)
+
+    st.markdown("<div style='height:0.75rem;'></div>", unsafe_allow_html=True)
+
+    # ── 3. TOP CUSTOMER CONCERNS & PAIN-POINT INTELLIGENCE ─────────────────────
+    render_pain_point_section(df)
+
+    st.markdown("<div style='height:0.75rem;'></div>", unsafe_allow_html=True)
+
+    # ── 4. RATING × SENTIMENT MISMATCH ─────────────────────────────────────────
+    render_mismatch_section(df)
+
+    st.markdown("<div style='height:0.75rem;'></div>", unsafe_allow_html=True)
+
+    # ── 5. CUSTOMER REVIEW FEED ────────────────────────────────────────────────
+    render_review_feed(df)
+
+
+def _render_unseen():
+    render_html("""
+    <div style="background:#11151D;border:1px solid #242A35;border-radius:8px;padding:1.1rem 1.25rem;margin-bottom:1.25rem;">
+        <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.35rem;">
+            <span style="background:rgba(124,92,255,0.15);color:#7C5CFF;border:1px solid rgba(124,92,255,0.3);padding:2px 8px;border-radius:4px;font-size:0.7rem;font-weight:700;">
+                HELD-OUT TEST SET
+            </span>
+            <span style="font-size:1.1rem;font-weight:700;color:#F5F7FA;">
+                MODEL VALIDATION — HELD-OUT REVIEWS
+            </span>
+        </div>
+        <div style="color:#98A2B3;font-size:0.82rem;line-height:1.45;">
+            <b>16,336 unseen test reviews</b> (stratified 80/20 train-test partition, <code>random_state=42</code>).
+            These reviews were <b>not used during model training</b>. Predictions displayed below are generated in real time by our saved ML model on genuinely unseen customer reviews.
+        </div>
+    </div>
+    """)
+
+    col_m, col_n = st.columns([2, 1])
+    with col_m:
+        model_choice = st.selectbox(
+            "Evaluation Model",
+            ["balanced_logistic_regression", "logistic_regression", "linearsvc"],
+            format_func=lambda x: {
+                "balanced_logistic_regression": "Balanced Logistic Regression (Handles Class Imbalance)",
+                "logistic_regression": "Standard Logistic Regression",
+                "linearsvc": "LinearSVC (High Accuracy)",
+            }.get(x, x),
+            key="unseen_model_select"
+        )
+    with col_n:
+        n_samples = st.selectbox("Sample size to evaluate", [50, 100, 200], index=1, key="unseen_n_samples")
+
+    with st.spinner("Running ML model inference on held-out test reviews..."):
+        df_unseen = load_unseen_reviews(n_samples=n_samples, model_name=model_choice)
+
+    if df_unseen.empty:
+        st.error("Could not load held-out reviews. Ensure model artifacts exist in backend/models/.")
+        return
+
+    total_u = len(df_unseen)
+    pos_u   = (df_unseen["sentiment"] == "positive").sum()
+    neu_u   = (df_unseen["sentiment"] == "neutral").sum()
+    neg_u   = (df_unseen["sentiment"] == "negative").sum()
+    mism_u  = int(df_unseen["is_mismatch"].sum())
+    accuracy_eval = (df_unseen["sentiment"] == df_unseen["label_sentiment"]).sum() / total_u * 100
+
+    metrics_card = f"""
+    <div style="background:#11151D;border:1px solid #242A35;border-radius:8px;padding:0.9rem 1.25rem;margin-bottom:1rem;">
+        <div style="display:flex;gap:2rem;flex-wrap:wrap;align-items:center;">
+            <div>
+                <div style="font-size:0.68rem;color:#98A2B3;font-weight:700;text-transform:uppercase;">EVALUATED</div>
+                <div style="font-size:1.45rem;font-weight:800;color:#F5F7FA;">{total_u:,}</div>
+                <div style="font-size:0.7rem;color:#667085;">Held-out reviews</div>
+            </div>
+            <div>
+                <div style="font-size:0.68rem;color:#22D3EE;font-weight:700;text-transform:uppercase;">AGREEMENT RATE</div>
+                <div style="font-size:1.45rem;font-weight:800;color:#22D3EE;">{accuracy_eval:.1f}%</div>
+                <div style="font-size:0.7rem;color:#667085;">vs Star Rule</div>
+            </div>
+            <div>
+                <div style="font-size:0.68rem;color:#22C55E;font-weight:700;text-transform:uppercase;">POSITIVE</div>
+                <div style="font-size:1.45rem;font-weight:800;color:#22C55E;">{pos_u / total_u * 100:.1f}%</div>
+                <div style="font-size:0.7rem;color:#667085;">{pos_u:,} reviews</div>
+            </div>
+            <div>
+                <div style="font-size:0.68rem;color:#F59E0B;font-weight:700;text-transform:uppercase;">NEUTRAL</div>
+                <div style="font-size:1.45rem;font-weight:800;color:#F59E0B;">{neu_u / total_u * 100:.1f}%</div>
+                <div style="font-size:0.7rem;color:#667085;">{neu_u:,} reviews</div>
+            </div>
+            <div>
+                <div style="font-size:0.68rem;color:#EF4444;font-weight:700;text-transform:uppercase;">NEGATIVE</div>
+                <div style="font-size:1.45rem;font-weight:800;color:#EF4444;">{neg_u / total_u * 100:.1f}%</div>
+                <div style="font-size:0.7rem;color:#667085;">{neg_u:,} reviews</div>
+            </div>
+            <div>
+                <div style="font-size:0.68rem;color:#7C5CFF;font-weight:700;text-transform:uppercase;">MISMATCHES</div>
+                <div style="font-size:1.45rem;font-weight:800;color:#7C5CFF;">{mism_u:,}</div>
+                <div style="font-size:0.7rem;color:#667085;">Rating vs NLP</div>
+            </div>
+        </div>
+    </div>
+    """
+    render_html(metrics_card)
+
+    col_f1, col_f2 = st.columns(2)
+    with col_f1:
+        sent_filter = st.selectbox("Filter by Model Prediction", ["All", "positive", "negative", "neutral"], key="unseen_sent_filter")
+    with col_f2:
+        mismatch_filter = st.checkbox("Show Mismatch Cases Only", key="unseen_mismatch_filter")
+
+    df_show = df_unseen.copy()
+    if sent_filter != "All":
+        df_show = df_show[df_show["sentiment"] == sent_filter]
+    if mismatch_filter:
+        df_show = df_show[df_show["is_mismatch"]]
+
+    render_html(f"<div style='font-size:0.75rem;color:#98A2B3;margin-bottom:0.75rem;'>Displaying {min(40, len(df_show))} of {len(df_show):,} evaluated reviews</div>")
+
+    for _, row in df_show.head(40).iterrows():
+        intel = extract_aspects_and_issues(
+            str(row["text"]),
+            sentiment=str(row["sentiment"]),
+            rating=float(row.get("rating", 3.0))
+        )
+
+        sent = str(row["sentiment"]).upper()
+        if sent == "POSITIVE":
+            badge_bg, badge_col, badge_bdr = "rgba(34,197,94,0.12)", "#22C55E", "rgba(34,197,94,0.28)"
+        elif sent == "NEGATIVE":
+            badge_bg, badge_col, badge_bdr = "rgba(239,68,68,0.12)", "#EF4444", "rgba(239,68,68,0.28)"
+        else:
+            badge_bg, badge_col, badge_bdr = "rgba(245,158,11,0.12)", "#F59E0B", "rgba(245,158,11,0.28)"
+
+        pcol = {"HIGH": "#EF4444", "MEDIUM": "#F59E0B", "LOW": "#22C55E"}.get(intel["priority"], "#98A2B3")
+
+        conf = row.get("confidence")
+        conf_str = f"{conf * 100:.1f}%" if conf is not None else "N/A (LinearSVC)"
+
+        mismatch_badge = ""
+        if row.get("is_mismatch"):
+            mismatch_badge = (
+                f'<span style="background:rgba(239,68,68,0.15);color:#EF4444;border:1px solid rgba(239,68,68,0.35);'
+                f'padding:2px 8px;border-radius:4px;font-size:0.7rem;font-weight:700;">'
+                f'⚠️ Mismatch ({row["rating"]:.0f}★ vs {sent})</span>'
+            )
+
+        title_html = f'<div style="font-weight:700;font-size:0.92rem;color:#F5F7FA;margin-bottom:0.25rem;">{row["title"]}</div>' if str(row.get("title", "")).strip() else ""
+
+        u_card = f"""
+        <div style="background:#11151D;border:1px solid #242A35;border-radius:8px;padding:1rem 1.25rem;margin-bottom:0.75rem;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.4rem;">
+                <div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;">
+                    <span style="color:#F59E0B;font-size:0.95rem;">{_star_icons(row['rating'])}</span>
+                    <span style="background:{badge_bg};color:{badge_col};border:1px solid {badge_bdr};padding:2px 8px;border-radius:4px;font-size:0.72rem;font-weight:700;">
+                        AI Prediction: {sent}
+                    </span>
+                    <span style="background:#151A24;color:#98A2B3;border:1px solid #242A35;padding:2px 6px;border-radius:4px;font-size:0.7rem;">
+                        Confidence: {conf_str}
+                    </span>
+                    {mismatch_badge}
+                </div>
+                <span style="font-size:0.75rem;color:#667085;">{str(row.get('date',''))[:10]}</span>
+            </div>
+
+            {title_html}
+            <div style="color:#D0D5DD;font-size:0.88rem;line-height:1.5;margin-bottom:0.6rem;">
+                "{str(row['text'])[:350]}{'…' if len(str(row['text'])) > 350 else ''}"
+            </div>
+
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;border-top:1px solid #1E2533;padding-top:0.6rem;font-size:0.75rem;">
+                <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+                    <span style="background:#151A24;border:1px solid #242A35;color:#98A2B3;padding:2px 6px;border-radius:4px;">
+                        🏷️ <b>Aspect:</b> {intel['primary_aspect']}
+                    </span>
+                    <span style="background:#151A24;border:1px solid #242A35;color:#98A2B3;padding:2px 6px;border-radius:4px;">
+                        🔍 <b>Issue:</b> {intel['issue']}
+                    </span>
+                    <span style="background:#151A24;border:1px solid #242A35;color:{pcol};font-weight:700;padding:2px 6px;border-radius:4px;">
+                        Priority: {intel['priority']}
+                    </span>
+                </div>
+                <span style="color:#667085;">ASIN: <code style="color:#22D3EE;font-size:0.7rem;">{row.get('product','N/A')}</code></span>
+            </div>
+            <div style="background:#151A24;border-left:3px solid #7C5CFF;padding:0.4rem 0.65rem;margin-top:0.6rem;border-radius:0 4px 4px 0;font-size:0.76rem;color:#98A2B3;">
+                <b style="color:#F5F7FA;">Actionable Recommendation:</b> {intel['suggested_action']}
+            </div>
+        </div>
+        """
+        render_html(u_card)
+
+
+def _render_manual():
+    live_pred = importlib.import_module("frontend.pages.2_live_prediction")
+    live_pred.render()
+
+
+def _render_google_dormant():
+    render_html("""
+    <div style="background:#11151D;border:1px solid #242A35;border-radius:8px;padding:2rem;text-align:center;margin-top:1rem;">
+        <div style="font-size:2rem;margin-bottom:0.6rem;">🌐</div>
+        <div style="font-size:1.15rem;font-weight:700;color:#F5F7FA;margin-bottom:0.35rem;">
+            Live External Review Integration
+        </div>
+        <div style="color:#98A2B3;font-size:0.85rem;max-width:520px;margin:0 auto 1.25rem;line-height:1.5;">
+            Connects to the <b>Google Places API (New)</b> to fetch and analyze real business reviews in real time.
+        </div>
+        <div style="background:#151A24;border:1px solid #242A35;border-radius:6px;padding:1rem;max-width:440px;margin:0 auto;text-align:left;font-size:0.8rem;color:#D0D5DD;line-height:1.7;">
+            <div style="font-size:0.72rem;font-weight:700;color:#7C5CFF;margin-bottom:0.35rem;text-transform:uppercase;">
+                CONFIGURATION REQUIRED:
+            </div>
+            1. Create a Google Cloud API Key<br>
+            2. Enable <b>Places API (New)</b><br>
+            3. Set in <code>.streamlit/secrets.toml</code>:<br>
+            &nbsp;&nbsp;<code style="color:#22D3EE;">GOOGLE_PLACES_API_KEY = "AIza..."</code><br>
+            4. Restart the dashboard
+        </div>
+        <div style="color:#667085;font-size:0.75rem;margin-top:1rem;">
+            The primary dashboard runs 100% locally on genuine Amazon feedback without requiring external APIs.
+        </div>
+    </div>
+    """)
 
 
 def render():
-    st.markdown("""
-    <div class="page-header">
-        <h1 class="page-title">Overview</h1>
-        <p class="page-subtitle">Dataset insights and sentiment distribution at a glance</p>
+    header_html = """
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;border-bottom:1px solid #1E2533;padding-bottom:0.75rem;">
+        <div>
+            <h1 style="font-size:1.6rem;font-weight:800;color:#F5F7FA;letter-spacing:-0.02em;margin:0 0 0.2rem;line-height:1.2;">
+                CUSTOMER FEEDBACK INTELLIGENCE
+            </h1>
+            <div style="color:#98A2B3;font-size:0.82rem;margin:0;">
+                AI-powered review analytics
+            </div>
+        </div>
+        <div style="display:flex;gap:0.45rem;align-items:center;flex-wrap:wrap;">
+            <span style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.25);color:#22C55E;font-size:0.68rem;font-weight:700;padding:2px 8px;border-radius:4px;display:flex;align-items:center;gap:4px;">
+                <span style="width:5px;height:5px;border-radius:50%;background:#22C55E;"></span>
+                LOCAL ANALYTICS
+            </span>
+            <span style="background:#11151D;border:1px solid #242A35;color:#22D3EE;font-size:0.68rem;font-weight:700;padding:2px 8px;border-radius:4px;">
+                81.7K REVIEWS
+            </span>
+            <span style="background:#11151D;border:1px solid #242A35;color:#98A2B3;font-size:0.68rem;font-weight:700;padding:2px 8px;border-radius:4px;">
+                LOCAL INFERENCE
+            </span>
+        </div>
     </div>
-    """, unsafe_allow_html=True)
+    """
+    render_html(header_html)
 
-    with st.spinner("Loading dashboard data..."):
-        stats = load_stats()
-        sentiment_dist = load_sentiment_distribution()
-        rating_dist = load_rating_distribution()
-        product_stats = load_product_stats()
+    tab_hist, tab_unseen, tab_manual, tab_google = st.tabs([
+        "Historical Reviews",
+        "Held-Out Validation",
+        "New Review",
+        "Google Reviews",
+    ])
 
-    if not stats:
-        st.error("Unable to load data. Please ensure the backend is running.")
-        return
+    with tab_hist:
+        _render_historical()
 
-    col1, col2, col3, col4 = st.columns(4)
+    with tab_unseen:
+        _render_unseen()
 
-    with col1:
-        render_metric_card(
-            icon_svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>',
-            value=f"{stats.get('total_reviews', 0):,}",
-            label="Total Reviews",
-            trend=f"+{stats.get('reviews_today', 0)} today",
-            trend_class="trend-positive",
-        )
+    with tab_manual:
+        _render_manual()
 
-    with col2:
-        render_metric_card(
-            icon_svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>',
-            value=f"{stats.get('positive_pct', 0):.1f}%",
-            label="Positive Sentiment",
-            trend="Dominant class",
-            trend_class="trend-positive",
-        )
+    with tab_google:
+        import os
+        has_key = bool(os.environ.get("GOOGLE_PLACES_API_KEY", "").strip())
+        if not has_key:
+            try:
+                has_key = bool(st.secrets.get("GOOGLE_PLACES_API_KEY", "").strip())
+            except Exception:
+                pass
 
-    with col3:
-        render_metric_card(
-            icon_svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>',
-            value=f"{stats.get('avg_rating', 0):.1f}/5.0",
-            label="Average Rating",
-            trend="High satisfaction",
-            trend_class="trend-positive",
-        )
+        if has_key:
+            from frontend.components.live_places_section import render_live_places_section
+            render_live_places_section()
+        else:
+            _render_google_dormant()
 
-    with col4:
-        render_metric_card(
-            icon_svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>',
-            value=f"{stats.get('unique_products', 0)}",
-            label="Products Analyzed",
-            trend=f"{stats.get('categories', 0)} categories",
-            trend_class="trend-neutral",
-        )
 
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    tab1, tab2, tab3 = st.tabs(["📊 Sentiment Distribution", "⭐ Rating Analysis", "🏷️ Top Products"])
-
-    with tab1:
-        col_left, col_right = st.columns([2, 1])
-
-        with col_left:
-            st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-            st.markdown('<h3 class="chart-title">Sentiment Distribution</h3>', unsafe_allow_html=True)
-
-            if sentiment_dist:
-                df_sentiment = pd.DataFrame(sentiment_dist)
-                fig = px.pie(
-                    df_sentiment,
-                    values="count",
-                    names="sentiment",
-                    color="sentiment",
-                    color_discrete_map={
-                        "positive": "#22c55e",
-                        "negative": "#ef4444",
-                        "neutral": "#f59e0b",
-                    },
-                    hole=0.55,
-                )
-                fig.update_traces(
-                    textposition="inside",
-                    textinfo="percent+label",
-                    textfont_size=13,
-                    textfont_color="white",
-                    textfont_family="Inter",
-                    marker=dict(line=dict(color="white", width=2)),
-                    pull=[0.05, 0, 0],
-                )
-                fig.update_layout(
-                    showlegend=True,
-                    legend=dict(
-                        orientation="h",
-                        yanchor="bottom",
-                        y=-0.15,
-                        xanchor="center",
-                        x=0.5,
-                        font=dict(size=12, family="Inter"),
-                    ),
-                    margin=dict(t=10, b=10, l=10, r=10),
-                    font=dict(family="Inter"),
-                    paper_bgcolor="rgba(0,0,0,0)",
-                    plot_bgcolor="rgba(0,0,0,0)",
-                )
-                st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
-
-            st.markdown('</div>', unsafe_allow_html=True)
-
-        with col_right:
-            st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-            st.markdown('<h3 class="chart-title">Sentiment Counts</h3>', unsafe_allow_html=True)
-
-            if sentiment_dist:
-                for item in sentiment_dist:
-                    sentiment = item["sentiment"]
-                    count = item["count"]
-                    pct = item["percentage"]
-                    color_class = {
-                        "positive": "sentiment-positive",
-                        "negative": "sentiment-negative",
-                        "neutral": "sentiment-neutral",
-                    }.get(sentiment, "sentiment-neutral")
-
-                    st.markdown(f"""
-                    <div style="padding: 0.75rem 0; border-bottom: 1px solid var(--border);">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
-                            <span class="sentiment-badge {color_class}">{sentiment}</span>
-                            <span style="font-weight: 600; color: var(--text-primary);">{count:,}</span>
-                        </div>
-                        <div style="height: 6px; background: var(--bg-tertiary); border-radius: 3px; overflow: hidden;">
-                            <div style="width: {pct}%; height: 100%; background: {'#22c55e' if sentiment == 'positive' else '#ef4444' if sentiment == 'negative' else '#f59e0b'}; border-radius: 3px; transition: width 0.5s ease;"></div>
-                        </div>
-                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; text-align: right;">{pct:.1f}%</div>
-                    </div>
-                    """, unsafe_allow_html=True)
-
-            st.markdown('</div>', unsafe_allow_html=True)
-
-    with tab2:
-        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-        st.markdown('<h3 class="chart-title">Rating Distribution by Sentiment</h3>', unsafe_allow_html=True)
-
-        if rating_dist:
-            df_rating = pd.DataFrame(rating_dist)
-            fig = px.bar(
-                df_rating,
-                x="rating",
-                y="count",
-                color="sentiment",
-                color_discrete_map={
-                    "positive": "#22c55e",
-                    "negative": "#ef4444",
-                    "neutral": "#f59e0b",
-                },
-                barmode="group",
-            )
-            fig.update_layout(
-                xaxis_title="Rating",
-                yaxis_title="Number of Reviews",
-                legend=dict(
-                    orientation="h",
-                    yanchor="bottom",
-                    y=1.02,
-                    xanchor="right",
-                    x=1,
-                    font=dict(size=12, family="Inter"),
-                ),
-                margin=dict(t=40, b=40, l=40, r=40),
-                font=dict(family="Inter"),
-                paper_bgcolor="rgba(0,0,0,0)",
-                plot_bgcolor="rgba(0,0,0,0)",
-                xaxis=dict(gridcolor=var_border if (var_border := "var(--border)") else "#e2e8f0"),
-                yaxis=dict(gridcolor=var_border if (var_border := "var(--border)") else "#e2e8f0"),
-            )
-            fig.update_traces(marker_line_width=0)
-            st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
-
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    with tab3:
-        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-        st.markdown('<h3 class="chart-title">Top Products by Review Volume</h3>', unsafe_allow_html=True)
-
-        if product_stats:
-            df_products = pd.DataFrame(product_stats).head(15)
-            fig = px.bar(
-                df_products,
-                x="review_count",
-                y="product_name",
-                orientation="h",
-                color="avg_rating",
-                color_continuous_scale=["#ef4444", "#f59e0b", "#22c55e"],
-                range_color=[1, 5],
-                text="review_count",
-            )
-            fig.update_traces(textposition="outside", textfont_size=11, textfont_family="Inter")
-            fig.update_layout(
-                xaxis_title="Number of Reviews",
-                yaxis_title="",
-                yaxis=dict(autorange="reversed"),
-                coloraxis_colorbar=dict(title="Avg Rating", thickness=10, len=0.7),
-                margin=dict(t=10, b=40, l=10, r=10),
-                font=dict(family="Inter"),
-                paper_bgcolor="rgba(0,0,0,0)",
-                plot_bgcolor="rgba(0,0,0,0)",
-                height=500,
-            )
-            st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
-
-            st.markdown("### Product Details")
-            display_df = df_products[["product_name", "review_count", "avg_rating", "sentiment_distribution"]].copy()
-            display_df.columns = ["Product", "Reviews", "Avg Rating", "Sentiment Breakdown"]
-            st.dataframe(
-                display_df,
-                use_container_width=True,
-                hide_index=True,
-                column_config={
-                    "Product": st.column_config.TextColumn(width="medium"),
-                    "Reviews": st.column_config.NumberColumn(format="%,d"),
-                    "Avg Rating": st.column_config.NumberColumn(format="%.2f"),
-                    "Sentiment Breakdown": st.column_config.TextColumn(width="large"),
-                },
-            )
-
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    with st.expander("📋 Dataset Summary", expanded=False):
-        col_a, col_b = st.columns(2)
-        with col_a:
-            st.markdown("**Data Quality**")
-            st.write(f"• Total rows: {stats.get('total_reviews', 0):,}")
-            st.write(f"• Missing reviews handled: {stats.get('missing_reviews', 0):,}")
-            st.write(f"• Duplicates removed: {stats.get('duplicates_removed', 0):,}")
-            st.write(f"• Unique products: {stats.get('unique_products', 0)}")
-
-        with col_b:
-            st.markdown("**Preprocessing**")
-            st.write("• TF-IDF: n-grams (1,2), 10k features")
-            st.write("• Stopwords: NLTK English (preserving negations)")
-            st.write("• Text cleaning: HTML, URLs, special chars removed")
-            st.write("• Negation handling: Expanded contractions")
+if __name__ == "__main__":
+    render()

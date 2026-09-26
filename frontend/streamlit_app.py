@@ -1,529 +1,450 @@
 import streamlit as st
-from frontend.pages import overview, live_prediction, keyword_insights, model_comparison
+from frontend.ui_utils import render_html
+from frontend.pages import overview, product_intelligence, live_prediction, keyword_insights, model_comparison
 
 st.set_page_config(
-    page_title="Sentiment Analysis Dashboard",
-    page_icon="📊",
+    page_title="Customer Feedback Intelligence",
+    page_icon="⚡",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="locked",
 )
 
-CUSTOM_CSS = """
+DARK_THEME_CSS = """
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
     :root {
-        --primary: #2563eb;
-        --primary-hover: #1d4ed8;
-        --primary-light: #dbeafe;
-        --secondary: #64748b;
-        --success: #059669;
-        --warning: #d97706;
-        --danger: #dc2626;
-        --bg-primary: #ffffff;
-        --bg-secondary: #f8fafc;
-        --bg-tertiary: #f1f5f9;
-        --text-primary: #0f172a;
-        --text-secondary: #475569;
-        --text-muted: #94a3b8;
-        --border: #e2e8f0;
-        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-        --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-        --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-        --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-        --radius-sm: 6px;
-        --radius: 8px;
-        --radius-lg: 12px;
-        --transition: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+        --bg-app: #090B10;
+        --bg-sidebar: #0D1017;
+        --bg-card: #11151D;
+        --bg-card-hover: #171C26;
+        --bg-input: #151A24;
+        --border-subtle: #1E2533;
+        --border-card: #242A35;
+        --border-active: #7C5CFF;
+        
+        --accent-primary: #7C5CFF;
+        --accent-primary-hover: #9074FF;
+        --accent-primary-muted: rgba(124, 92, 255, 0.12);
+        --accent-secondary: #22D3EE;
+        
+        --sentiment-pos: #22C55E;
+        --sentiment-neg: #EF4444;
+        --sentiment-neu: #F59E0B;
+        
+        --text-primary: #F5F7FA;
+        --text-secondary: #98A2B3;
+        --text-muted: #667085;
     }
 
-    * {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    }
-
-    .stApp {
-        background: var(--bg-secondary);
-    }
-
-    .main .block-container {
-        padding-top: 2rem;
-        padding-bottom: 3rem;
-        max-width: 1400px;
-    }
-
-    header[data-testid="stHeader"] {
-        background: transparent;
-    }
-
-    .stSidebar {
-        background: var(--bg-primary);
-        border-right: 1px solid var(--border);
-    }
-
-    .stSidebar .stMarkdown {
-        padding: 0;
-    }
-
-    .sidebar-brand {
-        padding: 1.5rem 1rem 1rem;
-        border-bottom: 1px solid var(--border);
-        margin-bottom: 1rem;
-    }
-
-    .sidebar-brand h1 {
-        font-size: 1.125rem;
-        font-weight: 700;
-        color: var(--text-primary);
-        margin: 0;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .sidebar-brand svg {
-        color: var(--primary);
-    }
-
-    .nav-section {
-        padding: 0 0.75rem;
-    }
-
-    .nav-section-title {
-        font-size: 0.6875rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        color: var(--text-muted);
-        margin: 1.5rem 0 0.5rem;
-        padding-left: 0.5rem;
-    }
-
-    .nav-item {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        padding: 0.625rem 0.875rem;
-        border-radius: var(--radius);
-        color: var(--text-secondary);
-        font-size: 0.875rem;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all var(--transition);
-        border: 1px solid transparent;
-        margin-bottom: 0.25rem;
-    }
-
-    .nav-item:hover {
-        background: var(--bg-tertiary);
-        color: var(--text-primary);
-    }
-
-    .nav-item.active {
-        background: var(--primary-light);
-        color: var(--primary);
-        border-color: var(--primary);
-    }
-
-    .nav-item svg {
-        width: 18px;
-        height: 18px;
-        flex-shrink: 0;
-    }
-
-    .stButton > button {
-        width: 100%;
-        justify-content: flex-start;
-        background: transparent;
-        border: none;
-        padding: 0.625rem 0.875rem;
-        border-radius: var(--radius);
-        color: var(--text-secondary);
-        font-size: 0.875rem;
-        font-weight: 500;
-        text-align: left;
-        transition: all var(--transition);
-    }
-
-    .stButton > button:hover {
-        background: var(--bg-tertiary);
-        color: var(--text-primary);
-    }
-
-    .stButton > button:focus {
-        outline: none;
-        box-shadow: 0 0 0 2px var(--primary-light);
-    }
-
-    .page-header {
-        margin-bottom: 2rem;
-    }
-
-    .page-title {
-        font-size: 1.875rem;
-        font-weight: 700;
-        color: var(--text-primary);
-        margin: 0 0 0.5rem;
-        letter-spacing: -0.02em;
-    }
-
-    .page-subtitle {
-        font-size: 1rem;
-        color: var(--text-secondary);
-        margin: 0;
-        font-weight: 400;
-    }
-
-    .metric-card {
-        background: var(--bg-primary);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-lg);
-        padding: 1.5rem;
-        transition: all var(--transition);
-        box-shadow: var(--shadow-sm);
-    }
-
-    .metric-card:hover {
-        box-shadow: var(--shadow-md);
-        border-color: var(--primary-light);
-    }
-
-    .metric-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: var(--radius);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 0.75rem;
-    }
-
-    .metric-icon svg {
-        width: 20px;
-        height: 20px;
-    }
-
-    .metric-value {
-        font-size: 2rem;
-        font-weight: 700;
-        color: var(--text-primary);
-        line-height: 1.2;
-        margin: 0 0 0.25rem;
-    }
-
-    .metric-label {
-        font-size: 0.875rem;
-        color: var(--text-secondary);
-        font-weight: 500;
-        margin: 0;
-    }
-
-    .metric-trend {
-        font-size: 0.75rem;
-        font-weight: 500;
-        margin-top: 0.5rem;
-        display: flex;
-        align-items: center;
-        gap: 0.25rem;
-    }
-
-    .trend-positive { color: var(--success); }
-    .trend-negative { color: var(--danger); }
-    .trend-neutral { color: var(--warning); }
-
-    .chart-container {
-        background: var(--bg-primary);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-lg);
-        padding: 1.5rem;
-        box-shadow: var(--shadow-sm);
-    }
-
-    .chart-title {
-        font-size: 1rem;
-        font-weight: 600;
-        color: var(--text-primary);
-        margin: 0 0 1rem;
-    }
-
-    .data-table {
-        background: var(--bg-primary);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-lg);
-        overflow: hidden;
-        box-shadow: var(--shadow-sm);
-    }
-
-    .stDataFrame {
-        border: none !important;
-    }
-
-    .stDataFrame [data-testid="stTable"] {
-        border-radius: var(--radius-lg);
-    }
-
-    .prediction-card {
-        background: var(--bg-primary);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-lg);
-        padding: 1.5rem;
-        margin-top: 1rem;
-    }
-
-    .sentiment-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.375rem;
-        padding: 0.375rem 0.875rem;
-        border-radius: 9999px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.025em;
-    }
-
-    .sentiment-positive { background: #dcfce7; color: #166534; }
-    .sentiment-negative { background: #fee2e2; color: #991b1b; }
-    .sentiment-neutral { background: #fef3c7; color: #92400e; }
-
-    .confidence-bar {
-        height: 8px;
-        background: var(--bg-tertiary);
-        border-radius: 9999px;
-        overflow: hidden;
-        margin-top: 0.75rem;
-    }
-
-    .confidence-fill {
-        height: 100%;
-        border-radius: 9999px;
-        transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .confidence-positive { background: linear-gradient(90deg, #22c55e, #16a34a); }
-    .confidence-negative { background: linear-gradient(90deg, #ef4444, #dc2626); }
-    .confidence-neutral { background: linear-gradient(90deg, #f59e0b, #d97706); }
-
-    .keyword-chip {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.375rem;
-        padding: 0.375rem 0.75rem;
-        background: var(--bg-tertiary);
-        border-radius: var(--radius);
-        font-size: 0.8125rem;
-        font-weight: 500;
-        color: var(--text-primary);
-        transition: all var(--transition);
-    }
-
-    .keyword-chip:hover {
-        background: var(--primary-light);
-        color: var(--primary);
-    }
-
-    .keyword-chip .score {
-        font-size: 0.6875rem;
-        color: var(--text-muted);
-        background: var(--bg-primary);
-        padding: 0.125rem 0.375rem;
-        border-radius: 9999px;
-        font-weight: 600;
-    }
-
-    .model-card {
-        background: var(--bg-primary);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-lg);
-        padding: 1.5rem;
-        transition: all var(--transition);
-    }
-
-    .model-card:hover {
-        box-shadow: var(--shadow-md);
-        border-color: var(--primary-light);
-    }
-
-    .model-card.best {
-        border-color: var(--success);
-        box-shadow: 0 0 0 1px var(--success);
-    }
-
-    .model-name {
-        font-size: 1rem;
-        font-weight: 600;
-        color: var(--text-primary);
-        margin: 0 0 0.5rem;
-    }
-
-    .model-metric {
-        display: flex;
-        justify-content: space-between;
-        padding: 0.5rem 0;
-        border-bottom: 1px solid var(--border);
-    }
-
-    .model-metric:last-child {
-        border-bottom: none;
-    }
-
-    .model-metric-label {
-        color: var(--text-secondary);
-        font-size: 0.875rem;
-    }
-
-    .model-metric-value {
-        font-weight: 600;
-        color: var(--text-primary);
-    }
-
-    .best-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.25rem;
-        padding: 0.25rem 0.5rem;
-        background: #dcfce7;
-        color: #166534;
-        border-radius: var(--radius-sm);
-        font-size: 0.6875rem;
-        font-weight: 600;
-        text-transform: uppercase;
-    }
-
-    .stTextArea textarea {
-        border-radius: var(--radius) !important;
-        border: 1px solid var(--border) !important;
-        font-family: 'Inter', monospace !important;
-        font-size: 0.875rem !important;
-        padding: 0.875rem !important;
-        transition: all var(--transition) !important;
-    }
-
-    .stTextArea textarea:focus {
-        border-color: var(--primary) !important;
-        box-shadow: 0 0 0 3px var(--primary-light) !important;
-    }
-
-    .stSelectbox [data-baseweb="select"] {
-        border-radius: var(--radius) !important;
-    }
-
-    .stSelectbox [data-baseweb="select"] > div {
-        border: 1px solid var(--border) !important;
-    }
-
-    .stSelectbox [data-baseweb="select"]:focus-within > div {
-        border-color: var(--primary) !important;
-        box-shadow: 0 0 0 3px var(--primary-light) !important;
-    }
-
-    .stSlider [data-baseweb="slider"] {
-        margin-top: 0.5rem;
-    }
-
-    .stSlider [role="slider"] {
-        background: var(--primary) !important;
-    }
-
-    .stSlider [data-baseweb="slider"] [aria-valuenow] {
-        background: var(--primary) !important;
-    }
-
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 0.25rem;
-        background: var(--bg-tertiary);
-        padding: 0.25rem;
-        border-radius: var(--radius);
-    }
-
-    .stTabs [data-baseweb="tab"] {
-        background: transparent !important;
-        border-radius: var(--radius-sm) !important;
-        color: var(--text-secondary) !important;
-        font-weight: 500 !important;
-        font-size: 0.875rem !important;
-        padding: 0.625rem 1rem !important;
-        transition: all var(--transition) !important;
-    }
-
-    .stTabs [aria-selected="true"] {
-        background: var(--bg-primary) !important;
-        color: var(--primary) !important;
-        box-shadow: var(--shadow-sm) !important;
-    }
-
-    .stExpander {
-        border: 1px solid var(--border) !important;
-        border-radius: var(--radius) !important;
-        background: var(--bg-primary) !important;
-    }
-
-    .stExpander summary {
-        font-weight: 500 !important;
+    /* Prevent all horizontal overflow across viewports */
+    html, body, [data-testid="stAppViewContainer"], .main, [data-testid="stMainBlockContainer"], .block-container {
+        overflow-x: hidden !important;
+        max-width: 100% !important;
+        background-color: var(--bg-app) !important;
         color: var(--text-primary) !important;
     }
 
-    .footer {
-        margin-top: 3rem;
-        padding-top: 1.5rem;
-        border-top: 1px solid var(--border);
-        text-align: center;
+    /* Target text typography without breaking Material Icon ligatures */
+    body, p, h1, h2, h3, h4, h5, h6, label, input, select, textarea {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Preserve Icon Fonts and prevent raw ligature text leaks */
+    [data-testid*="stIcon"],
+    [data-testid="stIconMaterial"],
+    [class*="material-symbols"],
+    [class*="material-icons"],
+    .material-symbols-rounded,
+    .material-symbols-outlined,
+    .material-icons,
+    [data-testid="stSidebarCollapseButton"] span,
+    [data-testid="stSidebarCollapseButton"] svg {
+        font-family: 'Material Symbols Rounded', 'Material Symbols Outlined', 'Material Icons', sans-serif !important;
+    }
+
+    /* Clean styling for sidebar collapse button */
+    [data-testid="stSidebarCollapseButton"] {
+        color: #98A2B3 !important;
+        overflow: hidden !important;
+    }
+
+    code, pre {
+        font-family: 'JetBrains Mono', monospace !important;
+        word-break: break-word !important;
+    }
+
+    /* Hide Default Streamlit Chrome */
+    #MainMenu, footer {
+        display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+    }
+
+    /* Hide default multi-page nav links only (not the sidebar container) */
+    [data-testid="stSidebarNav"],
+    [data-testid="stSidebarNavItems"],
+    nav[data-testid="stSidebarNav"] {
+        display: none !important;
+        height: 0 !important;
+        overflow: hidden !important;
+    }
+
+    /* Completely remove Streamlit Header Chrome & Unused Top Space */
+    header[data-testid="stHeader"],
+    [data-testid="stHeader"] {
+        display: none !important;
+        height: 0 !important;
+        min-height: 0 !important;
+        max-height: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        visibility: hidden !important;
+    }
+
+    [data-testid="stAppViewContainer"] > .main {
+        padding-top: 0 !important;
+        margin-top: 0 !important;
+    }
+
+    .stDeployButton,
+    [data-testid="stToolbar"],
+    [data-testid="stStatusWidget"] {
+        display: none !important;
+    }
+
+    /* FORCE sidebar visible — override ALL Streamlit collapse states */
+    section[data-testid="stSidebar"],
+    [data-testid="stSidebar"] {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        width: 250px !important;
+        min-width: 240px !important;
+        max-width: 265px !important;
+        transform: none !important;
+        margin-left: 0 !important;
+        left: 0 !important;
+        z-index: 999 !important;
+        position: relative !important;
+        background-color: var(--bg-sidebar) !important;
+        border-right: 1px solid var(--border-card) !important;
+    }
+
+    [data-testid="stSidebar"][aria-expanded="false"],
+    [data-testid="stSidebar"][aria-expanded="true"] {
+        display: flex !important;
+        visibility: visible !important;
+        width: 250px !important;
+        min-width: 240px !important;
+        max-width: 265px !important;
+        transform: none !important;
+        margin-left: 0 !important;
+        left: 0 !important;
+    }
+
+    /* Remove excessive top gap in sidebar content */
+    [data-testid="stSidebarUserContent"],
+    [data-testid="stSidebar"] > div:first-child,
+    [data-testid="stSidebar"] .block-container {
+        padding-top: 0.75rem !important;
+        padding-bottom: 1rem !important;
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
+        width: 100% !important;
+    }
+
+    /* Hide the collapse button since sidebar is locked */
+    [data-testid="stSidebarCollapseButton"],
+    button[data-testid="stSidebarCollapseButton"],
+    [data-testid="stSidebarCollapsedControl"] {
+        display: none !important;
+    }
+
+    /* Maximize main content space utilization with clean edge padding */
+    .main .block-container,
+    [data-testid="stMainBlockContainer"],
+    [data-testid="stAppViewBlockContainer"],
+    .block-container {
+        padding-top: 0.65rem !important;
+        padding-bottom: 1.5rem !important;
+        padding-left: 1.25rem !important;
+        padding-right: 1.25rem !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+    }
+
+    /* Tighten vertical block spacing */
+    [data-testid="stVerticalBlock"] {
+        gap: 0.65rem !important;
+    }
+
+    [data-testid="stSidebar"] * {
+        color: var(--text-primary);
+    }
+
+    .sidebar-brand {
+        padding: 0.25rem 0.25rem 0.85rem;
+        border-bottom: 1px solid var(--border-subtle);
+        margin-bottom: 0.85rem;
+    }
+
+    .sidebar-brand-title {
+        font-size: 0.95rem;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        margin: 0;
+        line-height: 1.2;
+    }
+
+    .sidebar-brand-sub {
+        font-size: 0.72rem;
+        font-weight: 500;
         color: var(--text-muted);
-        font-size: 0.8125rem;
+        letter-spacing: 0.02em;
+        margin-top: 0.2rem;
     }
 
-    @media (max-width: 768px) {
-        .main .block-container {
-            padding-left: 1rem;
-            padding-right: 1rem;
-        }
-        .page-title {
-            font-size: 1.5rem;
-        }
-        .metric-value {
-            font-size: 1.5rem;
-        }
+    .nav-label {
+        font-size: 0.65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-muted);
+        padding: 0 0.25rem;
+        margin: 1rem 0 0.35rem;
     }
 
-    .stAlert {
-        border-radius: var(--radius) !important;
+    /* Custom Navigation Buttons */
+    [data-testid="stSidebar"] .stButton > button {
+        background-color: transparent !important;
+        border: 1px solid transparent !important;
+        color: var(--text-secondary) !important;
+        font-size: 0.82rem !important;
+        font-weight: 500 !important;
+        text-align: left !important;
+        padding: 0.45rem 0.75rem !important;
+        border-radius: 6px !important;
+        transition: all 0.15s ease !important;
+        width: 100% !important;
+        display: flex !important;
+        justify-content: flex-start !important;
+    }
+
+    [data-testid="stSidebar"] .stButton > button:hover {
+        background-color: var(--bg-card) !important;
+        color: var(--text-primary) !important;
+        border-color: var(--border-subtle) !important;
+    }
+
+    [data-testid="stSidebar"] .stButton > button[kind="primary"] {
+        background-color: var(--accent-primary-muted) !important;
+        color: var(--text-primary) !important;
+        border: 1px solid var(--accent-primary) !important;
+        font-weight: 600 !important;
+        box-shadow: 0 0 8px rgba(124, 92, 255, 0.2) !important;
+    }
+
+    /* Sidebar Footer Metadata Card */
+    .sidebar-meta-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-card);
+        border-radius: 8px;
+        padding: 0.75rem;
+        margin-top: 1.5rem;
+        font-size: 0.72rem;
+    }
+
+    .sidebar-meta-title {
+        font-size: 0.62rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 0.15rem;
+    }
+
+    .sidebar-meta-val {
+        color: var(--text-secondary);
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+        line-height: 1.35;
+    }
+
+    .sidebar-meta-val:last-child {
+        margin-bottom: 0;
+    }
+
+    /* Dark Tabs Styling */
+    .stTabs [data-baseweb="tab-list"] {
+        background-color: var(--bg-card);
+        border-radius: 8px;
+        padding: 4px;
+        gap: 4px;
+        border: 1px solid var(--border-card);
+    }
+
+    .stTabs [data-baseweb="tab"] {
+        background-color: transparent !important;
+        border-radius: 6px !important;
+        color: var(--text-secondary) !important;
+        font-size: 0.82rem !important;
+        font-weight: 600 !important;
+        padding: 0.4rem 0.9rem !important;
         border: none !important;
     }
 
-    [data-testid="stNotification"] {
-        border-radius: var(--radius) !important;
+    .stTabs [data-baseweb="tab"]:hover {
+        color: var(--text-primary) !important;
+        background-color: var(--bg-card-hover) !important;
     }
 
-    .stProgress > div > div > div {
-        background: var(--primary) !important;
+    .stTabs [aria-selected="true"] {
+        background-color: var(--accent-primary) !important;
+        color: #ffffff !important;
+        box-shadow: 0 2px 8px rgba(124, 92, 255, 0.4) !important;
+    }
+
+    .stTabs [data-baseweb="tab-highlight"] {
+        display: none !important;
+    }
+
+    /* Dark Input Controls */
+    .stTextInput input, .stTextArea textarea, .stSelectbox > div > div {
+        background-color: var(--bg-input) !important;
+        border: 1px solid var(--border-card) !important;
+        color: var(--text-primary) !important;
+        border-radius: 6px !important;
+    }
+
+    .stTextInput input:focus, .stTextArea textarea:focus, .stSelectbox > div > div:focus-within {
+        border-color: var(--accent-primary) !important;
+        box-shadow: 0 0 0 1px var(--accent-primary) !important;
+    }
+
+    [data-baseweb="tag"] {
+        background-color: var(--accent-primary-muted) !important;
+        border: 1px solid var(--accent-primary) !important;
+        color: var(--text-primary) !important;
+    }
+
+    /* Buttons */
+    .stButton > button {
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-card);
+        color: var(--text-primary);
+        font-weight: 600;
+        border-radius: 6px;
+        padding: 0.45rem 1rem;
+        transition: all 0.15s ease;
+    }
+
+    .stButton > button:hover {
+        background-color: var(--bg-card-hover);
+        border-color: var(--accent-primary);
+        color: #ffffff;
+    }
+
+    .stButton > button[kind="primary"] {
+        background: linear-gradient(135deg, #7C5CFF 0%, #6342E8 100%) !important;
+        border: 1px solid #7C5CFF !important;
+        color: #ffffff !important;
+        box-shadow: 0 2px 8px rgba(124, 92, 255, 0.3) !important;
+    }
+
+    .stButton > button[kind="primary"]:hover {
+        background: linear-gradient(135deg, #9074FF 0%, #7C5CFF 100%) !important;
+        box-shadow: 0 4px 12px rgba(124, 92, 255, 0.45) !important;
+    }
+
+    /* Metric Cards */
+    [data-testid="stMetric"] {
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-card);
+        border-radius: 8px;
+        padding: 0.75rem 0.9rem;
+    }
+
+    [data-testid="stMetricLabel"] {
+        color: var(--text-muted) !important;
+        font-size: 0.7rem !important;
+        font-weight: 700 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.06em !important;
+    }
+
+    [data-testid="stMetricValue"] {
+        color: var(--text-primary) !important;
+        font-size: 1.35rem !important;
+        font-weight: 800 !important;
+    }
+
+    /* Dark Expanders */
+    .streamlit-expanderHeader {
+        background-color: var(--bg-card) !important;
+        border: 1px solid var(--border-card) !important;
+        border-radius: 6px !important;
+        color: var(--text-primary) !important;
+    }
+
+    .streamlit-expanderContent {
+        background-color: var(--bg-app) !important;
+        border: 1px solid var(--border-card) !important;
+        border-top: none !important;
+        border-radius: 0 0 6px 6px !important;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+        width: 5px;
+        height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+        background: var(--bg-app);
+    }
+    ::-webkit-scrollbar-thumb {
+        background: var(--border-card);
+        border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: var(--text-muted);
     }
 </style>
 """
 
-st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
+render_html(DARK_THEME_CSS)
 
 PAGES = {
-    "Overview": overview,
-    "Live Prediction": live_prediction,
-    "Keyword Insights": keyword_insights,
-    "Model Comparison": model_comparison,
+    "Overall Analysis": overview,
+    "Product Intelligence": product_intelligence,
+    "Live Review Intelligence": live_prediction,
+    "Aspect & Keyword Explorer": keyword_insights,
+    "Model Benchmark": model_comparison,
 }
+
 
 def render_sidebar():
     with st.sidebar:
-        st.markdown("""
+        render_html("""
         <div class="sidebar-brand">
-            <h1>
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            <div class="sidebar-brand-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7C5CFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
                 </svg>
-                Sentiment AI
-            </h1>
+                <span>CUSTOMER FEEDBACK</span>
+            </div>
+            <div class="sidebar-brand-sub">AI Review Analytics</div>
         </div>
-        """, unsafe_allow_html=True)
+        """)
 
-        st.markdown('<div class="nav-section">', unsafe_allow_html=True)
-        st.markdown('<div class="nav-section-title">Dashboard</div>', unsafe_allow_html=True)
-        
+        st.markdown('<div class="nav-label">Navigation</div>', unsafe_allow_html=True)
+
         for page_name in PAGES.keys():
             is_active = st.session_state.get("current_page") == page_name
             if st.button(
@@ -535,41 +456,36 @@ def render_sidebar():
                 st.session_state["current_page"] = page_name
                 st.rerun()
 
-        st.markdown('</div>', unsafe_allow_html=True)
-
-        st.markdown('<div class="nav-section">', unsafe_allow_html=True)
-        st.markdown('<div class="nav-section-title">Settings</div>', unsafe_allow_html=True)
-        
-        st.selectbox(
-            "Model",
-            ["Balanced Logistic Regression", "Logistic Regression", "LinearSVC"],
-            key="selected_model",
-            index=0,
-        )
-        
-        st.slider(
-            "Confidence Threshold",
-            0.0, 1.0, 0.5, 0.05,
-            key="confidence_threshold",
-        )
-
-        st.markdown('</div>', unsafe_allow_html=True)
-
-        st.markdown("""
-        <div class="footer">
-            Sentiment Analysis Dashboard v1.0<br>
-            Built with Streamlit & FastAPI
+        render_html("""
+        <div class="sidebar-meta-card">
+            <div class="sidebar-meta-title">DATA</div>
+            <div class="sidebar-meta-val">
+                Amazon Reviews 2023<br>
+                <span style="color:#667085;font-size:0.68rem;">81.7K unique reviews</span>
+            </div>
+            <div class="sidebar-meta-title">MODEL</div>
+            <div class="sidebar-meta-val">TF-IDF + Linear Models</div>
+            <div class="sidebar-meta-title">INFERENCE</div>
+            <div class="sidebar-meta-val" style="color:#22C55E;display:flex;align-items:center;gap:5px;font-weight:700;font-size:0.75rem;">
+                <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#22C55E;"></span>
+                LOCAL
+            </div>
         </div>
-        """, unsafe_allow_html=True)
+        """)
+
 
 def main():
-    if "current_page" not in st.session_state:
-        st.session_state["current_page"] = "Overview"
+    # Backwards compatibility for session state
+    if st.session_state.get("current_page") == "Overview":
+        st.session_state["current_page"] = "Overall Analysis"
+    elif st.session_state.get("current_page") not in PAGES:
+        st.session_state["current_page"] = "Overall Analysis"
 
     render_sidebar()
 
     page_module = PAGES[st.session_state["current_page"]]
     page_module.render()
+
 
 if __name__ == "__main__":
     main()

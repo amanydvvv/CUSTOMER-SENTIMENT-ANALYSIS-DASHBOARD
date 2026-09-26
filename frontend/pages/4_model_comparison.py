@@ -1,331 +1,247 @@
+"""
+4_model_comparison.py
+─────────────────────
+Model Performance & Comparison page.
+Dark-themed, objective benchmark presentation without rankings or gimmicks.
+Uses render_html from frontend.ui_utils to guarantee zero raw HTML leaks.
+"""
+
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
+import json
+import os
+from frontend.ui_utils import render_html
 from frontend.api_client import load_model_metrics
 
-
-MODEL_INFO = {
-    "logistic_regression": {
-        "name": "Logistic Regression",
-        "description": "Standard L2-regularized logistic regression. Fast, interpretable, works well with TF-IDF features.",
-        "pros": ["Fast training & inference", "Probability calibration", "Interpretable coefficients", "Low memory footprint"],
-        "cons": ["May underfit complex patterns", "Sensitive to class imbalance"],
-    },
-    "balanced_logistic_regression": {
-        "name": "Balanced Logistic Regression",
-        "description": "Logistic regression with class_weight='balanced'. Automatically adjusts for class imbalance.",
-        "pros": ["Handles class imbalance", "Better minority class recall", "Same speed as standard LR", "Probability calibration"],
-        "cons": ["Can overfit minority class", "Slightly lower overall accuracy"],
-    },
-    "linearsvc": {
-        "name": "LinearSVC",
-        "description": "Linear Support Vector Classification. Maximizes margin between classes.",
-        "pros": ["Strong generalization", "Effective in high dimensions", "Robust to outliers", "No probability calibration needed"],
-        "cons": ["No native probabilities", "Slower on large datasets", "Sensitive to feature scaling", "Harder to interpret"],
-    },
-}
+MODELS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "backend", "models")
+EVAL_RESULTS_PATH = os.path.join(MODELS_DIR, "evaluation_results.json")
 
 
-def render_metric_card(title: str, value: str, delta: str = None, delta_color: str = "normal"):
-    delta_html = ""
-    if delta:
-        color = "#22c55e" if delta_color == "positive" else "#ef4444" if delta_color == "negative" else "#f59e0b"
-        delta_html = f'<div style="color: {color}; font-size: 0.75rem; font-weight: 500; margin-top: 0.25rem;">{delta}</div>'
-
-    st.markdown(f"""
-    <div class="metric-card">
-        <div class="metric-value">{value}</div>
-        <div class="metric-label">{title}</div>
-        {delta_html}
-    </div>
-    """, unsafe_allow_html=True)
-
-
-def render_model_card(model_key: str, metrics: dict, is_best: bool = False):
-    info = MODEL_INFO.get(model_key, {})
-    best_badge = '<span class="best-badge">Best Overall</span>' if is_best else ''
-
-    st.markdown(f"""
-    <div class="model-card {'best' if is_best else ''}">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
-            <h3 class="model-name">{info.get('name', model_key)}</h3>
-            {best_badge}
-        </div>
-        <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 1rem;">{info.get('description', '')}</p>
-    """, unsafe_allow_html=True)
-
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.metric("Accuracy", f"{metrics.get('accuracy', 0):.4f}")
-    with col2:
-        st.metric("Macro F1", f"{metrics.get('macro_f1', 0):.4f}")
-    with col3:
-        st.metric("Weighted F1", f"{metrics.get('weighted_f1', 0):.4f}")
-    with col4:
-        st.metric("ROC AUC", f"{metrics.get('roc_auc', 0):.4f}")
-
-    st.markdown("---")
-
-    col_pros, col_cons = st.columns(2)
-    with col_pros:
-        st.markdown("**✅ Strengths**")
-        for pro in info.get("pros", []):
-            st.markdown(f"• {pro}")
-    with col_cons:
-        st.markdown("**⚠️ Considerations**")
-        for con in info.get("cons", []):
-            st.markdown(f"• {con}")
-
-    st.markdown("</div>", unsafe_allow_html=True)
+def _load_eval_details():
+    if os.path.exists(EVAL_RESULTS_PATH):
+        try:
+            with open(EVAL_RESULTS_PATH, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return []
 
 
 def render():
-    st.markdown("""
-    <div class="page-header">
-        <h1 class="page-title">Model Comparison</h1>
-        <p class="page-subtitle">Compare performance across all trained sentiment classifiers</p>
+    header_html = """
+    <div style="margin-bottom:1.25rem;border-bottom:1px solid #1E2533;padding-bottom:1rem;">
+        <h1 style="font-size:1.85rem;font-weight:800;color:#F5F7FA;letter-spacing:-0.02em;margin:0 0 0.2rem;line-height:1.2;">
+            MODEL BENCHMARK & EVALUATION
+        </h1>
+        <div style="color:#98A2B3;font-size:0.88rem;margin:0;">
+            Objective empirical evaluation on held-out test split (16,336 Amazon Customer Reviews)
+        </div>
     </div>
-    """, unsafe_allow_html=True)
+    """
+    render_html(header_html)
 
-    with st.spinner("Loading model metrics..."):
-        metrics_data = load_model_metrics()
+    eval_data = _load_eval_details()
+    if not eval_data:
+        metrics_from_api = load_model_metrics()
+        if metrics_from_api:
+            eval_data = metrics_from_api
 
-    if not metrics_data:
-        st.info("Model metrics not available via API. Showing training results from saved models.")
+    if not eval_data:
+        st.error("No model evaluation metrics found. Please verify backend/models/evaluation_results.json.")
+        return
 
-        default_metrics = {
-            "logistic_regression": {
-                "accuracy": 0.8912,
-                "macro_f1": 0.7834,
-                "weighted_f1": 0.8856,
-                "roc_auc": 0.9421,
-                "per_class": {
-                    "positive": {"precision": 0.91, "recall": 0.94, "f1": 0.92},
-                    "negative": {"precision": 0.78, "recall": 0.68, "f1": 0.73},
-                    "neutral": {"precision": 0.65, "recall": 0.52, "f1": 0.58},
-                }
-            },
-            "balanced_logistic_regression": {
-                "accuracy": 0.8875,
-                "macro_f1": 0.8012,
-                "weighted_f1": 0.8821,
-                "roc_auc": 0.9456,
-                "per_class": {
-                    "positive": {"precision": 0.90, "recall": 0.93, "f1": 0.91},
-                    "negative": {"precision": 0.82, "recall": 0.75, "f1": 0.78},
-                    "neutral": {"precision": 0.68, "recall": 0.60, "f1": 0.64},
-                }
-            },
-            "linearsvc": {
-                "accuracy": 0.8945,
-                "macro_f1": 0.7901,
-                "weighted_f1": 0.8892,
-                "roc_auc": 0.9387,
-                "per_class": {
-                    "positive": {"precision": 0.92, "recall": 0.95, "f1": 0.93},
-                    "negative": {"precision": 0.79, "recall": 0.70, "f1": 0.74},
-                    "neutral": {"precision": 0.66, "recall": 0.55, "f1": 0.60},
-                }
-            },
-        }
-        metrics_data = default_metrics
+    # Benchmark Summary Cards
+    col1, col2, col3 = st.columns(3)
+    for i, item in enumerate(eval_data):
+        m_name = {
+            "logistic_regression": "Standard Logistic Regression",
+            "balanced_logistic_regression": "Balanced Logistic Regression",
+            "linearsvc": "Linear Support Vector Classifier"
+        }.get(item["model_name"], item["model_name"])
 
-    st.markdown("### Overall Performance")
+        with [col1, col2, col3][i % 3]:
+            card_html = f"""
+            <div style="background:#11151D;border:1px solid #242A35;border-radius:8px;padding:1rem;margin-bottom:0.75rem;">
+                <div style="font-size:0.72rem;font-weight:700;color:#7C5CFF;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.3rem;">
+                    {m_name}
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-top:0.5rem;">
+                    <div style="background:#151A24;padding:0.5rem;border-radius:4px;border:1px solid #242A35;">
+                        <div style="font-size:0.65rem;color:#98A2B3;text-transform:uppercase;">Accuracy</div>
+                        <div style="font-size:1.15rem;font-weight:800;color:#F5F7FA;">{item['accuracy'] * 100:.2f}%</div>
+                    </div>
+                    <div style="background:#151A24;padding:0.5rem;border-radius:4px;border:1px solid #242A35;">
+                        <div style="font-size:0.65rem;color:#98A2B3;text-transform:uppercase;">Macro F1</div>
+                        <div style="font-size:1.15rem;font-weight:800;color:#22D3EE;">{item.get('macro_f1', item.get('f1', 0.0)):.4f}</div>
+                    </div>
+                    <div style="background:#151A24;padding:0.5rem;border-radius:4px;border:1px solid #242A35;">
+                        <div style="font-size:0.65rem;color:#98A2B3;text-transform:uppercase;">Weighted F1</div>
+                    <div style="background:#151A24;padding:0.5rem;border-radius:4px;border:1px solid #242A35;">
+                        <div style="font-size:0.65rem;color:#98A2B3;text-transform:uppercase;">Macro Recall</div>
+                        <div style="font-size:1.15rem;font-weight:800;color:#22C55E;">{item.get('macro_recall', item.get('recall', 0.0)) * 100:.2f}%</div>
+                    </div>
+                </div>
+            </div>
+            """
+            render_html(card_html)
 
+    # Explanatory Evaluation Protocol Callout
+    render_html("""
+    <div style="background:#11151D;border:1px solid #242A35;border-left:4px solid #7C5CFF;border-radius:6px;padding:0.75rem 1rem;margin:0.5rem 0 0.85rem 0;">
+        <div style="font-size:0.72rem;font-weight:700;color:#7C5CFF;margin-bottom:0.2rem;display:flex;align-items:center;gap:6px;text-transform:uppercase;letter-spacing:0.05em;">
+            <span>⚡</span> <span>Evaluation Protocol: Macro vs. Weighted Metrics</span>
+        </div>
+        <div style="font-size:0.74rem;color:#98A2B3;line-height:1.45;">
+            Due to customer review class imbalance (~70% positive), <b>Macro Recall & Macro Precision</b> evaluate unweighted per-class performance across Positive, Neutral, and Negative categories. 
+            While Standard LR achieves higher raw accuracy by defaulting to positive, <b>Balanced Logistic Regression achieves higher Macro Recall (70.84% vs 61.89%) and Macro F1 (0.6677 vs 0.6253)</b>, accurately detecting customer dissatisfaction.
+        </div>
+    </div>
+    """)
+
+    # Comparison Table
     df_metrics = pd.DataFrame([
         {
-            "Model": MODEL_INFO.get(k, {}).get("name", k),
-            "Accuracy": v.get("accuracy", 0),
-            "Macro F1": v.get("macro_f1", 0),
-            "Weighted F1": v.get("weighted_f1", 0),
-            "ROC AUC": v.get("roc_auc", 0),
+            "Model": {
+                "logistic_regression": "Standard Logistic Regression",
+                "balanced_logistic_regression": "Balanced Logistic Regression",
+                "linearsvc": "LinearSVC"
+            }.get(item["model_name"], item["model_name"]),
+            "Accuracy": f"{item['accuracy'] * 100:.2f}%",
+            "Macro Recall": f"{item.get('macro_recall', item.get('recall', 0.0)) * 100:.2f}%",
+            "Macro Precision": f"{item.get('macro_precision', item.get('precision', 0.0)) * 100:.2f}%",
+            "Macro F1": f"{item.get('macro_f1', item.get('f1', 0.0)):.4f}",
+            "Weighted F1": f"{item.get('weighted_f1', 0.0):.4f}",
+            "Batch Latency": f"{item.get('latency', 0.0):.4f} ms/sample",
         }
-        for k, v in metrics_data.items()
+        for item in eval_data
     ])
 
-    best_model = df_metrics.loc[df_metrics["Macro F1"].idxmax(), "Model"]
-    best_model_key = [k for k, v in MODEL_INFO.items() if v["name"] == best_model][0]
+    render_html("""
+    <div style="background:#11151D;border:1px solid #242A35;border-radius:8px;padding:0.75rem 1rem;margin-top:0.5rem;margin-bottom:0.85rem;">
+        <div style="font-size:0.72rem;font-weight:700;color:#7C5CFF;text-transform:uppercase;letter-spacing:0.08em;">
+            Comparative Metrics Table
+        </div>
+    </div>
+    """)
+    st.dataframe(df_metrics, use_container_width=True, hide_index=True)
 
-    col1, col2, col3, col4 = st.columns(4)
-    for idx, (col, metric) in enumerate(zip([col1, col2, col3, col4], ["Accuracy", "Macro F1", "Weighted F1", "ROC AUC"])):
-        with col:
-            best_val = df_metrics[metric].max()
-            best_idx = df_metrics[metric].idxmax()
-            render_metric_card(
-                metric,
-                f"{best_val:.4f}",
-                f"Best: {df_metrics.loc[best_idx, 'Model']}",
-                "positive"
-            )
+    # Visual Comparison Bar Charts
+    col_f1, col_acc = st.columns(2)
 
-    st.markdown("### Detailed Comparison")
+    df_chart = pd.DataFrame([
+        {
+            "Model": item["model_name"].replace("_", " ").title(),
+            "Accuracy": item["accuracy"],
+            "Macro F1": item.get("macro_f1", item.get("f1", 0.0)),
+            "Weighted F1": item.get("weighted_f1", 0.0)
+        }
+        for item in eval_data
+    ])
 
-    tab1, tab2, tab3 = st.tabs(["📊 Metrics Table", "📈 Visual Comparison", "🔍 Per-Class Analysis"])
-
-    with tab1:
-        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-        st.dataframe(
-            df_metrics.style.format({
-                "Accuracy": "{:.4f}",
-                "Macro F1": "{:.4f}",
-                "Weighted F1": "{:.4f}",
-                "ROC AUC": "{:.4f}",
-            }).highlight_max(subset=["Accuracy", "Macro F1", "Weighted F1", "ROC AUC"], color="#dcfce7"),
-            use_container_width=True,
-            hide_index=True,
-        )
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    with tab2:
-        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-        st.markdown('<h3 class="chart-title">Metric Comparison</h3>', unsafe_allow_html=True)
-
-        df_melted = df_metrics.melt(id_vars="Model", var_name="Metric", value_name="Score")
-
-        fig = px.bar(
-            df_melted,
-            x="Model",
-            y="Score",
-            color="Metric",
-            barmode="group",
-            color_discrete_sequence=["#2563eb", "#22c55e", "#f59e0b", "#8b5cf6"],
-            text="Score",
-        )
-        fig.update_traces(texttemplate="%{text:.3f}", textposition="outside", textfont_size=11)
-        fig.update_layout(
-            yaxis=dict(range=[0, 1.05], gridcolor="#e2e8f0"),
-            xaxis=dict(gridcolor="#e2e8f0"),
-            legend=dict(
-                orientation="h",
-                yanchor="bottom",
-                y=1.02,
-                xanchor="right",
-                x=1,
-            ),
-            margin=dict(t=40, b=40, l=40, r=40),
-            font=dict(family="Inter"),
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(0,0,0,0)",
-        )
-        st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
-
-        st.markdown('<h3 class="chart-title" style="margin-top: 1.5rem;">Radar Chart</h3>', unsafe_allow_html=True)
-
-        fig_radar = go.Figure()
-        metrics_radar = ["Accuracy", "Macro F1", "Weighted F1", "ROC AUC"]
-        colors_radar = ["#2563eb", "#22c55e", "#8b5cf6"]
-
-        for idx, (_, row) in enumerate(df_metrics.iterrows()):
-            values = [row[m] for m in metrics_radar]
-            values.append(values[0])
-            theta = metrics_radar + [metrics_radar[0]]
-
-            fig_radar.add_trace(go.Scatterpolar(
-                r=values,
-                theta=theta,
-                fill='toself',
-                name=row["Model"],
-                line=dict(color=colors_radar[idx], width=2),
-                fillcolor=colors_radar[idx],
-                opacity=0.15,
-            ))
-
-        fig_radar.update_layout(
-            polar=dict(
-                radialaxis=dict(visible=True, range=[0.7, 1], gridcolor="#e2e8f0"),
-                angularaxis=dict(gridcolor="#e2e8f0"),
-            ),
-            showlegend=True,
-            legend=dict(
-                orientation="h",
-                yanchor="bottom",
-                y=-0.15,
-                xanchor="center",
-                x=0.5,
-            ),
-            margin=dict(t=20, b=20, l=20, r=20),
-            font=dict(family="Inter"),
-            paper_bgcolor="rgba(0,0,0,0)",
-        )
-        st.plotly_chart(fig_radar, use_container_width=True, config={"displayModeBar": False})
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    with tab3:
-        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-        st.markdown('<h3 class="chart-title">Per-Class Performance</h3>', unsafe_allow_html=True)
-
-        class_metrics = []
-        for model_key, metrics in metrics_data.items():
-            model_name = MODEL_INFO.get(model_key, {}).get("name", model_key)
-            for class_name, class_metric in metrics.get("per_class", {}).items():
-                class_metrics.append({
-                    "Model": model_name,
-                    "Class": class_name.capitalize(),
-                    "Precision": class_metric.get("precision", 0),
-                    "Recall": class_metric.get("recall", 0),
-                    "F1-Score": class_metric.get("f1", 0),
-                })
-
-        df_class = pd.DataFrame(class_metrics)
-
-        fig_class = px.bar(
-            df_class,
-            x="Class",
-            y="F1-Score",
-            color="Model",
-            barmode="group",
-            color_discrete_sequence=["#2563eb", "#22c55e", "#8b5cf6"],
-            text="F1-Score",
-            facet_col="Model",
-        )
-        fig_class.update_traces(texttemplate="%{text:.2f}", textposition="outside", textfont_size=10)
-        fig_class.update_layout(
-            yaxis=dict(range=[0, 1.05], gridcolor="#e2e8f0"),
-            margin=dict(t=40, b=40, l=40, r=40),
-            font=dict(family="Inter"),
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(0,0,0,0)",
-        )
-        st.plotly_chart(fig_class, use_container_width=True, config={"displayModeBar": False})
-
-        st.markdown("### Precision / Recall / F1 Table")
-        for model_key, metrics in metrics_data.items():
-            model_name = MODEL_INFO.get(model_key, {}).get("name", model_key)
-            with st.expander(f"{model_name} - Per Class Metrics"):
-                df_per_class = pd.DataFrame(metrics.get("per_class", {})).T
-                df_per_class.index.name = "Class"
-                st.dataframe(
-                    df_per_class.style.format("{:.3f}").highlight_max(color="#dcfce7"),
-                    use_container_width=True,
-                )
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    st.markdown("### Model Cards")
-
-    for model_key, metrics in metrics_data.items():
-        is_best = model_key == best_model_key
-        render_model_card(model_key, metrics, is_best)
-
-    with st.expander("📚 Model Selection Guide", expanded=False):
-        st.markdown("""
-        **When to use each model:**
-
-        | Scenario | Recommended Model | Reason |
-        |----------|-------------------|--------|
-        | General purpose, balanced classes | **LinearSVC** | Highest accuracy, strong generalization |
-        | Imbalanced data, need recall on minority | **Balanced Logistic Regression** | Class weighting improves minority class |
-        | Need calibrated probabilities | **Logistic Regression** | Native probability outputs, well-calibrated |
-        | Production, low latency | **Logistic Regression** | Fastest inference, smallest model |
-        | Interpretability required | **Logistic Regression** | Coefficients map to feature importance |
-
-        **Key Metrics Explained:**
-        - **Accuracy**: Overall correct predictions (misleading for imbalanced data)
-        - **Macro F1**: Unweighted mean of per-class F1 (equally weights all classes)
-        - **Weighted F1**: Support-weighted mean (accounts for class imbalance)
-        - **ROC AUC**: Area under ROC curve (threshold-independent ranking quality)
+    with col_f1:
+        render_html("""
+        <div style="background:#11151D;border:1px solid #242A35;border-radius:8px;padding:1rem 1.25rem;">
+            <div style="font-size:0.75rem;font-weight:700;color:#7C5CFF;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.25rem;">
+                Macro F1 Score (Minority Class Balance)
+            </div>
+            <div style="font-size:0.78rem;color:#98A2B3;margin-bottom:0.75rem;">
+                Higher Macro F1 reflects balanced detection across Positive, Neutral, Negative
+            </div>
+        </div>
         """)
 
+        fig_f1 = px.bar(
+            df_chart,
+            x="Model",
+            y="Macro F1",
+            color="Model",
+            text="Macro F1",
+            color_discrete_sequence=["#7C5CFF", "#22D3EE", "#22C55E"]
+        )
+        fig_f1.update_traces(texttemplate="%{text:.4f}", textposition="outside", textfont=dict(color="#F5F7FA"))
+        fig_f1.update_layout(
+            height=250,
+            margin=dict(l=10, r=10, t=10, b=10),
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            yaxis=dict(range=[0, 1.0], showgrid=True, gridcolor="#1E2533", tickfont=dict(color="#98A2B3")),
+            xaxis=dict(tickfont=dict(color="#F5F7FA")),
+            showlegend=False
+        )
+        st.plotly_chart(fig_f1, use_container_width=True, config={"displayModeBar": False})
 
-def render_confusion_matrices(metrics_data: dict):
-    pass
+    with col_acc:
+        render_html("""
+        <div style="background:#11151D;border:1px solid #242A35;border-radius:8px;padding:1rem 1.25rem;">
+            <div style="font-size:0.75rem;font-weight:700;color:#7C5CFF;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.25rem;">
+                Overall Classification Accuracy
+            </div>
+            <div style="font-size:0.78rem;color:#98A2B3;margin-bottom:0.75rem;">
+                Percentage of correct predictions over 16,336 test samples
+            </div>
+        </div>
+        """)
+
+        fig_acc = px.bar(
+            df_chart,
+            x="Model",
+            y="Accuracy",
+            color="Model",
+            text="Accuracy",
+            color_discrete_sequence=["#7C5CFF", "#22D3EE", "#22C55E"]
+        )
+        fig_acc.update_traces(texttemplate="%{text:.2%}", textposition="outside", textfont=dict(color="#F5F7FA"))
+        fig_acc.update_layout(
+            height=250,
+            margin=dict(l=10, r=10, t=10, b=10),
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            yaxis=dict(range=[0, 1.0], showgrid=True, gridcolor="#1E2533", tickfont=dict(color="#98A2B3")),
+            xaxis=dict(tickfont=dict(color="#F5F7FA")),
+            showlegend=False
+        )
+        st.plotly_chart(fig_acc, use_container_width=True, config={"displayModeBar": False})
+
+    # Confusion Matrices
+    render_html("""
+    <div style="background:#11151D;border:1px solid #242A35;border-radius:8px;padding:1.1rem 1.25rem;margin-top:1.25rem;">
+        <div style="font-size:0.75rem;font-weight:700;color:#7C5CFF;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.25rem;">
+            Confusion Matrices on Held-Out Test Set (16,336 Reviews)
+        </div>
+        <div style="font-size:0.78rem;color:#98A2B3;margin-bottom:1rem;">
+            Breakdown of True vs. Predicted classes across all three models
+        </div>
+    </div>
+    """)
+
+    cm_cols = st.columns(len(eval_data))
+    labels = ["Negative", "Neutral", "Positive"]
+
+    for i, item in enumerate(eval_data):
+        with cm_cols[i]:
+            m_name = item["model_name"].replace("_", " ").title()
+            cm = item.get("confusion_matrix", [])
+            if cm:
+                fig_cm = px.imshow(
+                    cm,
+                    labels=dict(x="Predicted", y="True Label", color="Count"),
+                    x=labels,
+                    y=labels,
+                    text_auto=True,
+                    color_continuous_scale=[[0, "#151A24"], [0.5, "#3730A3"], [1, "#7C5CFF"]]
+                )
+                fig_cm.update_layout(
+                    title=f"<b style='color:#F5F7FA;font-size:13px;'>{m_name}</b>",
+                    height=260,
+                    margin=dict(l=10, r=10, t=30, b=10),
+                    paper_bgcolor="rgba(0,0,0,0)",
+                    plot_bgcolor="rgba(0,0,0,0)",
+                    font=dict(color="#F5F7FA"),
+                    coloraxis_showscale=False
+                )
+                st.plotly_chart(fig_cm, use_container_width=True, config={"displayModeBar": False})
+
+
+if __name__ == "__main__":
+    render()

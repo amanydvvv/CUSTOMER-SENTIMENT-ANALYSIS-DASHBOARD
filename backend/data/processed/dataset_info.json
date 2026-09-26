@@ -1,0 +1,68 @@
+{
+  "source": "Amazon Reviews 2023 (All_Beauty.jsonl.gz)",
+  "source_category": "All_Beauty",
+  "original_total_rows": 701528,
+  "sampled_candidate_rows": 89200,
+  "duplicate_clean_text_removed": 3456,
+  "empty_clean_text_removed": 81,
+  "final_usable_rows": 85663,
+  "random_seed": 42,
+  "sampling_method": "Deterministic pseudo-random stratified stream sampling",
+  "labeling_rule": "1.0-2.0 -> negative, 3.0 -> neutral, 4.0-5.0 -> positive",
+  "class_distribution": {
+    "positive": {
+      "count": 60474,
+      "percentage": 70.6
+    },
+    "neutral": {
+      "count": 7022,
+      "percentage": 8.2
+    },
+    "negative": {
+      "count": 18167,
+      "percentage": 21.21
+    }
+  },
+  "rating_distribution": {
+    "1.0": {
+      "count": 12764,
+      "percentage": 14.9
+    },
+    "2.0": {
+      "count": 5403,
+      "percentage": 6.31
+    },
+    "3.0": {
+      "count": 7022,
+      "percentage": 8.2
+    },
+    "4.0": {
+      "count": 9841,
+      "percentage": 11.49
+    },
+    "5.0": {
+      "count": 50633,
+      "percentage": 59.11
+    }
+  },
+  "schema_columns": [
+    "review_id",
+    "text",
+    "title",
+    "rating",
+    "product",
+    "category",
+    "price",
+    "date",
+    "helpful_votes",
+    "verified_purchase",
+    "sentiment",
+    "source",
+    "clean_text"
+  ],
+  "unavailable_fields": [
+    "price"
+  ],
+  "synthetic_data_used": false,
+  "created_at_utc": "2026-09-25T13:54:54.426845+00:00"
+}

@@ -5,6 +5,7 @@ from functools import lru_cache
 
 API_BASE_URL = "http://localhost:8000"
 
+
 class APIClient:
     def __init__(self, base_url: str = API_BASE_URL):
         self.base_url = base_url
@@ -58,6 +59,19 @@ class APIClient:
     def get_model_metrics(self) -> Optional[Dict]:
         return self._request("GET", "/models/metrics")
 
+    # Google Places Live Review API methods
+    def search_places(self, query: str, api_key: Optional[str] = None) -> Optional[Dict]:
+        params = {"query": query}
+        if api_key:
+            params["api_key"] = api_key
+        return self._request("GET", "/places/search", params=params)
+
+    def analyze_place_reviews(self, place_id: str, model: str = "balanced_logistic_regression", api_key: Optional[str] = None) -> Optional[Dict]:
+        params = {"model_name": model}
+        if api_key:
+            params["api_key"] = api_key
+        return self._request("GET", f"/places/{place_id}/analyze", params=params)
+
 
 @st.cache_resource
 def get_api_client() -> APIClient:
@@ -102,3 +116,13 @@ def predict_batch(texts: List[str], model: str) -> Optional[List[Dict]]:
 def load_model_metrics() -> Optional[Dict]:
     client = get_api_client()
     return client.get_model_metrics()
+
+
+def search_google_places(query: str, api_key: Optional[str] = None) -> Optional[Dict]:
+    client = get_api_client()
+    return client.search_places(query, api_key=api_key)
+
+
+def analyze_google_place_reviews(place_id: str, model: str = "balanced_logistic_regression", api_key: Optional[str] = None) -> Optional[Dict]:
+    client = get_api_client()
+    return client.analyze_place_reviews(place_id, model=model, api_key=api_key)

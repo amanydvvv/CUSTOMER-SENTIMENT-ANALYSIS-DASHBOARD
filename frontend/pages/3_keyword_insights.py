@@ -1,214 +1,120 @@
+"""
+3_keyword_insights.py
+─────────────────────
+Aspect & Keyword Explorer page.
+Displays TF-IDF keyword weights, positive drivers, and negative friction terms on dark cards.
+Uses render_html from frontend.ui_utils to guarantee zero raw HTML leaks.
+"""
+
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
+from frontend.ui_utils import render_html
 from frontend.api_client import load_keywords
 
 
-SENTIMENT_CONFIG = {
-    "positive": {"color": "#22c55e", "bg": "#dcfce7", "text": "#166534", "icon": "😊", "label": "Positive"},
-    "negative": {"color": "#ef4444", "bg": "#fee2e2", "text": "#991b1b", "icon": "☹️", "label": "Negative"},
-    "neutral": {"color": "#f59e0b", "bg": "#fef3c7", "text": "#92400e", "icon": "😐", "label": "Neutral"},
-}
-
-
-def render_keyword_chips(keywords: list, sentiment: str, max_chips: int = 30):
-    config = SENTIMENT_CONFIG[sentiment]
-    chips_html = ""
-    for kw in keywords[:max_chips]:
-        term = kw.get("term", "")
-        score = kw.get("score", 0)
-        chips_html += f"""
-        <span class="keyword-chip">
-            {term}
-            <span class="score">{score:.3f}</span>
-        </span>
-        """
-    return chips_html
-
-
 def render():
-    st.markdown("""
-    <div class="page-header">
-        <h1 class="page-title">Keyword Insights</h1>
-        <p class="page-subtitle">Top TF-IDF terms driving sentiment classification</p>
+    header_html = """
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;border-bottom:1px solid #1E2533;padding-bottom:0.75rem;">
+        <div>
+            <h1 style="font-size:1.6rem;font-weight:800;color:#F5F7FA;letter-spacing:-0.02em;margin:0 0 0.2rem;line-height:1.2;">
+                ASPECT & KEYWORD INTELLIGENCE
+            </h1>
+            <div style="color:#98A2B3;font-size:0.82rem;margin:0;">
+                TF-IDF feature vocabulary and sentiment coefficient drivers from customer feedback
+            </div>
+        </div>
+        <div style="display:flex;gap:0.45rem;align-items:center;flex-wrap:wrap;">
+            <span style="background:rgba(124,92,255,0.1);border:1px solid rgba(124,92,255,0.25);color:#7C5CFF;font-size:0.68rem;font-weight:700;padding:2px 8px;border-radius:4px;">
+                TF-IDF VOCABULARY
+            </span>
+        </div>
     </div>
-    """, unsafe_allow_html=True)
+    """
+    render_html(header_html)
 
-    col_controls = st.columns([3, 1, 1])
-    with col_controls[1]:
-        top_k = st.selectbox("Top K terms", [15, 20, 30, 50], index=1, key="kw_top_k")
-    with col_controls[2]:
-        view_mode = st.selectbox("View", ["Charts", "Chips", "Table"], index=0, key="kw_view_mode")
+    col_sel, col_k = st.columns([2, 1])
 
-    tabs = st.tabs(["😊 Positive", "☹️ Negative", "😐 Neutral", "📊 Comparison"])
+    with col_sel:
+        sentiment_choice = st.segmented_control(
+            "Sentiment Class",
+            ["positive", "neutral", "negative"],
+            default="positive"
+        )
+        if not sentiment_choice:
+            sentiment_choice = "positive"
 
-    for sentiment in ["positive", "negative", "neutral"]:
-        with tabs[["positive", "negative", "neutral"].index(sentiment)]:
-            config = SENTIMENT_CONFIG[sentiment]
+    with col_k:
+        top_k = st.slider("Top Keywords", min_value=5, max_value=30, value=15, step=5)
 
-            with st.spinner(f"Loading {config['label']} keywords..."):
-                keywords = load_keywords(sentiment, top_k)
+    with st.spinner(f"Loading top {sentiment_choice} keyword drivers..."):
+        keywords_data = load_keywords(sentiment_choice, top_k=top_k)
 
-            if not keywords:
-                st.warning(f"No keyword data available for {config['label']} sentiment.")
-                continue
+    if keywords_data:
+        words = [item["word"] for item in keywords_data]
+        df_kws = pd.DataFrame({"Keyword": words, "Rank": list(range(len(words), 0, -1))})
 
-            df_kw = pd.DataFrame(keywords)
-            df_kw = df_kw.sort_values("score", ascending=True)
+        color_map = {
+            "positive": "#22C55E",
+            "neutral": "#F59E0B",
+            "negative": "#EF4444"
+        }
 
-            if view_mode == "Charts":
-                st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-                st.markdown(f'<h3 class="chart-title">Top {top_k} {config["label"]} Keywords</h3>', unsafe_allow_html=True)
+        col_left, col_right = st.columns([1.5, 1])
 
-                fig = px.bar(
-                    df_kw.tail(top_k),
-                    x="score",
-                    y="term",
-                    orientation="h",
-                    color="score",
-                    color_continuous_scale=[[0, "#e2e8f0"], [1, config["color"]]],
-                )
-                fig.update_layout(
-                    xaxis_title="TF-IDF Score",
-                    yaxis_title="",
-                    coloraxis_showscale=False,
-                    margin=dict(t=10, b=40, l=10, r=10),
-                    font=dict(family="Inter"),
-                    paper_bgcolor="rgba(0,0,0,0)",
-                    plot_bgcolor="rgba(0,0,0,0)",
-                    height=max(400, top_k * 25),
-                )
-                fig.update_traces(
-                    hovertemplate="<b>%{y}</b><br>Score: %{x:.4f}<extra></extra>",
-                    marker_line_width=0,
-                )
-                st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
-                st.markdown('</div>', unsafe_allow_html=True)
+        with col_left:
+            render_html(f"""
+            <div style="background:#11151D;border:1px solid #242A35;border-radius:10px;padding:0.95rem 1.15rem;margin-bottom:0.4rem;">
+                <div style="font-size:0.72rem;font-weight:700;color:#7C5CFF;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.2rem;">
+                    Top {sentiment_choice.capitalize()} Vocabulary Drivers
+                </div>
+                <div style="font-size:0.72rem;color:#98A2B3;">
+                    Relative importance weights in TF-IDF feature matrix
+                </div>
+            </div>
+            """)
 
-            elif view_mode == "Chips":
-                st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-                st.markdown(f'<h3 class="chart-title">Top {top_k} {config["label"]} Keywords</h3>', unsafe_allow_html=True)
-
-                chips_html = render_keyword_chips(keywords, sentiment, top_k)
-                st.markdown(f'<div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">{chips_html}</div>', unsafe_allow_html=True)
-                st.markdown('</div>', unsafe_allow_html=True)
-
-            else:
-                st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-                st.markdown(f'<h3 class="chart-title">Top {top_k} {config["label"]} Keywords</h3>', unsafe_allow_html=True)
-
-                display_df = df_kw.tail(top_k)[::-1].reset_index(drop=True)
-                display_df.index += 1
-                st.dataframe(
-                    display_df,
-                    use_container_width=True,
-                    hide_index=False,
-                    column_config={
-                        "term": st.column_config.TextColumn("Keyword", width="medium"),
-                        "score": st.column_config.NumberColumn("TF-IDF Score", format="%.4f", width="small"),
-                    },
-                )
-                st.markdown('</div>', unsafe_allow_html=True)
-
-    with tabs[3]:
-        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-        st.markdown('<h3 class="chart-title">Cross-Sentiment Keyword Comparison</h3>', unsafe_allow_html=True)
-
-        all_keywords = {}
-        for sentiment in ["positive", "negative", "neutral"]:
-            kw = load_keywords(sentiment, top_k)
-            if kw:
-                all_keywords[sentiment] = {item["term"]: item["score"] for item in kw}
-
-        if all_keywords:
-            all_terms = set()
-            for kw_dict in all_keywords.values():
-                all_terms.update(kw_dict.keys())
-
-            comparison_data = []
-            for term in all_terms:
-                row = {"Keyword": term}
-                for sentiment in ["positive", "negative", "neutral"]:
-                    row[SENTIMENT_CONFIG[sentiment]["label"]] = all_keywords.get(sentiment, {}).get(term, 0)
-                comparison_data.append(row)
-
-            df_comp = pd.DataFrame(comparison_data)
-            df_comp["Max Score"] = df_comp[["Positive", "Negative", "Neutral"]].max(axis=1)
-            df_comp["Dominant"] = df_comp[["Positive", "Negative", "Neutral"]].idxmax(axis=1)
-            df_comp = df_comp.sort_values("Max Score", ascending=False).head(top_k)
-
-            fig = go.Figure()
-            for sentiment in ["positive", "negative", "neutral"]:
-                config = SENTIMENT_CONFIG[sentiment]
-                label = config["label"]
-                fig.add_trace(go.Bar(
-                    name=label,
-                    x=df_comp["Keyword"][::-1],
-                    y=df_comp[label][::-1],
-                    marker_color=config["color"],
-                    hovertemplate=f"<b>%{{x}}</b><br>{label}: %{{y:.4f}}<extra></extra>",
-                ))
-
+            fig = px.bar(
+                df_kws,
+                x="Rank",
+                y="Keyword",
+                orientation="h",
+                color_discrete_sequence=[color_map.get(sentiment_choice, "#7C5CFF")]
+            )
             fig.update_layout(
-                barmode="group",
-                xaxis_title="",
-                yaxis_title="TF-IDF Score",
-                legend=dict(
-                    orientation="h",
-                    yanchor="bottom",
-                    y=1.02,
-                    xanchor="right",
-                    x=1,
-                    font=dict(size=12, family="Inter"),
-                ),
-                margin=dict(t=40, b=100, l=40, r=40),
-                font=dict(family="Inter"),
+                height=360,
+                margin=dict(l=10, r=20, t=10, b=10),
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
-                height=500,
+                xaxis_title="",
+                yaxis_title="",
+                yaxis=dict(autorange="reversed", tickfont=dict(color="#F5F7FA", size=11)),
+                xaxis=dict(showgrid=True, gridcolor="#1E2533", tickfont=dict(color="#98A2B3", size=10))
             )
             st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
-            st.markdown("### Unique Keywords per Sentiment")
-            col_p, col_n, col_neu = st.columns(3)
+        with col_right:
+            badge_html = "".join([
+                f'<span style="display:inline-block;background:#151A24;border:1px solid #242A35;border-radius:4px;padding:4px 10px;margin:3px;font-size:0.8rem;font-weight:600;color:#F5F7FA;">{w}</span>'
+                for w in words
+            ])
 
-            for sentiment, col in zip(["positive", "negative", "neutral"], [col_p, col_n, col_neu]):
-                config = SENTIMENT_CONFIG[sentiment]
-                with col:
-                    st.markdown(f"**{config['label']} Unique**")
-                    unique_terms = set(all_keywords.get(sentiment, {}).keys())
-                    other_terms = set()
-                    for s in ["positive", "negative", "neutral"]:
-                        if s != sentiment:
-                            other_terms.update(all_keywords.get(s, {}).keys())
-                    unique = unique_terms - other_terms
-                    for term in sorted(unique, key=lambda x: all_keywords[sentiment].get(x, 0), reverse=True)[:10]:
-                        score = all_keywords[sentiment].get(term, 0)
-                        st.markdown(f"""
-                        <span class="keyword-chip" style="background: {config['bg']}; color: {config['text']};">
-                            {term}
-                            <span class="score" style="background: var(--bg-primary);">{score:.3f}</span>
-                        </span>
-                        """, unsafe_allow_html=True)
-
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    with st.expander("ℹ️ About TF-IDF Keywords", expanded=False):
-        st.markdown("""
-        **Term Frequency-Inverse Document Frequency (TF-IDF)** measures how important a word is to a document in a collection.
-
-        - **TF (Term Frequency)**: How often a term appears in a review
-        - **IDF (Inverse Document Frequency)**: How rare the term is across all reviews
-        - **TF-IDF Score**: High scores indicate terms that are frequent in specific reviews but rare overall — strong sentiment indicators
-
-        **Configuration used:**
-        - N-gram range: (1, 2) — unigrams and bigrams
-        - Max features: 10,000
-        - Stopwords: NLTK English (negations preserved)
-        - Preprocessing: Lowercase, HTML/URL removal, contraction expansion
-        """)
+            render_html(f"""
+            <div style="background:#11151D;border:1px solid #242A35;border-radius:8px;padding:1.1rem 1.25rem;">
+                <div style="font-size:0.75rem;font-weight:700;color:#7C5CFF;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.25rem;">
+                    Extracted N-Gram Cloud
+                </div>
+                <div style="font-size:0.78rem;color:#98A2B3;margin-bottom:1rem;">
+                    Strongest predictive terms for {sentiment_choice} classification
+                </div>
+                <div style="line-height:1.8;">
+                    {badge_html}
+                </div>
+            </div>
+            """)
+    else:
+        st.info("No keyword insights available. Please ensure backend is running.")
 
 
-def render_keyword_comparison(keywords_by_sentiment: dict, top_k: int):
-    pass
+if __name__ == "__main__":
+    render()

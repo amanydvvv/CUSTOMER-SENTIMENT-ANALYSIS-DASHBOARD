@@ -1,217 +1,204 @@
+"""
+2_live_prediction.py
+────────────────────
+Manual Review Analyzer & Live Review Intelligence.
+Demonstrates practical ML inference:
+INPUT REVIEW → AI NLP ANALYSIS → ACTIONABLE RESULT
+Uses render_html from frontend.ui_utils to guarantee zero raw HTML leaks.
+"""
+
 import streamlit as st
-import plotly.graph_objects as go
-from frontend.api_client import predict_sentiment, predict_batch
-
-
-SENTIMENT_COLORS = {
-    "positive": {"bg": "#dcfce7", "text": "#166534", "fill": "confidence-positive", "icon": "😊"},
-    "negative": {"bg": "#fee2e2", "text": "#991b1b", "fill": "confidence-negative", "icon": "☹️"},
-    "neutral": {"bg": "#fef3c7", "text": "#92400e", "fill": "confidence-neutral", "icon": "😐"},
-}
-
-EXAMPLE_REVIEWS = {
-    "Positive": "This product exceeded my expectations! The quality is amazing and it works perfectly. Highly recommend to anyone looking for a reliable option.",
-    "Negative": "Terrible product. Stopped working after just two days. Poor build quality and waste of money. Do not buy this.",
-    "Neutral": "It's an okay product. Nothing special but does the job. Average quality for the price point.",
-}
-
-
-def render_confidence_gauge(confidence: float, sentiment: str):
-    color = SENTIMENT_COLORS[sentiment]["text"]
-    fill_class = SENTIMENT_COLORS[sentiment]["fill"]
-
-    fig = go.Figure(go.Indicator(
-        mode="gauge+number",
-        value=confidence * 100,
-        domain={"x": [0, 1], "y": [0, 1]},
-        title={"text": "Confidence", "font": {"size": 16, "family": "Inter", "color": "#475569"}},
-        number={"font": {"size": 32, "family": "Inter", "color": color}, "suffix": "%"},
-        gauge={
-            "axis": {"range": [0, 100], "tickwidth": 1, "tickcolor": "#e2e8f0"},
-            "bar": {"color": color, "thickness": 0.3},
-            "bgcolor": "#f1f5f9",
-            "borderwidth": 2,
-            "bordercolor": "#e2e8f0",
-            "steps": [
-                {"range": [0, 50], "color": "#fef3c7"},
-                {"range": [50, 75], "color": "#dbeafe"},
-                {"range": [75, 100], "color": "#dcfce7"},
-            ],
-            "threshold": {
-                "line": {"color": color, "width": 3},
-                "thickness": 0.8,
-                "value": confidence * 100,
-            },
-        },
-    ))
-    fig.update_layout(
-        height=200,
-        margin=dict(t=30, b=10, l=10, r=10),
-        font={"family": "Inter"},
-        paper_bgcolor="rgba(0,0,0,0)",
-    )
-    return fig
+import pandas as pd
+from frontend.ui_utils import render_html
+from frontend.api_client import get_api_client
+from frontend.components.aspect_analyzer import extract_aspects_and_issues
 
 
 def render():
-    st.markdown("""
-    <div class="page-header">
-        <h1 class="page-title">Live Prediction</h1>
-        <p class="page-subtitle">Analyze sentiment in real-time with multiple model options</p>
+    header_html = """
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;border-bottom:1px solid #1E2533;padding-bottom:0.75rem;">
+        <div>
+            <h1 style="font-size:1.6rem;font-weight:800;color:#F5F7FA;letter-spacing:-0.02em;margin:0 0 0.2rem;line-height:1.2;">
+                ANALYZE A NEW CUSTOMER REVIEW
+            </h1>
+            <div style="color:#98A2B3;font-size:0.82rem;margin:0;">
+                Real-time inference pipeline: Sentiment Classification → Aspect Extraction → Priority → Action
+            </div>
+        </div>
+        <div style="display:flex;gap:0.45rem;align-items:center;flex-wrap:wrap;">
+            <span style="background:rgba(124,92,255,0.1);border:1px solid rgba(124,92,255,0.25);color:#7C5CFF;font-size:0.68rem;font-weight:700;padding:2px 8px;border-radius:4px;">
+                INFERENCE TESTER
+            </span>
+        </div>
     </div>
-    """, unsafe_allow_html=True)
+    """
+    render_html(header_html)
 
-    col_input, col_output = st.columns([1, 1], gap="large")
+    client = get_api_client()
 
-    with col_input:
-        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-        st.markdown('<h3 class="chart-title">Input Text</h3>', unsafe_allow_html=True)
+    tab_single, tab_batch = st.tabs(["Single Review Analyzer", "Batch Review Tester"])
 
-        model = st.session_state.get("selected_model", "Balanced Logistic Regression")
-        model_key = model.lower().replace(" ", "_")
+    with tab_single:
+        col_input, col_meta = st.columns([2, 1])
 
-        text = st.text_area(
-            "Enter review text",
-            height=200,
-            placeholder="Type or paste a product review here...\n\nExample: \"This product is amazing! Great quality and fast delivery.\"",
-            label_visibility="collapsed",
-        )
+        with col_input:
+            review_text = st.text_area(
+                "Customer Review Text",
+                placeholder="Paste or type a customer review here...\ne.g. 'The cream arrived with a broken pump and leaked all over the box, but it works well on my skin.'",
+                height=130,
+                key="live_text_input"
+            )
 
-        col_ex1, col_ex2, col_ex3 = st.columns(3)
-        with col_ex1:
-            if st.button("😊 Positive", use_container_width=True):
-                st.session_state["prediction_text"] = EXAMPLE_REVIEWS["Positive"]
-                st.rerun()
-        with col_ex2:
-            if st.button("😐 Neutral", use_container_width=True):
-                st.session_state["prediction_text"] = EXAMPLE_REVIEWS["Neutral"]
-                st.rerun()
-        with col_ex3:
-            if st.button("☹️ Negative", use_container_width=True):
-                st.session_state["prediction_text"] = EXAMPLE_REVIEWS["Negative"]
-                st.rerun()
+        with col_meta:
+            model_choice = st.selectbox(
+                "Inference Model",
+                ["balanced_logistic_regression", "logistic_regression", "linearsvc"],
+                index=0,
+                format_func=lambda x: {
+                    "balanced_logistic_regression": "Balanced Logistic Regression (Recommended)",
+                    "logistic_regression": "Standard Logistic Regression",
+                    "linearsvc": "LinearSVC (High Accuracy)"
+                }.get(x, x),
+                key="live_model_select"
+            )
 
-        if "prediction_text" in st.session_state:
-            text = st.session_state.pop("prediction_text")
+            product_asin = st.text_input("Product ASIN (Optional)", placeholder="e.g. B00YQ6X8EO", key="live_asin_input")
+            input_rating = st.select_slider("Customer Star Rating (Optional for Mismatch Check)", options=[1, 2, 3, 4, 5], value=5)
 
-        analyze_btn = st.button("🔍 Analyze Sentiment", type="primary", use_container_width=True)
+        if st.button("ANALYZE REVIEW", type="primary", use_container_width=True):
+            if not review_text.strip():
+                st.warning("Please enter review text to analyze.")
+                return
 
-        st.markdown('</div>', unsafe_allow_html=True)
+            with st.spinner("Running ML inference & aspect extraction..."):
+                response = client.predict(review_text, model=model_choice)
 
-        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-        st.markdown('<h3 class="chart-title">Batch Analysis</h3>', unsafe_allow_html=True)
+            if response:
+                sentiment = response.get("sentiment", "neutral").upper()
+                confidence = response.get("confidence")
+                model_used = response.get("model_used", model_choice)
 
-        batch_text = st.text_area(
-            "Multiple reviews (one per line)",
-            height=120,
-            placeholder="Review 1\nReview 2\nReview 3",
-            label_visibility="collapsed",
-        )
+                intel = extract_aspects_and_issues(review_text, sentiment=sentiment, rating=input_rating)
 
-        batch_btn = st.button("📊 Analyze Batch", use_container_width=True)
-
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    with col_output:
-        if analyze_btn and text.strip():
-            with st.spinner("Analyzing sentiment..."):
-                result = predict_sentiment(text.strip(), model_key)
-
-            if result:
-                sentiment = result.get("sentiment", "neutral")
-                confidence = result.get("confidence", 0.0)
-                probabilities = result.get("probabilities", {})
-
-                colors = SENTIMENT_COLORS[sentiment]
-
-                st.markdown(f"""
-                <div class="prediction-card">
-                    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
-                        <span style="font-size: 2.5rem;">{colors['icon']}</span>
-                        <div>
-                            <div class="sentiment-badge" style="background: {colors['bg']}; color: {colors['text']};">
-                                {sentiment.capitalize()}
-                            </div>
-                            <div style="font-size: 0.875rem; color: var(--text-secondary); margin-top: 0.25rem;">
-                                Model: {model}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-
-                st.plotly_chart(
-                    render_confidence_gauge(confidence, sentiment),
-                    use_container_width=True,
-                    config={"displayModeBar": False},
+                is_mismatch = (
+                    (input_rating >= 4 and sentiment == "NEGATIVE") or
+                    (input_rating <= 2 and sentiment == "POSITIVE")
                 )
 
-                st.markdown("### Class Probabilities")
-                for label, prob in probabilities.items():
-                    pct = prob * 100
-                    label_colors = SENTIMENT_COLORS.get(label, SENTIMENT_COLORS["neutral"])
-                    st.markdown(f"""
-                    <div style="margin-bottom: 0.75rem;">
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
-                            <span class="sentiment-badge" style="background: {label_colors['bg']}; color: {label_colors['text']}; font-size: 0.75rem;">{label.capitalize()}</span>
-                            <span style="font-weight: 600; color: var(--text-primary);">{pct:.1f}%</span>
+                if sentiment == "POSITIVE":
+                    c_badge_bg = "rgba(34, 197, 94, 0.15)"
+                    c_badge_text = "#22C55E"
+                    c_badge_bdr = "rgba(34, 197, 94, 0.35)"
+                elif sentiment == "NEGATIVE":
+                    c_badge_bg = "rgba(239, 68, 68, 0.15)"
+                    c_badge_text = "#EF4444"
+                    c_badge_bdr = "rgba(239, 68, 68, 0.35)"
+                else:
+                    c_badge_bg = "rgba(245, 158, 11, 0.15)"
+                    c_badge_text = "#F59E0B"
+                    c_badge_bdr = "rgba(245, 158, 11, 0.35)"
+
+                p_color = {
+                    "HIGH": "#EF4444",
+                    "MEDIUM": "#F59E0B",
+                    "LOW": "#22C55E"
+                }.get(intel["priority"], "#98A2B3")
+
+                conf_str = f"{confidence * 100:.1f}%" if confidence is not None else "N/A (LinearSVC non-probabilistic)"
+
+                mismatch_banner = ""
+                if is_mismatch:
+                    mismatch_banner = f"""
+                    <div style="background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);border-radius:6px;padding:0.6rem 0.85rem;margin-bottom:0.85rem;color:#EF4444;font-size:0.8rem;font-weight:600;">
+                        Rating–Sentiment Mismatch: Selected rating is {input_rating}★, but ML classified text as {sentiment}.
+                    </div>
+                    """
+
+                result_card = f"""
+                <div style="background:#11151D;border:1px solid #242A35;border-radius:10px;padding:1.15rem;margin-top:1.15rem;">
+                    {mismatch_banner}
+                    <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #1E2533;padding-bottom:0.65rem;margin-bottom:0.85rem;">
+                        <div style="display:flex;align-items:center;gap:0.65rem;">
+                            <span style="font-size:0.72rem;color:#98A2B3;font-weight:700;text-transform:uppercase;">SENTIMENT</span>
+                            <span style="background:{c_badge_bg};color:{c_badge_text};border:1px solid {c_badge_bdr};padding:2px 10px;border-radius:4px;font-size:0.82rem;font-weight:800;letter-spacing:0.06em;">
+                                {sentiment}
+                            </span>
+                            <span style="color:#667085;font-size:0.72rem;">via <code>{model_used}</code></span>
                         </div>
-                        <div class="confidence-bar">
-                            <div class="confidence-fill {label_colors['fill']}" style="width: {pct}%"></div>
+                        <div style="font-size:0.75rem;color:#98A2B3;">
+                            CONFIDENCE: <b style="color:#F5F7FA;">{conf_str}</b>
                         </div>
                     </div>
-                    """, unsafe_allow_html=True)
 
-        elif analyze_btn and not text.strip():
-            st.warning("Please enter some text to analyze.")
+                    <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:0.65rem;margin-bottom:0.85rem;">
+                        <div style="background:#151A24;border:1px solid #242A35;border-radius:6px;padding:0.75rem;">
+                            <div style="font-size:0.65rem;color:#98A2B3;font-weight:700;text-transform:uppercase;">ASPECT</div>
+                            <div style="font-size:1rem;font-weight:800;color:#F5F7FA;margin-top:2px;">{intel['primary_aspect']}</div>
+                        </div>
 
-        if batch_btn and batch_text.strip():
-            reviews = [r.strip() for r in batch_text.strip().split("\n") if r.strip()]
-            with st.spinner(f"Analyzing {len(reviews)} reviews..."):
-                results = predict_batch(reviews, model_key)
+                        <div style="background:#151A24;border:1px solid #242A35;border-radius:6px;padding:0.75rem;">
+                            <div style="font-size:0.65rem;color:#98A2B3;font-weight:700;text-transform:uppercase;">PAIN POINT / ISSUE</div>
+                            <div style="font-size:1rem;font-weight:800;color:#F5F7FA;margin-top:2px;">{intel['issue']}</div>
+                        </div>
+
+                        <div style="background:#151A24;border:1px solid #242A35;border-radius:6px;padding:0.75rem;">
+                            <div style="font-size:0.65rem;color:#98A2B3;font-weight:700;text-transform:uppercase;">PRIORITY</div>
+                            <div style="font-size:1rem;font-weight:800;color:{p_color};margin-top:2px;">{intel['priority']}</div>
+                        </div>
+                    </div>
+
+                    <div style="background:#151A24;border-left:3px solid #7C5CFF;border-radius:0 6px 6px 0;padding:0.65rem 0.85rem;">
+                        <div style="font-size:0.68rem;font-weight:700;color:#7C5CFF;text-transform:uppercase;margin-bottom:2px;">SUGGESTED ACTION</div>
+                        <div style="color:#F5F7FA;font-size:0.82rem;line-height:1.4;">{intel['suggested_action']}</div>
+                    </div>
+                </div>
+                """
+                render_html(result_card)
+
+    with tab_batch:
+        render_html("""
+        <div style="font-size:0.85rem;color:#98A2B3;margin-bottom:0.75rem;">
+            Paste multiple customer reviews (one per line) to run batch inference.
+        </div>
+        """)
+
+        batch_input = st.text_area(
+            "Batch Review Lines",
+            value="Great moisturizer, leaves skin soft and hydrated all day!\nArrived damaged and leaking inside the box, very disappointed.\nAverage product, nothing special for the price.",
+            height=110,
+            key="batch_text_input"
+        )
+
+        batch_model = st.selectbox(
+            "Batch Model",
+            ["balanced_logistic_regression", "logistic_regression", "linearsvc"],
+            key="batch_model_select"
+        )
+
+        if st.button("Run Batch Analysis", type="primary"):
+            lines = [line.strip() for line in batch_input.split("\n") if line.strip()]
+            if not lines:
+                st.warning("Please provide at least one non-empty review line.")
+                return
+
+            with st.spinner(f"Analyzing {len(lines)} reviews in batch..."):
+                results = client.predict_batch(lines, model=batch_model)
 
             if results:
-                st.markdown(f"### Batch Results ({len(results)} reviews)")
+                st.success(f"Processed {len(results)} reviews successfully.")
+                df_res = pd.DataFrame(results)
 
-                sentiment_counts = {"positive": 0, "negative": 0, "neutral": 0}
-                for r in results:
-                    sentiment_counts[r.get("sentiment", "neutral")] += 1
+                counts = df_res["sentiment"].value_counts()
+                c1, c2, c3 = st.columns(3)
+                c1.metric("Positive", counts.get("positive", 0))
+                c2.metric("Neutral", counts.get("neutral", 0))
+                c3.metric("Negative", counts.get("negative", 0))
 
-                col_p, col_n, col_neu = st.columns(3)
-                with col_p:
-                    st.metric("Positive", sentiment_counts["positive"])
-                with col_n:
-                    st.metric("Negative", sentiment_counts["negative"])
-                with col_neu:
-                    st.metric("Neutral", sentiment_counts["neutral"])
-
-                for i, (review, result) in enumerate(zip(reviews, results)):
-                    sentiment = result.get("sentiment", "neutral")
-                    confidence = result.get("confidence", 0.0)
-                    colors = SENTIMENT_COLORS[sentiment]
-
-                    with st.expander(f"Review {i+1}: {sentiment.capitalize()} ({confidence:.0%})"):
-                        st.write(review[:200] + ("..." if len(review) > 200 else ""))
-                        st.markdown(f"""
-                        <div class="sentiment-badge" style="background: {colors['bg']}; color: {colors['text']};">
-                            {sentiment.capitalize()} • {confidence:.0%} confidence
-                        </div>
-                        """, unsafe_allow_html=True)
-
-        elif batch_btn and not batch_text.strip():
-            st.warning("Please enter at least one review for batch analysis.")
-
-        if not analyze_btn and not batch_btn:
-            st.markdown("""
-            <div class="chart-container" style="text-align: center; padding: 3rem 1.5rem;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color: var(--text-muted); margin-bottom: 1rem;">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                </svg>
-                <h3 style="color: var(--text-secondary); margin: 0 0 0.5rem;">Ready to Analyze</h3>
-                <p style="color: var(--text-muted); margin: 0;">Enter a review on the left and click <strong>Analyze Sentiment</strong> to get started.</p>
-            </div>
-            """, unsafe_allow_html=True)
+                st.dataframe(
+                    df_res[["text", "sentiment", "confidence", "model_used"]],
+                    use_container_width=True
+                )
 
 
-def render_batch_results(results: list):
-    pass
+if __name__ == "__main__":
+    render()

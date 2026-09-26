@@ -1,9 +1,14 @@
 __pycache__/
 *.py[cod]
 *.pyo
-.env
 venv/
 .venv/
+
+# Environment variable files (never commit real keys)
+# Keep .env.example — it contains only placeholders
+.env
+.env.local
+.env.production
 
 # Models (large binary artifacts)
 backend/models/*.joblib
@@ -11,12 +16,16 @@ backend/models/*.joblib
 # Database
 backend/data/processed/app.db
 
+# Raw data downloads
+backend/data/raw/
+
 # pytest
 .pytest_cache/
 *.log
 
-# Streamlit
+# Streamlit secrets (keep *.example files — they are safe placeholders)
 frontend/.streamlit/secrets.toml
+.streamlit/secrets.toml
 
 # IDE
 .vscode/

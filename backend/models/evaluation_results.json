@@ -1,0 +1,107 @@
+[
+  {
+    "model_name": "logistic_regression",
+    "accuracy": 0.850208,
+    "precision": 0.681506,
+    "recall": 0.618935,
+    "macro_precision": 0.681506,
+    "macro_recall": 0.618935,
+    "macro_f1": 0.625347,
+    "weighted_precision": 0.82052,
+    "weighted_recall": 0.850208,
+    "weighted_f1": 0.828218,
+    "latency": 0.000122,
+    "confusion_matrix": [
+      [
+        2774,
+        116,
+        644
+      ],
+      [
+        471,
+        155,
+        749
+      ],
+      [
+        332,
+        135,
+        10960
+      ]
+    ],
+    "labels": [
+      "negative",
+      "neutral",
+      "positive"
+    ]
+  },
+  {
+    "model_name": "balanced_logistic_regression",
+    "accuracy": 0.797013,
+    "precision": 0.655658,
+    "recall": 0.708412,
+    "macro_precision": 0.655658,
+    "macro_recall": 0.708412,
+    "macro_f1": 0.667689,
+    "weighted_precision": 0.850487,
+    "weighted_recall": 0.797013,
+    "weighted_f1": 0.817931,
+    "latency": 0.000186,
+    "confusion_matrix": [
+      [
+        2674,
+        673,
+        187
+      ],
+      [
+        383,
+        724,
+        268
+      ],
+      [
+        572,
+        1233,
+        9622
+      ]
+    ],
+    "labels": [
+      "negative",
+      "neutral",
+      "positive"
+    ]
+  },
+  {
+    "model_name": "linearsvc",
+    "accuracy": 0.846658,
+    "precision": 0.671175,
+    "recall": 0.624772,
+    "macro_precision": 0.671175,
+    "macro_recall": 0.624772,
+    "macro_f1": 0.631085,
+    "weighted_precision": 0.819976,
+    "weighted_recall": 0.846658,
+    "weighted_f1": 0.828486,
+    "latency": 0.000122,
+    "confusion_matrix": [
+      [
+        2775,
+        162,
+        597
+      ],
+      [
+        496,
+        190,
+        689
+      ],
+      [
+        386,
+        175,
+        10866
+      ]
+    ],
+    "labels": [
+      "negative",
+      "neutral",
+      "positive"
+    ]
+  }
+]
