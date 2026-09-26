@@ -1,17 +1,13 @@
-"""
-2_live_prediction.py
-────────────────────
-Manual Review Analyzer & Live Review Intelligence.
-Demonstrates practical ML inference:
-INPUT REVIEW → AI NLP ANALYSIS → ACTIONABLE RESULT
-Uses render_html from frontend.ui_utils to guarantee zero raw HTML leaks.
-"""
-
 import streamlit as st
 import pandas as pd
+import os
+import io
 from frontend.ui_utils import render_html
 from frontend.api_client import get_api_client
 from frontend.components.aspect_analyzer import extract_aspects_and_issues
+from backend.app.ml.keywords import explain_text
+
+MODELS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "backend", "models")
 
 
 def render():
@@ -22,7 +18,7 @@ def render():
                 ANALYZE A NEW CUSTOMER REVIEW
             </h1>
             <div style="color:#98A2B3;font-size:0.82rem;margin:0;">
-                Real-time inference pipeline: Sentiment Classification → Aspect Extraction → Priority → Action
+                Real-time inference pipeline: Sentiment Classification → Aspect Extraction → Priority → Explainability
             </div>
         </div>
         <div style="display:flex;gap:0.45rem;align-items:center;flex-wrap:wrap;">
@@ -72,6 +68,7 @@ def render():
 
             with st.spinner("Running ML inference & aspect extraction..."):
                 response = client.predict(review_text, model=model_choice)
+                explanation = explain_text(review_text, MODELS_DIR, model_name=model_choice)
 
             if response:
                 sentiment = response.get("sentiment", "neutral").upper()
@@ -114,6 +111,10 @@ def render():
                     </div>
                     """
 
+                # Positive & negative tokens chips
+                pos_chips = "".join([f'<span style="background:rgba(34,197,94,0.12);color:#22C55E;border:1px solid rgba(34,197,94,0.3);padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:600;margin-right:4px;">{w} (+{s:.2f})</span>' for w, s in explanation.get("top_positive", [])]) or '<span style="color:#667085;font-size:0.75rem;">None detected</span>'
+                neg_chips = "".join([f'<span style="background:rgba(239,68,68,0.12);color:#EF4444;border:1px solid rgba(239,68,68,0.3);padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:600;margin-right:4px;">{w} (-{s:.2f})</span>' for w, s in explanation.get("top_negative", [])]) or '<span style="color:#667085;font-size:0.75rem;">None detected</span>'
+
                 result_card = f"""
                 <div style="background:#11151D;border:1px solid #242A35;border-radius:10px;padding:1.15rem;margin-top:1.15rem;">
                     {mismatch_banner}
@@ -147,9 +148,27 @@ def render():
                         </div>
                     </div>
 
-                    <div style="background:#151A24;border-left:3px solid #7C5CFF;border-radius:0 6px 6px 0;padding:0.65rem 0.85rem;">
+                    <div style="background:#151A24;border-left:3px solid #7C5CFF;border-radius:0 6px 6px 0;padding:0.65rem 0.85rem;margin-bottom:0.85rem;">
                         <div style="font-size:0.68rem;font-weight:700;color:#7C5CFF;text-transform:uppercase;margin-bottom:2px;">SUGGESTED ACTION</div>
                         <div style="color:#F5F7FA;font-size:0.82rem;line-height:1.4;">{intel['suggested_action']}</div>
+                    </div>
+
+                    <!-- Explainability Block -->
+                    <div style="background:#151A24;border:1px solid #242A35;border-radius:6px;padding:0.75rem 0.85rem;">
+                        <div style="font-size:0.68rem;font-weight:700;color:#22D3EE;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.4rem;display:flex;align-items:center;gap:5px;">
+                            <span>🔍</span> <span>MODEL EXPLAINABILITY (TF-IDF WEIGHT ATTRIBUTION)</span>
+                        </div>
+                        <div style="font-size:0.86rem;line-height:1.6;color:#F5F7FA;background:#0D1017;border:1px solid #1E2533;border-radius:6px;padding:0.65rem 0.85rem;margin-bottom:0.65rem;">
+                            {explanation.get("highlighted_html", review_text)}
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;font-size:0.74rem;">
+                            <div>
+                                <span style="color:#98A2B3;font-weight:700;">Positive Drivers:</span> {pos_chips}
+                            </div>
+                            <div>
+                                <span style="color:#98A2B3;font-weight:700;">Negative Drivers:</span> {neg_chips}
+                            </div>
+                        </div>
                     </div>
                 </div>
                 """
@@ -158,16 +177,11 @@ def render():
     with tab_batch:
         render_html("""
         <div style="font-size:0.85rem;color:#98A2B3;margin-bottom:0.75rem;">
-            Paste multiple customer reviews (one per line) to run batch inference.
+            Run batch inference on multiple reviews via text pasting or CSV file upload.
         </div>
         """)
 
-        batch_input = st.text_area(
-            "Batch Review Lines",
-            value="Great moisturizer, leaves skin soft and hydrated all day!\nArrived damaged and leaking inside the box, very disappointed.\nAverage product, nothing special for the price.",
-            height=110,
-            key="batch_text_input"
-        )
+        batch_mode = st.radio("Input Method", ["Paste Text Lines", "Upload CSV File"], horizontal=True)
 
         batch_model = st.selectbox(
             "Batch Model",
@@ -175,14 +189,35 @@ def render():
             key="batch_model_select"
         )
 
-        if st.button("Run Batch Analysis", type="primary"):
-            lines = [line.strip() for line in batch_input.split("\n") if line.strip()]
-            if not lines:
-                st.warning("Please provide at least one non-empty review line.")
+        lines_to_process = []
+
+        if batch_mode == "Paste Text Lines":
+            batch_input = st.text_area(
+                "Batch Review Lines (one review per line)",
+                value="Great moisturizer, leaves skin soft and hydrated all day!\nArrived damaged and leaking inside the box, very disappointed.\nAverage product, nothing special for the price.",
+                height=110,
+                key="batch_text_input"
+            )
+            lines_to_process = [l.strip() for l in batch_input.split("\n") if l.strip()]
+
+        else:
+            uploaded_file = st.file_uploader("Upload CSV containing reviews", type=["csv"], key="batch_csv_upload")
+            if uploaded_file:
+                try:
+                    user_df = pd.read_csv(uploaded_file)
+                    st.write(f"Uploaded CSV with {len(user_df)} rows. Columns: {list(user_df.columns)}")
+                    text_col = st.selectbox("Select Text/Review Column", options=list(user_df.columns), index=0)
+                    lines_to_process = user_df[text_col].dropna().astype(str).tolist()
+                except Exception as e:
+                    st.error(f"Error reading CSV: {e}")
+
+        if st.button("RUN BATCH ANALYSIS", type="primary", use_container_width=True):
+            if not lines_to_process:
+                st.warning("Please provide review text or upload a valid CSV.")
                 return
 
-            with st.spinner(f"Analyzing {len(lines)} reviews in batch..."):
-                results = client.predict_batch(lines, model=batch_model)
+            with st.spinner(f"Analyzing {len(lines_to_process)} reviews in batch..."):
+                results = client.predict_batch(lines_to_process, model=batch_model)
 
             if results:
                 st.success(f"Processed {len(results)} reviews successfully.")
@@ -196,6 +231,16 @@ def render():
 
                 st.dataframe(
                     df_res[["text", "sentiment", "confidence", "model_used"]],
+                    use_container_width=True
+                )
+
+                # Download Button
+                csv_data = df_res.to_csv(index=False).encode("utf-8")
+                st.download_button(
+                    label="📥 Download Scored Batch CSV",
+                    data=csv_data,
+                    file_name="sentiment_batch_results.csv",
+                    mime="text/csv",
                     use_container_width=True
                 )
 

@@ -311,16 +311,29 @@ def render():
     """)
 
     # ── 3. PRODUCT FEEDBACK SUMMARY ─────────────────────────────────────────────
+    export_cols = [c for c in ["product", "rating", "sentiment", "verified_purchase", "title", "text"] if c in product_df.columns]
+    csv_bytes = product_df[export_cols].to_csv(index=False).encode("utf-8")
+
     render_html(f"""
-    <div style="background:#11151D;border:1px solid #242A35;border-radius:8px;padding:0.85rem 1.1rem;margin-bottom:1.15rem;">
-        <div style="font-size:0.65rem;font-weight:700;color:#98A2B3;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.25rem;">
-            PRODUCT FEEDBACK SUMMARY
+    <div style="background:#11151D;border:1px solid #242A35;border-radius:8px;padding:0.85rem 1.1rem;margin-bottom:0.65rem;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.25rem;">
+            <div style="font-size:0.65rem;font-weight:700;color:#98A2B3;text-transform:uppercase;letter-spacing:0.08em;">
+                PRODUCT FEEDBACK SUMMARY
+            </div>
         </div>
         <div style="font-size:0.84rem;color:#F5F7FA;line-height:1.5;">
             {summary_narrative}
         </div>
     </div>
     """)
+
+    st.download_button(
+        label=f"📥 Download Product Sentiment Audit CSV ({selected_asin})",
+        data=csv_bytes,
+        file_name=f"product_audit_{selected_asin}.csv",
+        mime="text/csv",
+        use_container_width=True
+    )
 
     # ── 4. CUSTOMER SENTIMENT & TOP CUSTOMER CONCERNS (SIDE-BY-SIDE) ────────────
     render_html("""
