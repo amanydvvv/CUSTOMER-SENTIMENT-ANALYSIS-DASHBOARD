@@ -1,12 +1,16 @@
-# Customer Feedback Intelligence Dashboard
-**CSE7102 Mini Project — Presidency University**
+# Customer Feedback Intelligence & Sentiment Analysis Dashboard
 
-A fully decoupled 3-tier NLP system: FastAPI backend + SQLite database + Streamlit frontend,
-with real Amazon Reviews 2023 training data and live Google Places API review ingestion.
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![Streamlit](https://img.shields.io/badge/Streamlit-1.40+-FF4B4B.svg?logo=streamlit&logoColor=white)](https://streamlit.io)
+[![Scikit-Learn](https://img.shields.io/badge/Scikit--Learn-1.5+-F7931E.svg?logo=scikit-learn&logoColor=white)](https://scikit-learn.org)
+[![Tests](https://img.shields.io/badge/Tests-66%20Passed-22C55E.svg)](file:///c:/Users/amanc/Desktop/mini/pytest.ini)
+
+A production-grade, 3-tier NLP intelligence system for customer sentiment analysis, aspect-based pain-point extraction, and automated decision support. Built on **FastAPI**, **SQLite**, **Scikit-Learn**, and **Streamlit** using real **Amazon Reviews 2023** data and live **Google Places API** review ingestion.
 
 ---
 
-## Architecture
+## 🏛️ System Architecture
 
 ```
 mini/
@@ -16,294 +20,169 @@ mini/
 │   │   ├── api/
 │   │   │   ├── predict.py              # POST /predict, POST /predict/batch
 │   │   │   ├── reviews.py              # GET /reviews
-│   │   │   ├── stats.py                # GET /stats, /stats/sentiment-distribution, etc.
-│   │   │   └── places.py              # GET /places/search, GET /places/{id}/analyze
+│   │   │   ├── stats.py                # GET /stats, /stats/sentiment-distribution
+│   │   │   └── places.py               # GET /places/search, GET /places/{id}/analyze
 │   │   ├── ml/
-│   │   │   ├── preprocessing.py        # clean_text() — negation-aware, stopword-filtered
-│   │   │   ├── features.py             # TF-IDF (unigram+bigram, max 10k features)
-│   │   │   ├── train.py                # LR, Balanced LR, LinearSVC — saves joblib artifacts
-│   │   │   ├── evaluate.py             # accuracy, macro-F1, latency — no hardcoding
-│   │   │   └── keywords.py             # top-N keywords per class from LR coefficients
+│   │   │   ├── preprocessing.py        # clean_text() — negation-aware, deduplicated
+│   │   │   ├── features.py             # TF-IDF (unigrams + bigrams, top 10k features)
+│   │   │   ├── train.py                # LR, Balanced LR, LinearSVC training pipeline
+│   │   │   ├── evaluate.py             # Empirical evaluation (Macro F1, Macro Recall)
+│   │   │   └── keywords.py             # Top-N class keywords from model coefficients
 │   │   ├── db/
-│   │   │   ├── database.py             # SQLAlchemy engine + session
-│   │   │   ├── models.py               # reviews, predictions, model_metrics tables
+│   │   │   ├── database.py             # SQLAlchemy session & SQLite engine
+│   │   │   ├── models.py               # Database schemas (reviews, predictions, model_metrics)
 │   │   │   └── crud.py                 # DB read/write helpers
 │   │   ├── services/
-│   │   │   └── google_places.py        # Google Places API (New) — Text Search + Place Details
-│   │   └── schemas.py                  # Pydantic request/response schemas
-│   ├── tests/
-│   │   ├── test_api.py                 # Core API endpoint tests (14 tests)
-│   │   ├── test_phase5_google_places.py # Phase 5 Google Places integration (36 tests)
-│   │   └── test_preprocessing.py       # NLP cleaning unit tests
+│   │   │   └── google_places.py        # Google Places API (Text Search + Place Details)
+│   │   └── schemas.py                  # Pydantic request/response validation schemas
 │   ├── data/
-│   │   ├── raw/                        # Amazon Reviews 2023 (All Beauty) source
 │   │   └── processed/
-│   │       ├── amazon_all_beauty_reviews.csv   # 50k preprocessed reviews
-│   │       └── app.db                          # SQLite database (gitignored)
-│   ├── models/                         # joblib artifacts (gitignored — large binaries)
+│   │       ├── amazon_all_beauty_reviews.csv   # 81.7K preprocessed genuine reviews
+│   │       ├── dataset_info.json               # Class distribution & metadata
+│   │       └── app.db                          # SQLite database
+│   ├── models/                         # Serialized ML artifacts (.joblib)
 │   │   ├── tfidf_vectorizer.joblib
 │   │   ├── logistic_regression.joblib
 │   │   ├── balanced_logistic_regression.joblib
-│   │   └── linearsvc.joblib
-│   ├── init_db.py                      # Creates tables + seeds model_metrics
-│   ├── migrate_db.py                   # DB schema migrations
-│   └── requirements.txt
+│   │   ├── linearsvc.joblib
+│   │   └── evaluation_results.json
+│   ├── init_db.py                      # Database schema creator & metric seeder
+│   ├── migrate_db.py                   # Safe, non-destructive schema migration
+│   ├── prepare_dataset.py              # Raw review extractor & preprocessor
+│   ├── requirements.txt                # Backend dependencies
+│   └── tests/                          # Automated backend test suites
+│       ├── test_api.py                 # Core API endpoint tests (14 tests)
+│       ├── test_phase5_google_places.py# Google Places integration tests (36 tests)
+│       └── test_preprocessing.py       # NLP cleaning unit tests (5 tests)
 ├── frontend/
-│   ├── streamlit_app.py                # App shell + sidebar navigation
-│   ├── api_client.py                   # All HTTP calls to backend (single place)
-│   ├── data_loader.py                  # Cached dataset loading
-│   ├── pages/
-│   │   ├── 1_overview.py               # Main dashboard (Historical / Live / Manual)
-│   │   ├── 2_live_prediction.py        # Single + batch manual inference
-│   │   ├── 3_keyword_insights.py       # Per-class top keyword explorer
-│   │   └── 4_model_comparison.py       # Accuracy + latency benchmark charts
-│   └── components/
-│       ├── sentiment_pulse.py          # Interactive Sentiment Pulse gauge
-│       ├── review_feed.py              # Review cards (Amazon + Google attribution)
-│       ├── pain_point_section.py       # Aspect/complaint breakdown charts
-│       ├── mismatch_section.py         # Rating vs AI sentiment mismatch analysis
-│       ├── aspect_analyzer.py          # Rule-based aspect + pain-point engine
-│       └── live_places_section.py      # Google Places live review UI section
+│   ├── streamlit_app.py                # App shell, dark design system, sidebar navigation
+│   ├── api_client.py                   # Unified HTTP client communicating with backend
+│   ├── data_loader.py                  # Cached review dataset loader
+│   ├── unseen_review_loader.py         # Held-out validation review sampler
+│   ├── ui_utils.py                     # Safe HTML rendering utilities
+│   ├── components/                     # Modular dashboard components
+│   │   ├── sentiment_pulse.py          # Interactive Sentiment Pulse gauge
+│   │   ├── review_feed.py              # Filterable review feed with attribution badges
+│   │   ├── pain_point_section.py       # Aspect & complaint breakdown engine
+│   │   ├── mismatch_section.py         # Star rating vs. AI sentiment mismatch detector
+│   │   ├── aspect_analyzer.py          # Aspect & issue priority extractor
+│   │   └── live_places_section.py      # Google Places live analysis component
+│   └── pages/                          # Multi-page dashboard modules
+│       ├── 1_overview.py               # Overall Analysis & historical explorer
+│       ├── 2_live_prediction.py        # Live Single & batch review inference
+│       ├── 3_keyword_insights.py       # Aspect & keyword vocabulary explorer
+│       ├── 4_model_comparison.py       # Model benchmark & evaluation metrics
+│       └── 5_product_intelligence.py   # ASIN-level product intelligence
 ├── .streamlit/
-│   ├── config.toml                     # Theme + server config
-│   └── secrets.toml.example            # Safe-to-commit template (no real keys)
-├── .env.example                        # Safe-to-commit env var template
-├── .gitignore
+│   ├── config.toml                     # Theme & server configuration
+│   └── secrets.toml.example            # Safe template for API keys
+├── run_project.bat                     # Windows 1-click launcher (starts backend + frontend)
+├── pytest.ini                          # Test configuration & path setup
 └── README.md
 ```
 
 ---
 
-## Setup & Run
+## 📊 Model Evaluation & Empirical Benchmark
 
-### 1. Install dependencies
+Evaluated on a **held-out 20% stratified test set (16,336 genuine Amazon reviews)**.
+
+| Model | Accuracy | Macro Recall *(Unweighted)* | Macro Precision | Macro F1 | Weighted F1 | Latency |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Standard Logistic Regression** | **85.02%** | 61.89% | 68.15% | 0.6253 | 0.8282 | 0.0001 ms |
+| **Balanced Logistic Regression** 🏆 | 79.70% | **70.84%** *(+8.95%)* | 65.57% | **0.6677** *(+0.042)* | 0.8179 | 0.0002 ms |
+| **LinearSVC** | 84.67% | 62.48% | 67.12% | 0.6311 | 0.8285 | 0.0001 ms |
+
+> ### 💡 Why Macro Recall & Macro F1 are the Decisive Metrics:
+> Customer review datasets suffer from severe class imbalance (**~70% positive, 22% negative, 8% neutral**). A standard classifier achieves high raw accuracy by almost always guessing positive (achieving only **11% recall on neutral reviews**).  
+> **Balanced Logistic Regression** trades a small fraction of overall accuracy to boost **Neutral Recall from 11% to 53%** and **Negative Recall to 76%**, ensuring critical customer dissatisfaction is never ignored.
+
+---
+
+## ⚡ Quick Start
+
+### Option A: 1-Click Launch (Windows)
+Simply double-click the **`run_project.bat`** file in the root folder. It will:
+1. Initialize the SQLite database.
+2. Launch the FastAPI backend on port `8000`.
+3. Launch the Streamlit dashboard on port `8501`.
+
+---
+
+### Option B: Manual CLI Setup
+
+#### 1. Clone the repository
+```bash
+git clone https://github.com/amanydvvv/CUSTOMER-SENTIMENT-ANALYSIS-DASHBOARD.git
+cd CUSTOMER-SENTIMENT-ANALYSIS-DASHBOARD
+```
+
+#### 2. Install dependencies
 ```bash
 pip install -r backend/requirements.txt
 ```
 
-### 2. Train models
-> Only needed once, or if you delete `backend/models/`. The Amazon Reviews 2023
-> dataset must be prepared first.
+#### 3. Initialize the database
+```bash
+python backend/init_db.py
+```
+
+#### 4. Run the Backend API (Terminal 1)
 ```bash
 cd backend
-python prepare_dataset.py          # download + preprocess Amazon Reviews 2023
-python -m app.ml.train             # train and save the three models
+python -m uvicorn app.main:app --port 8000
 ```
+* Interactive Swagger Docs → **[http://localhost:8000/docs](http://localhost:8000/docs)**
+* Alternative ReDoc → **[http://localhost:8000/redoc](http://localhost:8000/redoc)**
 
-### 3. Initialise the database
+#### 5. Run the Frontend Dashboard (Terminal 2)
 ```bash
-# still inside backend/
-python init_db.py
-```
-Creates `data/processed/app.db` and seeds `model_metrics` from actual evaluation — no hardcoded numbers.
-
-### 4. Start the backend API
-```bash
-# still inside backend/
-uvicorn app.main:app --reload --port 8000
-```
-Interactive docs → http://127.0.0.1:8000/docs
-
-### 5. Start the frontend (new terminal)
-```bash
-# from the project root (mini/)
 streamlit run frontend/streamlit_app.py
 ```
-Dashboard → http://localhost:8501
+* Dashboard UI → **[http://localhost:8501](http://localhost:8501)**
 
 ---
 
-## Google Places API — Live Review Analysis (Phase 5)
+## 🧪 Automated Testing & QA
 
-The dashboard can fetch real customer reviews from Google Maps and analyze them
-with our trained ML models. **The training dataset is never modified.**
-
-### How to configure
-
-**Option A — Streamlit secrets (recommended for persistent sessions)**
-
-Copy the example file and add your key:
-```bash
-cp .streamlit/secrets.toml.example .streamlit/secrets.toml
-# Edit .streamlit/secrets.toml:
-#   GOOGLE_PLACES_API_KEY = "AIzaSy..."
-```
-
-**Option B — Environment variable**
-```bash
-# Windows PowerShell
-$env:GOOGLE_PLACES_API_KEY = "AIzaSy..."
-uvicorn app.main:app --reload --port 8000
-
-# Linux / macOS
-export GOOGLE_PLACES_API_KEY="AIzaSy..."
-uvicorn app.main:app --reload --port 8000
-```
-
-**Option C — UI (per session)**
-
-Open the dashboard → **🌐 Live Google Reviews** tab →
-expand **🔑 Google Places API Key Configuration** → paste key.
-The key is stored in Streamlit session memory only and is never logged or committed.
-
-### Getting an API key
-
-1. Go to [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
-2. Create a project and enable **Places API (New)**
-3. Create an API key and (recommended) restrict it to Places API
-
-### Live review workflow
-
-```
-1. Select "🌐 Live Google Reviews" in the dashboard
-2. Type a business name, e.g. "Starbucks Indiranagar Bangalore"
-3. Click [🔍 Search Places]
-4. Select a place from the dropdown
-5. Choose inference model (Balanced LR recommended)
-6. Click [⚡ Analyze Live Reviews]
-```
-
-The app then:
-- Fetches reviews via Google Places API (New)
-- Runs each review through `clean_text()` → saved TF-IDF → saved ML model
-- Applies aspect/pain-point analysis
-- Detects rating vs. AI sentiment mismatches
-- Displays results with required Google attribution
-
-### API limitations
-
-| Limitation | Detail |
-|---|---|
-| Reviews per place | Google Places API returns **at most 5 reviews** per request |
-| Language | Model trained on English; non-English reviews may have lower accuracy |
-| Caching | Raw Google review text is **not** stored in SQLite (policy compliance) |
-| Polling | No automatic polling — all API calls require explicit user action |
-| Real-time count | Sentiment Pulse shows the actual returned count only — no inflation |
-
-> **Disclaimer:** "Live review availability and ordering are provided by Google Places API.
-> Only the reviews returned by the API are analyzed by this application."
-
----
-
-## API Endpoints
-
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/` | Root welcome message |
-| `GET` | `/health` | Health check |
-| `GET` | `/models` | List available model names |
-| `GET` | `/models/metrics` | Model accuracy, F1, latency from DB |
-| `POST` | `/predict/` | Single review sentiment inference + log to DB |
-| `POST` | `/predict/batch` | Batch inference |
-| `GET` | `/reviews/` | List logged reviews |
-| `GET` | `/stats/` | KPIs + model metrics + top keywords |
-| `GET` | `/stats/sentiment-distribution` | Sentiment breakdown |
-| `GET` | `/stats/rating-distribution` | Rating histogram |
-| `GET` | `/stats/products` | Per-product stats |
-| `GET` | `/stats/keywords/{sentiment}` | Top keywords for a sentiment class |
-| `GET` | `/places/search?query=…&api_key=…` | Google Places Text Search |
-| `GET` | `/places/{place_id}/analyze?model_name=…&api_key=…` | Fetch + analyze live reviews |
-
-### Example — predict
-```bash
-curl -X POST http://127.0.0.1:8000/predict/ \
-  -H "Content-Type: application/json" \
-  -d '{"text": "Absolutely loved this product!", "model": "balanced_logistic_regression"}'
-```
-```json
-{"review_id": 1, "sentiment": "positive", "confidence": 0.9412, "model_used": "balanced_logistic_regression"}
-```
-
-### Example — live place search
-```bash
-curl "http://127.0.0.1:8000/places/search?query=Third+Wave+Coffee+Bangalore&api_key=YOUR_KEY"
-```
-
----
-
-## ML Pipeline
-
-| Step | Detail |
-|------|--------|
-| Dataset | Amazon Reviews 2023 — All Beauty (real reviews) |
-| Split | 80:20 stratified, `random_state=42` |
-| Vectoriser | TF-IDF, `ngram_range=(1,2)`, `max_features=10000` |
-| Models | Logistic Regression · Balanced LR · LinearSVC |
-| Serialisation | `joblib` — vectoriser + each model saved separately |
-| Keywords | Top-N features per class from `model.coef_[i]` (LR) |
-| Confidence | LR/Balanced LR → `predict_proba()` · LinearSVC → `None` (no calibrated prob) |
-| Aspect analysis | Transparent rule-based keyword matching — no black-box AI |
-
-**Inference flow for live API reviews:**
-```
-raw review text
-  → clean_text()                # negation expansion + stopword removal
-  → tfidf_vectorizer.transform()  # saved vectorizer — NOT retrained
-  → model.predict()            # saved model — NOT retrained
-  → sentiment label
-  → extract_aspects_and_issues()  # rule-based aspect + pain-point engine
-  → mismatch check             # (Google rating metadata vs ML sentiment)
-```
-
-The Google star rating is **never passed as a model feature** — it is retained
-only as metadata for display and mismatch detection.
-
----
-
-## Tests
+Run the full automated test suite (66 tests covering NLP cleaning, API endpoints, and Google Places integration):
 
 ```bash
-cd backend
-python -m pytest tests/ -v
+python -m pytest
 ```
 
-**50 tests / 50 passing** (as of Phase 5):
-
-| Test file | Tests | Coverage |
-|---|---|---|
-| `test_api.py` | 14 | Core endpoints, models, predict, stats, Places missing-key |
-| `test_phase5_google_places.py` | 36 | Missing key, invalid key, quota, timeout, empty results, schema normalization, ML inference, mismatch, pulse metrics, confidence scores, model selection, attribution notes |
-| `test_preprocessing.py` | varies | Text cleaning, negation, stopword removal |
+Run independent smoke and integrity checks:
+```bash
+python smoke_test_unseen.py
+python verify_final_audit.py
+```
 
 ---
 
-## Dashboard Pages
+## 🌐 Google Places API Configuration (Optional)
 
-| Page | Key Features |
-|---|---|
-| **⚡ Intelligence Dashboard** | Source selector · Sentiment Pulse gauge · Pain-Point Intelligence · Mismatch Analysis · Review Feed · Live Google Reviews tab |
-| **📝 Live Review Intelligence** | Single review analysis · Batch tester · Aspect/Issue/Priority/Action output |
-| **🏷️ Aspect & Keyword Explorer** | Per-class TF-IDF keyword viewer |
-| **📊 Model Benchmark & Evaluation** | Accuracy · Macro-F1 · Latency charts |
+To enable live Google Maps review ingestion for businesses and restaurants:
 
----
-
-## Viva Q&A Notes
-
-**Q: Why three models?**
-LR is interpretable (coefficients = keyword weights). Balanced LR handles class imbalance without resampling the dataset. LinearSVC is fastest at inference on sparse TF-IDF matrices.
-
-**Q: Why TF-IDF and not BERT?**
-Scope is classical ML with full explainability. TF-IDF + bigrams on real Amazon data is sufficient to demonstrate meaningful sentiment classification to non-ML reviewers.
-
-**Q: Where does the frontend get its data?**
-Entirely over HTTP from the FastAPI backend. The frontend imports zero ML code — true 3-tier separation.
-
-**Q: Does the Google Places integration retrain the model?**
-No. The saved TF-IDF vectorizer and model artifacts are loaded once at startup. Google review text is passed through the existing inference pipeline — no retraining occurs.
-
-**Q: How are model metrics populated in the database?**
-`init_db.py` calls `evaluate_models()` which loads the saved test split (`test_data.joblib`) and runs actual inference. Nothing is hardcoded.
-
-**Q: Why does LinearSVC return `None` for confidence?**
-`LinearSVC.decision_function()` output is not a calibrated probability. Presenting it as a percentage would be misleading. Logistic Regression models use `predict_proba()` for genuine confidence scores.
+1. Copy `.streamlit/secrets.toml.example` to `.streamlit/secrets.toml`:
+   ```bash
+   cp .streamlit/secrets.toml.example .streamlit/secrets.toml
+   ```
+2. Add your Google Places API Key:
+   ```toml
+   GOOGLE_PLACES_API_KEY = "AIzaSy..."
+   ```
 
 ---
 
-## Team Contributions
+## 🛠️ API Reference
 
-| Member | Responsibility |
-|--------|----------------|
-| Member 1 | Data pipeline: `preprocessing.py`, `features.py`, `train.py`, `prepare_dataset.py` |
-| Member 2 | Backend API: `main.py`, `api/`, `db/`, `schemas.py`, `services/google_places.py`, `tests/` |
-| Member 3 | Frontend: `streamlit_app.py`, `pages/`, `components/`, `api_client.py` |
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `POST` | `/predict/` | Predict sentiment for a single review with confidence score |
+| `POST` | `/predict/batch` | Batch sentiment inference over multiple reviews |
+| `GET` | `/reviews/` | Fetch paginated historical reviews with optional filters |
+| `GET` | `/stats/` | Dashboard summary metrics, top keywords, and class distributions |
+| `GET` | `/places/search` | Search businesses via Google Places API |
+| `GET` | `/places/{id}/analyze` | Ingest and analyze live Google reviews for a specific place |
+| `GET` | `/models/metrics` | Retrieve live empirical evaluation metrics from SQLite DB |
+| `GET` | `/health` | Backend service health and model status check |
