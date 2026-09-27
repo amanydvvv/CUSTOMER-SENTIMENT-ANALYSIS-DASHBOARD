@@ -8,8 +8,12 @@ def create_review(db: Session, text: str, product: str = None):
     db.refresh(db_review)
     return db_review
 
-def get_reviews(db: Session, product: str = None, skip: int = 0, limit: int = 100):
+def get_reviews(db: Session, product: str = None, sentiment: str = None, skip: int = 0, limit: int = 100):
     query = db.query(models.Review)
+    if sentiment:
+        # Join Prediction to filter by ML-predicted sentiment
+        query = query.join(models.Prediction, models.Prediction.review_id == models.Review.id)\
+                     .filter(models.Prediction.sentiment == sentiment.lower().strip())
     if product:
         query = query.filter(models.Review.product == product)
     return query.offset(skip).limit(limit).all()

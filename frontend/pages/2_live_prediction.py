@@ -30,6 +30,10 @@ def render():
     """
     render_html(header_html)
 
+    # Initialise session history
+    if "analysis_history" not in st.session_state:
+        st.session_state["analysis_history"] = []
+
     client = get_api_client()
 
     tab_single, tab_batch = st.tabs(["Single Review Analyzer", "Batch Review Tester"])
@@ -174,7 +178,38 @@ def render():
                 """
                 render_html(result_card)
 
-    with tab_batch:
+                # Append to session history
+                st.session_state["analysis_history"].append({
+                    "snippet": (review_text[:70] + "...") if len(review_text) > 70 else review_text,
+                    "sentiment": sentiment.upper() if sentiment else "NEUTRAL",
+                    "confidence": confidence,
+                    "model": model_choice
+                })
+
+        # ── History Panel ────────────────────────────────────────────────────
+        if st.session_state.get("analysis_history"):
+            st.markdown("---")
+            st.markdown("#### 🕓 Analysis History (This Session)")
+            badge_colors = {"POSITIVE": "#22C55E", "NEGATIVE": "#EF4444", "NEUTRAL": "#F59E0B"}
+            for entry in reversed(st.session_state["analysis_history"][-10:]):
+                conf_txt = f"{entry['confidence']*100:.1f}%" if entry['confidence'] is not None else "N/A"
+                badge_col = badge_colors.get(entry["sentiment"], "#98A2B3")
+                st.markdown(f"""
+                <div style="background:#11151D;border:1px solid #242A35;border-radius:7px;
+                            padding:0.55rem 1rem;margin-bottom:0.35rem;
+                            display:flex;justify-content:space-between;align-items:center;">
+                    <span style="color:#D0D5DD;font-size:0.8rem;flex:1;margin-right:1rem;">{entry['snippet']}</span>
+                    <div style="display:flex;align-items:center;gap:0.5rem;flex-shrink:0;">
+                        <span style="background:{badge_col}22;border:1px solid {badge_col}55;
+                                     color:{badge_col};font-size:0.7rem;font-weight:700;
+                                     padding:2px 8px;border-radius:4px;">{entry['sentiment']}</span>
+                        <span style="color:#98A2B3;font-size:0.75rem;">{conf_txt}</span>
+                    </div>
+                </div>""", unsafe_allow_html=True)
+            if st.button("🗑️ Clear History", key="clear_history_btn"):
+                st.session_state["analysis_history"] = []
+                st.rerun()
+
         render_html("""
         <div style="font-size:0.85rem;color:#98A2B3;margin-bottom:0.75rem;">
             Run batch inference on multiple reviews via text pasting or CSV file upload.

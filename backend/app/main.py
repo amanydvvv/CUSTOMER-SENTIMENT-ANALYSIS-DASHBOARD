@@ -28,8 +28,39 @@ def root():
 
 
 @app.get("/health")
-def health_check():
-    return {"status": "ok", "message": "API server is healthy and models are loaded"}
+def health_check(db: Session = Depends(get_db)):
+    import os
+    from sqlalchemy import text
+
+    # --- Check 1: Live database connectivity ---
+    try:
+        db.execute(text("SELECT 1"))
+        db_status = "connected"
+    except Exception as e:
+        db_status = f"error: {str(e)}"
+
+    # --- Check 2: ML model artifact files ---
+    models_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "models")
+    expected = [
+        "logistic_regression.joblib",
+        "balanced_logistic_regression.joblib",
+        "linearsvc.joblib",
+        "tfidf_vectorizer.joblib"
+    ]
+    found   = [m for m in expected if os.path.exists(os.path.join(models_dir, m))]
+    missing = [m for m in expected if m not in found]
+
+    overall = "ok" if (db_status == "connected" and len(missing) == 0) else "degraded"
+
+    return {
+        "status": overall,
+        "database": db_status,
+        "models_dir": models_dir,
+        "models_found": found,
+        "models_missing": missing,
+        "all_models_loaded": len(missing) == 0,
+        "api_version": "2.0.0"
+    }
 
 
 @app.get("/models", response_model=List[str])
@@ -47,7 +78,7 @@ def get_all_model_metrics(db: Session = Depends(get_db)):
             precision=m.precision,
             recall=m.recall,
             f1=m.f1,
-            macro_f1=m.f1,
+            macro_f1=getattr(m, 'macro_f1', m.f1),
             weighted_f1=m.weighted_f1,
             latency=m.latency
         )

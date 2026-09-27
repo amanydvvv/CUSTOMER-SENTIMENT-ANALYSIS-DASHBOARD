@@ -48,9 +48,17 @@ def _render_historical():
         render_html('<div class="nav-label">FILTER REVIEWS</div>')
 
         if st.button("🔄 Reset Filters", use_container_width=True):
-            for k in ["filter_products", "filter_ratings", "filter_sentiments", "filter_verified", "filter_search"]:
+            for k in ["filter_products", "filter_ratings", "filter_sentiments",
+                      "filter_verified", "filter_search", "filter_date_from", "filter_date_to"]:
                 st.session_state.pop(k, None)
             st.rerun()
+
+        st.markdown("**📅 Date Range**")
+        _dcol1, _dcol2 = st.columns(2)
+        with _dcol1:
+            date_from = st.date_input("From", value=None, key="filter_date_from")
+        with _dcol2:
+            date_to = st.date_input("To", value=None, key="filter_date_to")
 
         top_products = ["All"] + sorted(df_raw["product"].value_counts().head(20).index.tolist())
         selected_prods = st.multiselect(
@@ -88,6 +96,19 @@ def _render_historical():
         verified_only=verified_only,
         search_query=search_query,
     )
+
+    # Apply date range filter
+    _date_from = st.session_state.get("filter_date_from")
+    _date_to   = st.session_state.get("filter_date_to")
+    if _date_from and _date_to and _date_from > _date_to:
+        st.warning("⚠️ 'From' date must be before 'To' date. Date filter not applied.")
+    else:
+        if "date_dt" in df.columns:
+            import pandas as _pd
+            if _date_from:
+                df = df[df["date_dt"] >= _pd.Timestamp(_date_from)]
+            if _date_to:
+                df = df[df["date_dt"] <= _pd.Timestamp(_date_to)]
 
     total = len(df)
     if total == 0:
