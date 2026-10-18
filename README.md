@@ -4,9 +4,10 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.40+-FF4B4B.svg?logo=streamlit&logoColor=white)](https://streamlit.io)
 [![Scikit-Learn](https://img.shields.io/badge/Scikit--Learn-1.5+-F7931E.svg?logo=scikit-learn&logoColor=white)](https://scikit-learn.org)
-[![Tests](https://img.shields.io/badge/Tests-66%20Passed-22C55E.svg)](file:///c:/Users/amanc/Desktop/mini/pytest.ini)
+[![DistilBERT](https://img.shields.io/badge/DistilBERT-Multilingual-FFD700.svg?logo=huggingface)](https://huggingface.co/lxyuan/distilbert-base-multilingual-cased-sentiments-student)
+[![Tests](https://img.shields.io/badge/Tests-60%20Passed-22C55E.svg)](./pytest.ini)
 
-A production-grade, 3-tier NLP intelligence system for customer sentiment analysis, aspect-based pain-point extraction, and automated decision support. Built on **FastAPI**, **SQLite**, **Scikit-Learn**, and **Streamlit** using real **Amazon Reviews 2023** data and live **Google Places API** review ingestion.
+A production-grade, 3-tier NLP intelligence system for customer sentiment analysis, aspect-based pain-point extraction, and automated decision support. Built on **FastAPI**, **SQLite**, **Scikit-Learn**, **DistilBERT Transformer**, and **Streamlit** using real **Amazon Reviews 2023** data and live **Google Places API** review ingestion.
 
 ---
 
@@ -18,22 +19,25 @@ mini/
 │   ├── app/
 │   │   ├── main.py                     # FastAPI entrypoint (all routers registered)
 │   │   ├── api/
-│   │   │   ├── predict.py              # POST /predict, POST /predict/batch
-│   │   │   ├── reviews.py              # GET /reviews
-│   │   │   ├── stats.py                # GET /stats, /stats/sentiment-distribution
-│   │   │   └── places.py               # GET /places/search, GET /places/{id}/analyze
+│   │   │   ├── predict.py              # POST /predict, POST /predict/batch (DistilBERT + TF-IDF)
+│   │   │   ├── reviews.py              # GET /reviews (sentiment + product filter + pagination)
+│   │   │   ├── stats.py                # GET /stats, /stats/keywords/{sentiment}
+│   │   │   ├── places.py               # GET /places/search, GET /places/reviews
+│   │   │   └── auth.py                 # POST /auth/register, /auth/login, GET /auth/me (JWT RBAC)
 │   │   ├── ml/
 │   │   │   ├── preprocessing.py        # clean_text() — negation-aware, deduplicated
 │   │   │   ├── features.py             # TF-IDF (unigrams + bigrams, top 10k features)
 │   │   │   ├── train.py                # LR, Balanced LR, LinearSVC training pipeline
 │   │   │   ├── evaluate.py             # Empirical evaluation (Macro F1, Macro Recall)
-│   │   │   └── keywords.py             # Top-N class keywords from model coefficients
+│   │   │   ├── keywords.py             # Top-N class keywords from model coefficients (TF-IDF)
+│   │   │   ├── keybert_extractor.py    # KeyBERT semantic keyword extraction (BERT embeddings)
+│   │   │   └── distilbert_model.py     # DistilBERT multilingual transformer inference pipeline
 │   │   ├── db/
 │   │   │   ├── database.py             # SQLAlchemy session & SQLite engine
-│   │   │   ├── models.py               # Database schemas (reviews, predictions, model_metrics)
-│   │   │   └── crud.py                 # DB read/write helpers
+│   │   │   ├── models.py               # DB: reviews, predictions, model_metrics, users, query_history
+│   │   │   └── crud.py                 # DB read/write helpers (sentiment-joined queries)
 │   │   ├── services/
-│   │   │   └── google_places.py        # Google Places API (Text Search + Place Details)
+│   │   │   └── google_places.py        # Google Places API (Text Search + Place Details + mock fallback)
 │   │   └── schemas.py                  # Pydantic request/response validation schemas
 │   ├── data/
 │   │   └── processed/

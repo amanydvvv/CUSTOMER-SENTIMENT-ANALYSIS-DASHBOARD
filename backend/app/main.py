@@ -1,10 +1,12 @@
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from typing import List, Dict, Any
-from app.api import predict, reviews, stats, places
+from app.api import predict, reviews, stats, places, auth
 from app.db.database import engine, Base, get_db
 from app.db.models import ModelMetric
 from app.schemas import ModelMetricResponse
+from app.ml.distilbert_model import get_distilbert_status, is_distilbert_available
+from app.ml.keybert_extractor import is_keybert_available
 
 # Ensure tables are created
 Base.metadata.create_all(bind=engine)
@@ -20,6 +22,7 @@ app.include_router(predict.router, prefix="/predict", tags=["predict"])
 app.include_router(reviews.router, prefix="/reviews", tags=["reviews"])
 app.include_router(stats.router, prefix="/stats", tags=["stats"])
 app.include_router(places.router, prefix="/places", tags=["places"])
+app.include_router(auth.router,   prefix="/auth",   tags=["auth"])
 
 
 @app.get("/")
@@ -55,17 +58,18 @@ def health_check(db: Session = Depends(get_db)):
     return {
         "status": overall,
         "database": db_status,
-        "models_dir": models_dir,
         "models_found": found,
         "models_missing": missing,
         "all_models_loaded": len(missing) == 0,
-        "api_version": "2.0.0"
+        "distilbert": get_distilbert_status(),
+        "keybert_available": is_keybert_available(),
+        "api_version": "3.0.0"
     }
 
 
 @app.get("/models", response_model=List[str])
 def list_available_models():
-    return ["logistic_regression", "balanced_logistic_regression", "linearsvc"]
+    return ["logistic_regression", "balanced_logistic_regression", "linearsvc", "distilbert"]
 
 
 @app.get("/models/metrics", response_model=List[ModelMetricResponse])

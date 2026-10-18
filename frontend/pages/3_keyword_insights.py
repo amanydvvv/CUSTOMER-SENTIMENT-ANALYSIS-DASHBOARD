@@ -115,6 +115,67 @@ def render():
     else:
         st.info("No keyword insights available. Please ensure backend is running.")
 
+    # ── Section: Side-by-Side Sentiment Driver Comparison ─────────────────
+    render_html("""
+    <div style="margin-top:1.75rem;margin-bottom:0.85rem;border-top:1px solid #1E2533;padding-top:1.1rem;">
+        <h3 style="font-size:1.05rem;font-weight:700;color:#F5F7FA;margin:0 0 0.2rem;">
+            📊 Side-by-Side Sentiment Driver Comparison
+        </h3>
+        <div style="font-size:0.78rem;color:#98A2B3;">
+            Comparative view of high-impact terms distinguishing positive satisfaction from critical complaints
+        </div>
+    </div>
+    """)
+
+    c_pos, c_neu, c_neg = st.columns(3)
+
+    pos_data = load_keywords("positive", top_k=10) or []
+    neu_data = load_keywords("neutral", top_k=10) or []
+    neg_data = load_keywords("negative", top_k=10) or []
+
+    with c_pos:
+        pos_badges = "".join([
+            f'<span style="display:inline-block;background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.3);border-radius:4px;padding:3px 8px;margin:3px;font-size:0.78rem;font-weight:600;color:#22C55E;">{item["word"]}</span>'
+            for item in pos_data
+        ]) if pos_data else '<span style="color:#98A2B3;font-size:0.78rem;">No keywords</span>'
+        render_html(f"""
+        <div style="background:#11151D;border:1px solid rgba(34,197,94,0.25);border-radius:8px;padding:0.9rem 1rem;min-height:220px;">
+            <div style="color:#22C55E;font-size:0.82rem;font-weight:700;margin-bottom:0.6rem;">
+                🟢 Positive Drivers
+            </div>
+            <div style="line-height:1.7;">{pos_badges}</div>
+        </div>
+        """)
+
+    with c_neu:
+        neu_badges = "".join([
+            f'<span style="display:inline-block;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.3);border-radius:4px;padding:3px 8px;margin:3px;font-size:0.78rem;font-weight:600;color:#F59E0B;">{item["word"]}</span>'
+            for item in neu_data
+        ]) if neu_data else '<span style="color:#98A2B3;font-size:0.78rem;">No keywords</span>'
+        render_html(f"""
+        <div style="background:#11151D;border:1px solid rgba(245,158,11,0.25);border-radius:8px;padding:0.9rem 1rem;min-height:220px;">
+            <div style="color:#F59E0B;font-size:0.82rem;font-weight:700;margin-bottom:0.6rem;">
+                ⚪ Neutral Aspects
+            </div>
+            <div style="line-height:1.7;">{neu_badges}</div>
+        </div>
+        """)
+
+    with c_neg:
+        neg_badges = "".join([
+            f'<span style="display:inline-block;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);border-radius:4px;padding:3px 8px;margin:3px;font-size:0.78rem;font-weight:600;color:#EF4444;">{item["word"]}</span>'
+            for item in neg_data
+        ]) if neg_data else '<span style="color:#98A2B3;font-size:0.78rem;">No keywords</span>'
+        render_html(f"""
+        <div style="background:#11151D;border:1px solid rgba(239,68,68,0.25);border-radius:8px;padding:0.9rem 1rem;min-height:220px;">
+            <div style="color:#EF4444;font-size:0.82rem;font-weight:700;margin-bottom:0.6rem;">
+                🔴 Negative Signals
+            </div>
+            <div style="line-height:1.7;">{neg_badges}</div>
+        </div>
+        """)
+
+
 
 if __name__ == "__main__":
     render()

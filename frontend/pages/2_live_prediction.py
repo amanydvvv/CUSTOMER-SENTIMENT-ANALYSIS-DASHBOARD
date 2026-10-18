@@ -52,12 +52,13 @@ def render():
         with col_meta:
             model_choice = st.selectbox(
                 "Inference Model",
-                ["balanced_logistic_regression", "logistic_regression", "linearsvc"],
+                ["distilbert", "balanced_logistic_regression", "logistic_regression", "linearsvc"],
                 index=0,
                 format_func=lambda x: {
-                    "balanced_logistic_regression": "Balanced Logistic Regression (Recommended)",
+                    "distilbert": "⚡ DistilBERT Transformer (Deep Learning — Multilingual SOTA)",
+                    "balanced_logistic_regression": "Balanced Logistic Regression (Fast TF-IDF Baseline)",
                     "logistic_regression": "Standard Logistic Regression",
-                    "linearsvc": "LinearSVC (High Accuracy)"
+                    "linearsvc": "LinearSVC (High Accuracy SVM)"
                 }.get(x, x),
                 key="live_model_select"
             )
@@ -220,7 +221,13 @@ def render():
 
         batch_model = st.selectbox(
             "Batch Model",
-            ["balanced_logistic_regression", "logistic_regression", "linearsvc"],
+            ["distilbert", "balanced_logistic_regression", "logistic_regression", "linearsvc"],
+            format_func=lambda x: {
+                "distilbert": "⚡ DistilBERT Transformer (Deep Learning — Multilingual SOTA)",
+                "balanced_logistic_regression": "Balanced Logistic Regression (Fast TF-IDF Baseline)",
+                "logistic_regression": "Standard Logistic Regression",
+                "linearsvc": "LinearSVC (High Accuracy SVM)"
+            }.get(x, x),
             key="batch_model_select"
         )
 

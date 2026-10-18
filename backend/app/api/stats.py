@@ -99,3 +99,32 @@ def get_keywords_by_sentiment(sentiment: str, top_k: int = Query(default=20)):
     words = keywords_dict.get(s_clean, [])
     # Return formatted list of dicts for frontend compatibility
     return [{"word": w, "score": 1.0} for w in words]
+
+
+@router.get("/keywords/keybert")
+def get_keybert_keywords(
+    sentiment: Optional[str] = Query(default=None),
+    top_k: int = Query(default=10),
+    db: Session = Depends(get_db)
+):
+    """Extract semantic keyphrases using KeyBERT transformer embeddings."""
+    try:
+        from app.ml.keybert_extractor import extract_keybert_keywords, is_keybert_available
+        if not is_keybert_available():
+            return {"status": "unavailable", "keywords": []}
+
+        query = db.query(Review.text)
+        if sentiment:
+            query = query.join(Prediction).filter(Prediction.sentiment == sentiment.lower())
+        texts = [r[0] for r in query.limit(100).all() if r[0]]
+        if not texts:
+            texts = [
+                "Great hydrating serum for glowing sensitive skin",
+                "Pump broke after two uses and product leaked in packaging",
+                "Average moisturizer, nothing special, mild scent"
+            ]
+        kws = extract_keybert_keywords(texts, top_n=top_k)
+        return {"status": "ok", "sentiment": sentiment or "all", "keywords": kws}
+    except Exception as e:
+        return {"status": "error", "message": str(e), "keywords": []}
+

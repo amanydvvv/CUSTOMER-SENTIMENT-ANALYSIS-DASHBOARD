@@ -23,11 +23,20 @@ loaded_models = {
 
 def _predict_single(text: str, model_name: str):
     """Internal helper to clean text, vectorize, and run inference with valid confidence."""
-    model = loaded_models.get(model_name, loaded_models['balanced_logistic_regression'])
     cleaned = clean_text(text)
-
     if not cleaned.strip():
         return "neutral", None, cleaned
+
+    if model_name.lower() == "distilbert":
+        try:
+            from app.ml.distilbert_model import predict_distilbert
+            pred, conf, _ = predict_distilbert(text)
+            return pred, conf, cleaned
+        except Exception:
+            # Fallback to balanced logistic regression if DistilBERT is not downloaded/available
+            model_name = "balanced_logistic_regression"
+
+    model = loaded_models.get(model_name, loaded_models['balanced_logistic_regression'])
 
     features = vectorizer.transform([cleaned])
     pred = model.predict(features)[0]
@@ -47,7 +56,7 @@ def predict_sentiment(review_req: ReviewCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Text cannot be empty.")
 
     model_to_use = review_req.get_model()
-    if model_to_use not in loaded_models:
+    if model_to_use not in loaded_models and model_to_use.lower() != "distilbert":
         model_to_use = 'balanced_logistic_regression'
 
     pred, conf, cleaned = _predict_single(review_req.text, model_to_use)
@@ -76,7 +85,7 @@ def predict_sentiment_batch(batch_req: BatchPredictRequest, db: Session = Depend
         raise HTTPException(status_code=400, detail="Texts list cannot be empty.")
 
     model_to_use = batch_req.get_model()
-    if model_to_use not in loaded_models:
+    if model_to_use not in loaded_models and model_to_use.lower() != "distilbert":
         model_to_use = 'balanced_logistic_regression'
 
     results = []

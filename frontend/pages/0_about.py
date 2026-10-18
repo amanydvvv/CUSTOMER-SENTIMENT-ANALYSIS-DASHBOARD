@@ -240,25 +240,34 @@ def render():
             <div style="font-size:0.72rem;font-weight:700;color:#7C5CFF;text-transform:uppercase;
                         letter-spacing:0.08em;margin-bottom:0.75rem;">👥 Team</div>
             <div style="display:flex;flex-direction:column;gap:0.75rem;">
-                <div style="background:#151A24;border:1px solid #242A35;border-radius:7px;padding:0.65rem 0.85rem;">
-                    <div style="color:#F5F7FA;font-weight:700;font-size:0.85rem;">Aman</div>
-                    <div style="color:#7C5CFF;font-size:0.73rem;font-weight:600;margin-top:2px;">Project Lead · ML Engineer</div>
+                <div style="background:#151A24;border:1px solid #7C5CFF;border-radius:7px;padding:0.75rem 0.9rem;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <span style="color:#F5F7FA;font-weight:700;font-size:0.88rem;">👑 Aman</span>
+                        <span style="background:rgba(124,92,255,0.18);color:#A78BFA;font-size:0.68rem;font-weight:700;padding:2px 7px;border-radius:4px;border:1px solid rgba(124,92,255,0.3);">40% SHARE</span>
+                    </div>
+                    <div style="color:#7C5CFF;font-size:0.74rem;font-weight:600;margin-top:3px;">ML &amp; Security Architect · Project Lead</div>
                     <div style="color:#98A2B3;font-size:0.72rem;margin-top:4px;line-height:1.4;">
-                        Architecture, ML pipeline, backend API, full-stack integration
+                        10k Amazon NLP pipeline, LinearSVC/Balanced LR training, DistilBERT deep learning transformer, KeyBERT aspect extractor &amp; JWT RBAC security.
                     </div>
                 </div>
-                <div style="background:#151A24;border:1px solid #242A35;border-radius:7px;padding:0.65rem 0.85rem;">
-                    <div style="color:#F5F7FA;font-weight:700;font-size:0.85rem;">Pasha</div>
-                    <div style="color:#22C55E;font-size:0.73rem;font-weight:600;margin-top:2px;">Frontend Developer</div>
+                <div style="background:#151A24;border:1px solid #38BDF8;border-radius:7px;padding:0.75rem 0.9rem;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <span style="color:#F5F7FA;font-weight:700;font-size:0.88rem;">⚙️ Guru</span>
+                        <span style="background:rgba(56,189,248,0.15);color:#38BDF8;font-size:0.68rem;font-weight:700;padding:2px 7px;border-radius:4px;border:1px solid rgba(56,189,248,0.3);">30% SHARE</span>
+                    </div>
+                    <div style="color:#38BDF8;font-size:0.74rem;font-weight:600;margin-top:3px;">Backend &amp; API Developer</div>
                     <div style="color:#98A2B3;font-size:0.72rem;margin-top:4px;line-height:1.4;">
-                        Dashboard UI enhancements, filters, export, session history
+                        FastAPI REST Gateway (:8000), Google Places live review ingestion, SQLite SQLAlchemy database models &amp; 60 automated pytest test suites.
                     </div>
                 </div>
-                <div style="background:#151A24;border:1px solid #242A35;border-radius:7px;padding:0.65rem 0.85rem;">
-                    <div style="color:#F5F7FA;font-weight:700;font-size:0.85rem;">Guru</div>
-                    <div style="color:#38BDF8;font-size:0.73rem;font-weight:600;margin-top:2px;">Backend Developer</div>
+                <div style="background:#151A24;border:1px solid #22C55E;border-radius:7px;padding:0.75rem 0.9rem;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <span style="color:#F5F7FA;font-weight:700;font-size:0.88rem;">🎨 Pasha</span>
+                        <span style="background:rgba(34,197,94,0.15);color:#22C55E;font-size:0.68rem;font-weight:700;padding:2px 7px;border-radius:4px;border:1px solid rgba(34,197,94,0.3);">30% SHARE</span>
+                    </div>
+                    <div style="color:#22C55E;font-size:0.74rem;font-weight:600;margin-top:3px;">Frontend &amp; UI/UX Developer</div>
                     <div style="color:#98A2B3;font-size:0.72rem;margin-top:4px;line-height:1.4;">
-                        API endpoints, health monitoring, rate limiting, CSV export
+                        Streamlit 6-page dashboard (:8501), DistilBERT multi-model live prediction interface, 3-column sentiment driver badges &amp; session CSV export.
                     </div>
                 </div>
             </div>
