@@ -93,7 +93,7 @@ The project follows a **3-tier architecture**:
 
 ```
 ┌──────────────────────────────┐
-│  Streamlit Frontend (Port 8501) │  ← User-facing dashboard (5 pages)
+│  Streamlit Frontend (Port 8501) │  ← User-facing dashboard (6 pages)
 │  frontend/                      │
 └──────────────┬───────────────┘
                │ HTTP REST API
@@ -109,9 +109,9 @@ The project follows a **3-tier architecture**:
 └─────────────────────────────┘
 ```
 
-**Tier 1 — Frontend (Streamlit):** Five distinct dashboard pages rendered in a dark-themed UI. Communicates with the backend exclusively via HTTP through `api_client.py`. Data is loaded directly from the processed CSV for performance-critical views using `@st.cache_data`.
+**Tier 1 — Frontend (Streamlit):** Six distinct dashboard pages (About, Overview, Live Prediction, Keyword Insights, Model Comparison, Product Intelligence) rendered in a dark-themed UI. Communicates with the backend exclusively via HTTP through `api_client.py`. Data is loaded directly from the processed CSV for performance-critical views using `@st.cache_data`.
 
-**Tier 2 — Backend (FastAPI):** Exposes a REST API with 12 endpoints covering prediction (single + batch), review retrieval, statistics, keyword extraction, model metrics, and Google Places live review ingestion. SQLAlchemy ORM manages all database interactions. ML model artifacts are loaded once at startup.
+**Tier 2 — Backend (FastAPI):** Exposes a REST API with 15+ endpoints covering prediction (single + batch with multi-model routing including DistilBERT), review retrieval, statistics, TF-IDF and KeyBERT keyword extraction, model metrics, JWT authentication with RBAC, and Google Places live review ingestion. SQLAlchemy ORM manages all database interactions. ML model artifacts are loaded once at startup.
 
 **Tier 3 — Data Layer (SQLite + joblib):** SQLite stores prediction history (Review and Prediction tables). Four `.joblib` files store the trained TF-IDF vectorizer and three model artifacts.
 
@@ -136,7 +136,7 @@ The project follows a **3-tier architecture**:
 
 2. **Domain limitation:** Models were trained exclusively on Amazon Beauty reviews. Sentiment vocabulary in other domains (electronics, hospitality) will differ, reducing out-of-domain accuracy.
 
-3. **No deep learning baseline:** Transformer-based models (DistilBERT, RoBERTa) were not evaluated due to computational constraints. A future comparison against fine-tuned transformers would be valuable.
+3. **No fine-tuned deep learning model:** While DistilBERT is integrated as a pre-trained multilingual transformer for inference, the model was not fine-tuned on the Amazon Beauty dataset due to computational constraints. Fine-tuning on domain-specific data would likely improve accuracy further.
 
 4. **Static keyword scores:** TF-IDF keyword scores are fixed at training time. Live-ingested Google Places reviews are not incorporated into the keyword model.
 
@@ -146,4 +146,4 @@ The project follows a **3-tier architecture**:
 
 ## 8. Conclusion
 
-This project delivers a complete, production-grade customer sentiment intelligence system. The core ML pipeline achieves 70.84% Macro Recall on a severely imbalanced 3-class problem using a deliberately chosen Balanced Logistic Regression model. The system is accessible through a real-time analytics dashboard that translates raw review text into structured, actionable business intelligence — from product-level pain points to live Google Maps review analysis. All components are tested (55 automated tests), version-controlled, and structured as a proper 3-tier application.
+This project delivers a complete, production-grade customer sentiment intelligence system. The core ML pipeline achieves 70.84% Macro Recall on a severely imbalanced 3-class problem using a deliberately chosen Balanced Logistic Regression model, complemented by a DistilBERT multilingual transformer for deep semantic inference. The system is accessible through a real-time 6-page analytics dashboard that translates raw review text into structured, actionable business intelligence — from product-level pain points to live Google Maps review analysis. All components are tested (60 automated tests, 100% pass rate), version-controlled, and structured as a proper 3-tier application with JWT authentication and RBAC security.
