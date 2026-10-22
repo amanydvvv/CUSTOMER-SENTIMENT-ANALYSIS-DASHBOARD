@@ -4,8 +4,10 @@ import os
 import io
 from frontend.ui_utils import render_html
 from frontend.api_client import get_api_client
-from frontend.components.aspect_analyzer import extract_aspects_and_issues
-from backend.app.ml.keywords import explain_text
+try:
+    from backend.app.ml.keywords import explain_text
+except ImportError:
+    from app.ml.keywords import explain_text
 
 MODELS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "backend", "models")
 
@@ -211,6 +213,7 @@ def render():
                 st.session_state["analysis_history"] = []
                 st.rerun()
 
+    with tab_batch:
         render_html("""
         <div style="font-size:0.85rem;color:#98A2B3;margin-bottom:0.75rem;">
             Run batch inference on multiple reviews via text pasting or CSV file upload.

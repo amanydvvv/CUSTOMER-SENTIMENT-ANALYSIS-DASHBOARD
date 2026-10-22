@@ -1,7 +1,7 @@
 # Customer Sentiment Intelligence Dashboard — Project Report
 
 **Course:** Data Science / Machine Learning Project  
-**Team:** Aman (Project Lead · ML Engineer) · Pasha (Frontend Developer) · Guru (Backend Developer)  
+**System Lead:** Aman (Project Lead & System Architect)  
 **Repository:** https://github.com/amanydvvv/CUSTOMER-SENTIMENT-ANALYSIS-DASHBOARD
 
 ---

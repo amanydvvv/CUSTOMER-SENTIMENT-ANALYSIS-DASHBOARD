@@ -17,8 +17,8 @@
 ```mermaid
 graph TD
     subgraph Pasha_Frontend ["🎨 PASHA - Frontend & UI/UX (Your 30% Domain)"]
-        P0["0_about.py: Team Roles & System Architecture"]
-        P1["1_overview.py: 10,000 Amazon Review Explorer & Live Filters"]
+        P0["0_about.py: Executive Overview & System Architecture"]
+        P1["1_overview.py: 81,700 Amazon Review Explorer & Live Filters"]
         P2["2_live_prediction.py: DistilBERT Model Selector & CSV Export"]
         P3["3_keyword_insights.py: 3-Column Sentiment Driver Badges"]
         P4["4_model_comparison.py: Model Benchmarks & Comparison Charts"]
@@ -103,8 +103,8 @@ Here is the breakdown of what your frontend contains:
 
 | Page | File | What It Does |
 |---|---|---|
-| **0. About** | `frontend/pages/0_about.py` | Shows project background, 3-tier architecture, and team work breakdown. |
-| **1. Overview** | `frontend/pages/1_overview.py` | Explores 10,000 genuine Amazon reviews with real-time sentiment filtering and donut charts. |
+| **0. Executive Overview** | `frontend/pages/0_about.py` | Shows project background, 3-tier architecture, and system capabilities. |
+| **1. Overview** | `frontend/pages/1_overview.py` | Explores 81,700 genuine Amazon reviews with real-time sentiment filtering and donut charts. |
 | **2. Live Prediction** | `frontend/pages/2_live_prediction.py` | Allows users to test any review text with **DistilBERT Transformer**, Balanced LR, LinearSVC, confidence gauge, and CSV export. |
 | **3. Keyword Insights** | `frontend/pages/3_keyword_insights.py` | Aspect & keyword analysis with 3 side-by-side columns of colored sentiment badges. |
 | **4. Model Comparison** | `frontend/pages/4_model_comparison.py` | Compares Accuracy, Macro F1, Recall, and latency across all machine learning models. |

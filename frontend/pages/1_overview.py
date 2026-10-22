@@ -447,19 +447,8 @@ def render():
         _render_manual()
 
     with tab_google:
-        import os
-        has_key = bool(os.environ.get("GOOGLE_PLACES_API_KEY", "").strip())
-        if not has_key:
-            try:
-                has_key = bool(st.secrets.get("GOOGLE_PLACES_API_KEY", "").strip())
-            except Exception:
-                pass
-
-        if has_key:
-            from frontend.components.live_places_section import render_live_places_section
-            render_live_places_section()
-        else:
-            _render_google_dormant()
+        from frontend.components.live_places_section import render_live_places_section
+        render_live_places_section()
 
 
 if __name__ == "__main__":

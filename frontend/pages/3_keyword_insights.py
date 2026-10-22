@@ -10,7 +10,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from frontend.ui_utils import render_html
-from frontend.api_client import load_keywords
+from frontend.api_client import load_keywords, load_keybert_keywords
 
 
 def render():
@@ -21,19 +21,30 @@ def render():
                 ASPECT & KEYWORD INTELLIGENCE
             </h1>
             <div style="color:#98A2B3;font-size:0.82rem;margin:0;">
-                TF-IDF feature vocabulary and sentiment coefficient drivers from customer feedback
+                TF-IDF feature vocabulary & KeyBERT semantic aspect phrase extraction
             </div>
         </div>
         <div style="display:flex;gap:0.45rem;align-items:center;flex-wrap:wrap;">
             <span style="background:rgba(124,92,255,0.1);border:1px solid rgba(124,92,255,0.25);color:#7C5CFF;font-size:0.68rem;font-weight:700;padding:2px 8px;border-radius:4px;">
-                TF-IDF VOCABULARY
+                DUAL NLP ENGINE
+            </span>
+            <span style="background:rgba(34,211,238,0.1);border:1px solid rgba(34,211,238,0.25);color:#22D3EE;font-size:0.68rem;font-weight:700;padding:2px 8px;border-radius:4px;">
+                TF-IDF + KeyBERT
             </span>
         </div>
     </div>
     """
     render_html(header_html)
 
-    col_sel, col_k = st.columns([2, 1])
+    col_eng, col_sel, col_k = st.columns([1.8, 1.2, 1])
+
+    with col_eng:
+        engine_mode = st.radio(
+            "Extraction Engine",
+            ["TF-IDF Model Coefficients", "KeyBERT Semantic Phrases"],
+            horizontal=True,
+            key="keyword_engine_radio"
+        )
 
     with col_sel:
         sentiment_choice = st.segmented_control(
@@ -47,8 +58,27 @@ def render():
     with col_k:
         top_k = st.slider("Top Keywords", min_value=5, max_value=30, value=15, step=5)
 
-    with st.spinner(f"Loading top {sentiment_choice} keyword drivers..."):
-        keywords_data = load_keywords(sentiment_choice, top_k=top_k)
+    is_keybert = "KeyBERT" in engine_mode
+    keywords_data = []
+
+    if is_keybert:
+        with st.spinner("Extracting contextual aspect phrases using KeyBERT embeddings..."):
+            res = load_keybert_keywords(sentiment=sentiment_choice, top_k=top_k)
+            if res and res.get("status") == "ok":
+                keywords_data = [
+                    {"word": item["keyword"], "score": item.get("score", 1.0)}
+                    for item in res.get("keywords", [])
+                ]
+            elif res and res.get("keywords"):
+                keywords_data = [
+                    {"word": item["keyword"], "score": item.get("score", 1.0)}
+                    for item in res.get("keywords", [])
+                ]
+
+    if not keywords_data:
+        # TF-IDF mode or KeyBERT fallback
+        with st.spinner(f"Loading top {sentiment_choice} keyword drivers..."):
+            keywords_data = load_keywords(sentiment_choice, top_k=top_k) or []
 
     if keywords_data:
         words = [item["word"] for item in keywords_data]

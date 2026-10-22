@@ -1,4 +1,4 @@
-# Customer Feedback Intelligence & Sentiment Analysis Dashboard
+ Customer Feedback Intelligence & Sentiment Analysis Dashboard
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
@@ -72,15 +72,18 @@ mini/
 │   │   ├── aspect_analyzer.py          # Aspect & issue priority extractor
 │   │   └── live_places_section.py      # Google Places live analysis component
 │   └── pages/                          # Multi-page dashboard modules
+│       ├── 0_about.py                  # Executive Overview & system architecture
 │       ├── 1_overview.py               # Overall Analysis & historical explorer
-│       ├── 2_live_prediction.py        # Live Single & batch review inference
-│       ├── 3_keyword_insights.py       # Aspect & keyword vocabulary explorer
+│       ├── 2_live_prediction.py        # Live single & batch review inference
+│       ├── 3_keyword_insights.py       # Aspect, TF-IDF & KeyBERT vocabulary explorer
 │       ├── 4_model_comparison.py       # Model benchmark & evaluation metrics
 │       └── 5_product_intelligence.py   # ASIN-level product intelligence
 ├── .streamlit/
 │   ├── config.toml                     # Theme & server configuration
 │   └── secrets.toml.example            # Safe template for API keys
 ├── run_project.bat                     # Windows 1-click launcher (starts backend + frontend)
+├── smoke_test_unseen.py                # Latency & held-out review split smoke test
+├── verify_final_audit.py               # Full 6-tier system integrity audit
 ├── pytest.ini                          # Test configuration & path setup
 └── README.md
 ```

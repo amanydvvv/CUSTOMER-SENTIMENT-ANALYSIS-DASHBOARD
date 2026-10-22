@@ -77,6 +77,8 @@ def render():
                     </div>
                     <div style="background:#151A24;padding:0.5rem;border-radius:4px;border:1px solid #242A35;">
                         <div style="font-size:0.65rem;color:#98A2B3;text-transform:uppercase;">Weighted F1</div>
+                        <div style="font-size:1.15rem;font-weight:800;color:#A78BFA;">{item.get('weighted_f1', 0.0):.4f}</div>
+                    </div>
                     <div style="background:#151A24;padding:0.5rem;border-radius:4px;border:1px solid #242A35;">
                         <div style="font-size:0.65rem;color:#98A2B3;text-transform:uppercase;">Macro Recall</div>
                         <div style="font-size:1.15rem;font-weight:800;color:#22C55E;">{item.get('macro_recall', item.get('recall', 0.0)) * 100:.2f}%</div>

@@ -27,19 +27,81 @@ def _load_eval():
 
 
 def render():
-    # ── Header ────────────────────────────────────────────────────────────────
+    # ── Hero Banner ───────────────────────────────────────────────────────────
     render_html("""
-    <div style="margin-bottom:1.5rem;border-bottom:1px solid #1E2533;padding-bottom:1rem;">
-        <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.4rem;">
-            <span style="font-size:1.9rem;">🧠</span>
-            <h1 style="font-size:1.85rem;font-weight:800;color:#F5F7FA;letter-spacing:-0.02em;margin:0;line-height:1.2;">
-                CUSTOMER SENTIMENT INTELLIGENCE
-            </h1>
+    <div style="
+        background: linear-gradient(135deg, rgba(124,92,255,0.08) 0%, rgba(34,211,238,0.04) 50%, rgba(124,92,255,0.06) 100%);
+        border: 1px solid rgba(124,92,255,0.12);
+        border-radius: 16px;
+        padding: 2rem 2.25rem 1.75rem;
+        margin-bottom: 1.5rem;
+        position: relative;
+        overflow: hidden;
+        animation: fadeInUp 0.5s ease-out both;
+    ">
+        <div style="
+            position: absolute; top: -40px; right: -40px; width: 200px; height: 200px;
+            background: radial-gradient(circle, rgba(124,92,255,0.1) 0%, transparent 70%);
+            border-radius: 50%; pointer-events: none;
+        "></div>
+        <div style="
+            position: absolute; bottom: -30px; left: -30px; width: 150px; height: 150px;
+            background: radial-gradient(circle, rgba(34,211,238,0.06) 0%, transparent 70%);
+            border-radius: 50%; pointer-events: none;
+        "></div>
+        <div style="display:flex;align-items:center;gap:0.65rem;margin-bottom:0.5rem;">
+            <div style="
+                width: 38px; height: 38px; border-radius: 10px;
+                background: linear-gradient(135deg, #7C5CFF, #22D3EE);
+                display: flex; align-items: center; justify-content: center;
+                font-size: 1.2rem; box-shadow: 0 4px 16px rgba(124,92,255,0.3);
+            ">🧠</div>
+            <h1 style="
+                font-size: 1.85rem; font-weight: 800; letter-spacing: -0.03em;
+                margin: 0; line-height: 1.15;
+                background: linear-gradient(135deg, #F5F7FA 0%, #98A2B3 100%);
+                -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+                background-clip: text;
+            ">CUSTOMER SENTIMENT INTELLIGENCE</h1>
         </div>
-        <div style="color:#98A2B3;font-size:0.88rem;max-width:820px;line-height:1.6;">
-            A production-grade NLP intelligence system that processes 81,700 Amazon customer reviews
+        <div style="color:#98A2B3;font-size:0.88rem;max-width:780px;line-height:1.65;margin-bottom:1.25rem;">
+            A production-grade NLP intelligence system processing <b style="color:#F5F7FA;">81,700 Amazon reviews</b>
             using machine learning to extract sentiment, surface product pain points, and deliver
             actionable business insights through a real-time analytics dashboard.
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:0.6rem;">
+            <span style="
+                background: rgba(124,92,255,0.1); border: 1px solid rgba(124,92,255,0.25);
+                color: #A78BFA; font-size: 0.75rem; font-weight: 700;
+                padding: 5px 14px; border-radius: 20px;
+                display: flex; align-items: center; gap: 6px;
+            ">
+                <span style="font-size:0.85rem;">📊</span> 81,700 Reviews
+            </span>
+            <span style="
+                background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.2);
+                color: #4ADE80; font-size: 0.75rem; font-weight: 700;
+                padding: 5px 14px; border-radius: 20px;
+                display: flex; align-items: center; gap: 6px;
+            ">
+                <span style="font-size:0.85rem;">🎯</span> 70.84% Macro Recall
+            </span>
+            <span style="
+                background: rgba(34,211,238,0.08); border: 1px solid rgba(34,211,238,0.2);
+                color: #22D3EE; font-size: 0.75rem; font-weight: 700;
+                padding: 5px 14px; border-radius: 20px;
+                display: flex; align-items: center; gap: 6px;
+            ">
+                <span style="font-size:0.85rem;">✅</span> 60 Tests Passing
+            </span>
+            <span style="
+                background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2);
+                color: #FBBF24; font-size: 0.75rem; font-weight: 700;
+                padding: 5px 14px; border-radius: 20px;
+                display: flex; align-items: center; gap: 6px;
+            ">
+                <span style="font-size:0.85rem;">🤖</span> 4 ML Models
+            </span>
         </div>
     </div>
     """)
@@ -49,13 +111,20 @@ def render():
 
     with col_data:
         render_html("""
-        <div style="background:#11151D;border:1px solid #242A35;border-radius:10px;padding:1.1rem 1.25rem;height:100%;">
-            <div style="font-size:0.72rem;font-weight:700;color:#7C5CFF;text-transform:uppercase;
-                        letter-spacing:0.08em;margin-bottom:0.75rem;">📦 Dataset</div>
+        <div style="
+            background: rgba(17,21,29,0.65); backdrop-filter: blur(16px);
+            border: 1px solid rgba(36,42,53,0.5);
+            border-top: 2px solid; border-image: linear-gradient(90deg, #7C5CFF, #22D3EE) 1;
+            border-image-slice: 1 1 0 1;
+            border-radius: 12px; padding: 1.15rem 1.3rem; height: 100%;
+            animation: fadeInUp 0.4s ease-out both;
+        ">
+            <div style="font-size:0.68rem;font-weight:700;color:#7C5CFF;text-transform:uppercase;
+                        letter-spacing:0.1em;margin-bottom:0.8rem;">📦 Dataset Overview</div>
             <div style="display:flex;flex-direction:column;gap:0.5rem;">
                 <div style="display:flex;justify-content:space-between;align-items:center;">
-                    <span style="color:#98A2B3;font-size:0.82rem;">Reviews</span>
-                    <span style="color:#F5F7FA;font-weight:700;font-size:0.9rem;">81,700</span>
+                    <span style="color:#98A2B3;font-size:0.82rem;">Total Reviews</span>
+                    <span style="color:#F5F7FA;font-weight:800;font-size:1rem;">81,700</span>
                 </div>
                 <div style="display:flex;justify-content:space-between;align-items:center;">
                     <span style="color:#98A2B3;font-size:0.82rem;">Source</span>
@@ -65,23 +134,35 @@ def render():
                     <span style="color:#98A2B3;font-size:0.82rem;">Train / Test</span>
                     <span style="color:#F5F7FA;font-weight:600;font-size:0.82rem;">80% / 20% stratified</span>
                 </div>
-                <div style="border-top:1px solid #1E2533;margin:0.4rem 0;"></div>
-                <div style="display:flex;justify-content:space-between;align-items:center;">
-                    <span style="color:#22C55E;font-size:0.82rem;">● Positive</span>
-                    <span style="color:#F5F7FA;font-weight:600;font-size:0.82rem;">~70%</span>
+                <div style="border-top:1px solid rgba(30,37,51,0.6);margin:0.35rem 0;"></div>
+                <div style="font-size:0.68rem;font-weight:700;color:#667085;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.1rem;">Class Distribution</div>
+                <div style="margin-bottom:0.2rem;">
+                    <div style="display:flex;justify-content:space-between;font-size:0.78rem;margin-bottom:3px;">
+                        <span style="color:#22C55E;">● Positive</span><span style="color:#F5F7FA;font-weight:600;">~70%</span>
+                    </div>
+                    <div style="height:6px;background:#151A24;border-radius:3px;overflow:hidden;">
+                        <div style="width:70%;height:100%;background:linear-gradient(90deg,#22C55E,#16A34A);border-radius:3px;"></div>
+                    </div>
                 </div>
-                <div style="display:flex;justify-content:space-between;align-items:center;">
-                    <span style="color:#EF4444;font-size:0.82rem;">● Negative</span>
-                    <span style="color:#F5F7FA;font-weight:600;font-size:0.82rem;">~22%</span>
+                <div style="margin-bottom:0.2rem;">
+                    <div style="display:flex;justify-content:space-between;font-size:0.78rem;margin-bottom:3px;">
+                        <span style="color:#EF4444;">● Negative</span><span style="color:#F5F7FA;font-weight:600;">~22%</span>
+                    </div>
+                    <div style="height:6px;background:#151A24;border-radius:3px;overflow:hidden;">
+                        <div style="width:22%;height:100%;background:linear-gradient(90deg,#EF4444,#DC2626);border-radius:3px;"></div>
+                    </div>
                 </div>
-                <div style="display:flex;justify-content:space-between;align-items:center;">
-                    <span style="color:#F59E0B;font-size:0.82rem;">● Neutral</span>
-                    <span style="color:#F5F7FA;font-weight:600;font-size:0.82rem;">~8%</span>
+                <div style="margin-bottom:0.2rem;">
+                    <div style="display:flex;justify-content:space-between;font-size:0.78rem;margin-bottom:3px;">
+                        <span style="color:#F59E0B;">● Neutral</span><span style="color:#F5F7FA;font-weight:600;">~8%</span>
+                    </div>
+                    <div style="height:6px;background:#151A24;border-radius:3px;overflow:hidden;">
+                        <div style="width:8%;height:100%;background:linear-gradient(90deg,#F59E0B,#D97706);border-radius:3px;"></div>
+                    </div>
                 </div>
-                <div style="border-top:1px solid #1E2533;margin:0.4rem 0;"></div>
-                <div style="color:#98A2B3;font-size:0.75rem;line-height:1.5;">
-                    ⚠️ Class imbalance present. Balanced LR selected as production model
-                    to correct for minority class suppression.
+                <div style="border-top:1px solid rgba(30,37,51,0.6);margin:0.25rem 0;"></div>
+                <div style="color:#98A2B3;font-size:0.73rem;line-height:1.5;">
+                    ⚠️ Severe imbalance → <span style="color:#A78BFA;font-weight:600;">Balanced LR</span> selected to correct minority class suppression.
                 </div>
             </div>
         </div>
@@ -236,40 +317,90 @@ def render():
 
     with col_team:
         render_html("""
-        <div style="background:#11151D;border:1px solid #242A35;border-radius:10px;padding:1.1rem 1.25rem;">
-            <div style="font-size:0.72rem;font-weight:700;color:#7C5CFF;text-transform:uppercase;
-                        letter-spacing:0.08em;margin-bottom:0.75rem;">👥 Team</div>
-            <div style="display:flex;flex-direction:column;gap:0.75rem;">
-                <div style="background:#151A24;border:1px solid #7C5CFF;border-radius:7px;padding:0.75rem 0.9rem;">
-                    <div style="display:flex;justify-content:space-between;align-items:center;">
-                        <span style="color:#F5F7FA;font-weight:700;font-size:0.88rem;">👑 Aman</span>
-                        <span style="background:rgba(124,92,255,0.18);color:#A78BFA;font-size:0.68rem;font-weight:700;padding:2px 7px;border-radius:4px;border:1px solid rgba(124,92,255,0.3);">40% SHARE</span>
+        <div style="
+            background: rgba(17,21,29,0.65); backdrop-filter: blur(16px);
+            border: 1px solid rgba(36,42,53,0.5); border-radius: 12px;
+            padding: 1.15rem 1.3rem; animation: fadeInUp 0.5s ease-out 0.2s both;
+        ">
+            <div style="font-size:0.68rem;font-weight:700;color:#7C5CFF;text-transform:uppercase;
+                        letter-spacing:0.1em;margin-bottom:0.85rem;">🏛️ System Architecture</div>
+            <div style="display:flex;flex-direction:column;gap:0.7rem;">
+
+                <!-- Tier 1 -->
+                <div style="
+                    background: rgba(21,26,36,0.8); border: 1px solid rgba(124,92,255,0.2);
+                    border-radius: 10px; padding: 0.85rem 1rem;
+                ">
+                    <div style="display:flex;align-items:center;gap:0.7rem;">
+                        <div style="
+                            width:34px; height:34px; border-radius:8px; flex-shrink:0;
+                            background: linear-gradient(135deg, #7C5CFF, #6342E8);
+                            display:flex; align-items:center; justify-content:center;
+                            font-size:0.9rem; color:#fff;
+                        ">🎨</div>
+                        <div style="flex:1;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;">
+                                <span style="color:#F5F7FA;font-weight:700;font-size:0.85rem;">Client Analytics Tier</span>
+                                <span style="background:rgba(124,92,255,0.12);color:#A78BFA;font-size:0.65rem;font-weight:700;padding:2px 8px;border-radius:12px;border:1px solid rgba(124,92,255,0.25);">:8501</span>
+                            </div>
+                            <div style="color:#A78BFA;font-size:0.72rem;font-weight:600;margin-top:2px;">Streamlit 6-Page Executive Suite</div>
+                        </div>
                     </div>
-                    <div style="color:#7C5CFF;font-size:0.74rem;font-weight:600;margin-top:3px;">ML &amp; Security Architect · Project Lead</div>
-                    <div style="color:#98A2B3;font-size:0.72rem;margin-top:4px;line-height:1.4;">
-                        10k Amazon NLP pipeline, LinearSVC/Balanced LR training, DistilBERT deep learning transformer, KeyBERT aspect extractor &amp; JWT RBAC security.
+                    <div style="color:#98A2B3;font-size:0.7rem;margin-top:6px;line-height:1.45;padding-left:42px;">
+                        Interactive gauges, multi-model selectors, aspect pain points, and token-level explainability.
                     </div>
                 </div>
-                <div style="background:#151A24;border:1px solid #38BDF8;border-radius:7px;padding:0.75rem 0.9rem;">
-                    <div style="display:flex;justify-content:space-between;align-items:center;">
-                        <span style="color:#F5F7FA;font-weight:700;font-size:0.88rem;">⚙️ Guru</span>
-                        <span style="background:rgba(56,189,248,0.15);color:#38BDF8;font-size:0.68rem;font-weight:700;padding:2px 7px;border-radius:4px;border:1px solid rgba(56,189,248,0.3);">30% SHARE</span>
+
+                <!-- Tier 2 -->
+                <div style="
+                    background: rgba(21,26,36,0.8); border: 1px solid rgba(56,189,248,0.2);
+                    border-radius: 10px; padding: 0.85rem 1rem;
+                ">
+                    <div style="display:flex;align-items:center;gap:0.7rem;">
+                        <div style="
+                            width:34px; height:34px; border-radius:8px; flex-shrink:0;
+                            background: linear-gradient(135deg, #38BDF8, #0EA5E9);
+                            display:flex; align-items:center; justify-content:center;
+                            font-size:0.9rem; color:#fff;
+                        ">⚙️</div>
+                        <div style="flex:1;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;">
+                                <span style="color:#F5F7FA;font-weight:700;font-size:0.85rem;">API Gateway Tier</span>
+                                <span style="background:rgba(56,189,248,0.1);color:#38BDF8;font-size:0.65rem;font-weight:700;padding:2px 8px;border-radius:12px;border:1px solid rgba(56,189,248,0.25);">:8000</span>
+                            </div>
+                            <div style="color:#38BDF8;font-size:0.72rem;font-weight:600;margin-top:2px;">FastAPI Async REST Engine</div>
+                        </div>
                     </div>
-                    <div style="color:#38BDF8;font-size:0.74rem;font-weight:600;margin-top:3px;">Backend &amp; API Developer</div>
-                    <div style="color:#98A2B3;font-size:0.72rem;margin-top:4px;line-height:1.4;">
-                        FastAPI REST Gateway (:8000), Google Places live review ingestion, SQLite SQLAlchemy database models &amp; 60 automated pytest test suites.
+                    <div style="color:#98A2B3;font-size:0.7rem;margin-top:6px;line-height:1.45;padding-left:42px;">
+                        Multi-model routing, Google Places ingestion, JWT RBAC security, and 60 automated test suites.
                     </div>
                 </div>
-                <div style="background:#151A24;border:1px solid #22C55E;border-radius:7px;padding:0.75rem 0.9rem;">
-                    <div style="display:flex;justify-content:space-between;align-items:center;">
-                        <span style="color:#F5F7FA;font-weight:700;font-size:0.88rem;">🎨 Pasha</span>
-                        <span style="background:rgba(34,197,94,0.15);color:#22C55E;font-size:0.68rem;font-weight:700;padding:2px 7px;border-radius:4px;border:1px solid rgba(34,197,94,0.3);">30% SHARE</span>
+
+                <!-- Tier 3 -->
+                <div style="
+                    background: rgba(21,26,36,0.8); border: 1px solid rgba(34,197,94,0.2);
+                    border-radius: 10px; padding: 0.85rem 1rem;
+                ">
+                    <div style="display:flex;align-items:center;gap:0.7rem;">
+                        <div style="
+                            width:34px; height:34px; border-radius:8px; flex-shrink:0;
+                            background: linear-gradient(135deg, #22C55E, #16A34A);
+                            display:flex; align-items:center; justify-content:center;
+                            font-size:0.9rem; color:#fff;
+                        ">🧠</div>
+                        <div style="flex:1;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;">
+                                <span style="color:#F5F7FA;font-weight:700;font-size:0.85rem;">Intelligence & Data Core</span>
+                                <span style="background:rgba(34,197,94,0.1);color:#22C55E;font-size:0.65rem;font-weight:700;padding:2px 8px;border-radius:12px;border:1px solid rgba(34,197,94,0.25);">SQLite + ML</span>
+                            </div>
+                            <div style="color:#22C55E;font-size:0.72rem;font-weight:600;margin-top:2px;">DistilBERT · Scikit-Learn · KeyBERT</div>
+                        </div>
                     </div>
-                    <div style="color:#22C55E;font-size:0.74rem;font-weight:600;margin-top:3px;">Frontend &amp; UI/UX Developer</div>
-                    <div style="color:#98A2B3;font-size:0.72rem;margin-top:4px;line-height:1.4;">
-                        Streamlit 6-page dashboard (:8501), DistilBERT multi-model live prediction interface, 3-column sentiment driver badges &amp; session CSV export.
+                    <div style="color:#98A2B3;font-size:0.7rem;margin-top:6px;line-height:1.45;padding-left:42px;">
+                        81,700 Amazon reviews, serialized models, sentiment persistence, and query logging.
                     </div>
                 </div>
+
             </div>
         </div>
         """)

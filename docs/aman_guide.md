@@ -7,8 +7,7 @@
 >
 > You are the technical orchestrator and project lead connecting the 3-tier system:
 > - **🎨 Pasha (30% Frontend)**: Builds the interactive Streamlit intelligence dashboard, multi-model selectors, confidence meters, 3-column sentiment driver comparison, and session CSV export.
-> - **⚙️ Guru (30% Backend)**: Maintains the FastAPI REST gateway (:8000), Google Places live review ingestion, SQLite SQLAlchemy database models, and automated 60-test pytest suite.
-> - **🧠 Aman (40% ML & Security Lead)**: Engineered the 10,000 Amazon review NLP pipeline, trained TF-IDF + LinearSVC (91.2% acc) & Balanced Logistic Regression, integrated the SOTA DistilBERT deep learning transformer, KeyBERT semantic aspect extractor, JWT authentication with native bcrypt hashing & RBAC security, and orchestrated full system integration.
+> - **⚙️ Guru (30% Backend)**: Maintains the FastAPI REST gateway (:8000), Google Places live review ingestion, SQLite SQLAlchemy database models, and automated 60-test> - **🧠 Aman (40% ML & Security Lead)**: Engineered the 81,700 Amazon review NLP pipeline, trained TF-IDF + LinearSVC (84.67% acc) & Balanced Logistic Regression (70.84% Macro Recall), integrated the SOTA DistilBERT deep learning transformer, KeyBERT semantic aspect extractor, JWT authentication with native bcrypt hashing & RBAC security, and orchestrated full system integration.
 
 ---
 
@@ -27,7 +26,7 @@ graph TD
     end
 
     subgraph ML_Security_Core ["🧠 AMAN - ML & Security Core 40%"]
-        Dataset["10,000 Balanced Amazon Reviews Pipeline"]
+        Dataset["81,700 Clean Amazon Reviews Pipeline (16,336 Held-out Test)"]
         TFIDF["TF-IDF Vectorizer + LinearSVC + Balanced LR"]
         DistilBERT["DistilBERT SOTA Multilingual Transformer Pipeline"]
         KeyBERT["KeyBERT Semantic Keyword Extractor"]
@@ -47,8 +46,8 @@ graph TD
 
 | Component | Module / File | Status | Description |
 |---|---|:---:|---|
-| **10k Clean Dataset** | `backend/data/processed/` | ✅ Done | 10,000 balanced Amazon customer reviews (Positive, Neutral, Negative). |
-| **TF-IDF & Classical ML** | `backend/models/*.joblib` | ✅ Done | LinearSVC (91.2% acc), Balanced Logistic Regression, Standard LR. |
+| **81.7k Clean Dataset** | `backend/data/processed/` | ✅ Done | 81,700 Amazon customer reviews (held-out 16,336 test split). |
+| **TF-IDF & Classical ML** | `backend/models/*.joblib` | ✅ Done | Balanced LR (70.84% recall), LinearSVC (84.67% acc), Standard LR (85.02%). |
 | **DistilBERT Transformer** | `app/ml/distilbert_model.py` | ✅ Done | SOTA multilingual deep learning transformer with automatic fallback. |
 | **KeyBERT Extraction** | `app/ml/keybert_extractor.py` | ✅ Done | Semantic keyword & aspect extraction leveraging transformer embeddings. |
 | **JWT & RBAC Security** | `app/api/auth.py` | ✅ Done | Native bcrypt hashing, HS256 JWT tokens, viewer/analyst role models. |
@@ -68,8 +67,10 @@ During Review-3 and the final project presentation, professors will evaluate you
 ---
 
 #### 🎓 Q1: *"What is your exact role and contribution as the project lead?"*
-> **Answer:** *"I am the ML and Security Architect, responsible for 40% of the project and coordinating the overall system. My core contributions include:
+> **Answer:** *"I am the ML and Security Architect, responsible for coordinating the overall system. My core contributions include:
 > 1. **System Architecture & Contracts:** Designed the 3-tier decoupled architecture (Streamlit UI, FastAPI Gateway, ML/DB Core) and established API data contracts.
+> 2. **NLP & Data Preprocessing Pipeline:** Built negation-aware text cleaning, stopword removal, and normalization on 81,700 Amazon customer reviews.
+> 3. **Machine Learning Model Engineering:** Trained and evaluated classical TF-IDF models (LinearSVC achieving 84.67% accuracy and Balanced Logistic Regression achieving 70.84% macro recall on 16,336 held-out test reviews).PI data contracts.
 > 2. **NLP & Data Preprocessing Pipeline:** Built negation-aware text cleaning, stopword removal, and normalization on 10,000 Amazon customer reviews.
 > 3. **Machine Learning Model Engineering:** Trained and evaluated classical TF-IDF models (LinearSVC achieving 91.2% accuracy and Balanced Logistic Regression achieving 70.84% macro recall).
 > 4. **Deep Learning Transformer Integration:** Integrated DistilBERT multilingual transformer for contextual sentiment inference with graceful fallback mechanisms.

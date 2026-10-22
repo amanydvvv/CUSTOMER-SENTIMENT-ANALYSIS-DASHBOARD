@@ -72,6 +72,12 @@ class APIClient:
             params["api_key"] = api_key
         return self._request("GET", f"/places/{place_id}/analyze", params=params)
 
+    def get_keybert_keywords(self, sentiment: Optional[str] = None, top_k: int = 15) -> Optional[Dict]:
+        params = {"top_k": top_k}
+        if sentiment and sentiment != "all":
+            params["sentiment"] = sentiment
+        return self._request("GET", "/stats/keywords/keybert", params=params)
+
 
 @st.cache_resource
 def get_api_client() -> APIClient:
@@ -126,3 +132,8 @@ def search_google_places(query: str, api_key: Optional[str] = None) -> Optional[
 def analyze_google_place_reviews(place_id: str, model: str = "balanced_logistic_regression", api_key: Optional[str] = None) -> Optional[Dict]:
     client = get_api_client()
     return client.analyze_place_reviews(place_id, model=model, api_key=api_key)
+
+
+def load_keybert_keywords(sentiment: Optional[str] = None, top_k: int = 15) -> Optional[Dict]:
+    client = get_api_client()
+    return client.get_keybert_keywords(sentiment=sentiment, top_k=top_k)

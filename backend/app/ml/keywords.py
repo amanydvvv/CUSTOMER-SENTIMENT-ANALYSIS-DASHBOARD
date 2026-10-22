@@ -47,7 +47,10 @@ def explain_text(text: str, model_dir: str, model_name: str = "balanced_logistic
       - top_positive: list of (word, score)
       - top_negative: list of (word, score)
     """
-    vectorizer, model, feature_names, feat_to_idx = _get_artifacts(model_dir, model_name)
+    # For deep transformer models without direct linear coefficients, use the aligned
+    # Balanced Logistic Regression model as a linear surrogate for feature attribution.
+    effective_model = "balanced_logistic_regression" if model_name in ("distilbert", "transformer") else model_name
+    vectorizer, model, feature_names, feat_to_idx = _get_artifacts(model_dir, effective_model)
     if not model or not hasattr(model, "coef_"):
         return {"highlighted_html": html.escape(text), "top_positive": [], "top_negative": []}
 

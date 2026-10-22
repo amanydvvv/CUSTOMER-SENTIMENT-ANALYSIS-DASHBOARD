@@ -115,8 +115,23 @@ def get_keybert_keywords(
 
         query = db.query(Review.text)
         if sentiment:
-            query = query.join(Prediction).filter(Prediction.sentiment == sentiment.lower())
+            query = query.join(Prediction, Prediction.review_id == Review.id)\
+                         .filter(Prediction.sentiment == sentiment.lower())
         texts = [r[0] for r in query.limit(100).all() if r[0]]
+        if len(texts) < 5:
+            csv_path = os.path.join(BASE_DIR, "data", "processed", "amazon_all_beauty_reviews.csv")
+            if os.path.exists(csv_path):
+                try:
+                    import pandas as pd
+                    df = pd.read_csv(csv_path, nrows=3000)
+                    if sentiment and "sentiment" in df.columns:
+                        sub = df[df["sentiment"].str.lower() == sentiment.lower()]
+                    else:
+                        sub = df
+                    if not sub.empty:
+                        texts = sub["text"].dropna().sample(min(len(sub), 50), random_state=42).tolist()
+                except Exception:
+                    pass
         if not texts:
             texts = [
                 "Great hydrating serum for glowing sensitive skin",
