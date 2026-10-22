@@ -24,6 +24,7 @@ from frontend.components.review_feed import render_review_feed
 from frontend.components.pain_point_section import render_pain_point_section, analyze_negative_aspects
 from frontend.components.mismatch_section import render_mismatch_section
 from frontend.components.aspect_analyzer import extract_aspects_and_issues
+from frontend.components.vibe_meter import render_purchase_meter
 from frontend.unseen_review_loader import load_unseen_reviews
 
 
@@ -179,6 +180,54 @@ def _render_historical():
     </div>
     """
     render_html(summary_card_html)
+
+    # ── 1b. PURCHASE CONFIDENCE METER (Overview) ───────────────────────────────────
+    render_html("""
+    <div style="font-size:0.68rem;font-weight:700;color:#7C5CFF;text-transform:uppercase;
+                letter-spacing:0.1em;margin-bottom:0.45rem;">OVERALL PURCHASE CONFIDENCE</div>
+    """)
+    _ov_col_left, _ov_col_right = st.columns([1, 1.4])
+    with _ov_col_left:
+        render_purchase_meter(
+            score_pct=float(pos_pct),
+            total_reviews=int(total),
+            positive_count=int(pos_count),
+            height=270,
+        )
+    with _ov_col_right:
+        render_html(f"""
+        <div style="background:#11151D;border:1px solid #1E2533;border-radius:8px;
+                    padding:1rem 1.1rem;height:100%;display:flex;flex-direction:column;justify-content:center;">
+            <div style="font-size:0.68rem;font-weight:700;color:#7C5CFF;text-transform:uppercase;
+                        letter-spacing:0.08em;margin-bottom:0.65rem;">CONFIDENCE BREAKDOWN</div>
+            <div style="font-size:0.82rem;color:#D0D5DD;line-height:1.55;">
+                Based on <b style="color:#F5F7FA;">{total:,} filtered reviews</b>,
+                the overall purchase signal scores
+                <b style="color:#00e599;">{pos_pct:.1f}%</b> positive confidence.
+            </div>
+            <div style="margin-top:0.85rem;display:flex;flex-direction:column;gap:0.4rem;">
+                <div style="display:flex;justify-content:space-between;font-size:0.78rem;">
+                    <span style="color:#22C55E;">&#9632; Positive</span>
+                    <span style="color:#22C55E;font-weight:700;">{pos_pct:.1f}% &nbsp;<span style="color:#667085;font-weight:400;">({pos_count:,})</span></span>
+                </div>
+                <div style="display:flex;justify-content:space-between;font-size:0.78rem;">
+                    <span style="color:#F59E0B;">&#9632; Neutral</span>
+                    <span style="color:#F59E0B;font-weight:700;">{neu_pct:.1f}% &nbsp;<span style="color:#667085;font-weight:400;">({neu_count:,})</span></span>
+                </div>
+                <div style="display:flex;justify-content:space-between;font-size:0.78rem;">
+                    <span style="color:#EF4444;">&#9632; Negative</span>
+                    <span style="color:#EF4444;font-weight:700;">{neg_pct:.1f}% &nbsp;<span style="color:#667085;font-weight:400;">({neg_count:,})</span></span>
+                </div>
+            </div>
+            <div style="margin-top:0.85rem;background:#151A24;border-left:3px solid #7C5CFF;
+                        border-radius:0 4px 4px 0;padding:0.45rem 0.7rem;
+                        font-size:0.75rem;color:#98A2B3;line-height:1.45;">
+                <b style="color:#F5F7FA;">Top Complaint Aspect:</b>
+                {top_aspect} ({top_aspect_share:.1f}% of negatives)&nbsp;&mdash;&nbsp;
+                <i>{top_aspect_issue}</i>
+            </div>
+        </div>
+        """)
 
     # ── 2. SENTIMENT PULSE | SENTIMENT COMPOSITION ─────────────────────────────
     render_sentiment_pulse(df, df_raw)

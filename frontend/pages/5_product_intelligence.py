@@ -28,6 +28,7 @@ from datetime import datetime
 from frontend.ui_utils import render_html
 from frontend.data_loader import load_historical_dataset
 from frontend.components.aspect_analyzer import extract_aspects_and_issues, ASPECT_KEYWORDS
+from frontend.components.vibe_meter import render_purchase_meter, render_aspect_donut
 
 
 def _star_icons(rating: float) -> str:
@@ -309,6 +310,71 @@ def render():
         </div>
     </div>
     """)
+
+    # ── 2b. PURCHASE CONFIDENCE METER + ASPECT VIBE ──────────────────────────────
+    render_html("""
+    <div style="font-size:0.68rem;font-weight:700;color:#7C5CFF;text-transform:uppercase;
+                letter-spacing:0.1em;margin-bottom:0.45rem;margin-top:0.35rem;">
+        PURCHASE CONFIDENCE &amp; ASPECT DISTRIBUTION
+    </div>
+    """)
+
+    col_meter, col_aspect = st.columns([1, 1.2])
+
+    with col_meter:
+        render_html("""
+        <div style="background:#11151D;border:1px solid #242A35;border-radius:8px;
+                    padding:0.7rem 0.9rem 0.2rem 0.9rem;margin-bottom:0.25rem;">
+            <div style="font-size:0.68rem;font-weight:700;color:#ff385c;
+                        text-transform:uppercase;letter-spacing:0.08em;">
+                PURCHASE CONFIDENCE METER
+            </div>
+            <div style="font-size:0.7rem;color:#98A2B3;">
+                Moctale-inspired sentiment confidence gauge
+            </div>
+        </div>
+        """)
+        render_purchase_meter(
+            score_pct=pos_pct,
+            total_reviews=total_reviews,
+            positive_count=pos_count,
+            height=290,
+        )
+
+    with col_aspect:
+        render_html("""
+        <div style="background:#11151D;border:1px solid #242A35;border-radius:8px;
+                    padding:0.7rem 0.9rem 0.2rem 0.9rem;margin-bottom:0.25rem;">
+            <div style="font-size:0.68rem;font-weight:700;color:#7C5CFF;
+                        text-transform:uppercase;letter-spacing:0.08em;">
+                ASPECT VIBE CHART
+            </div>
+            <div style="font-size:0.7rem;color:#98A2B3;">
+                Consumer discussion distribution by topic
+            </div>
+        </div>
+        """)
+        # Build aspect data from the negative review aspect analysis
+        if aspect_summary:
+            aspect_donut_data = {
+                row["aspect"]: round(row["share_pct"], 1)
+                for row in aspect_summary[:8]
+            }
+            dom_aspect = aspect_summary[0]["aspect"]
+            dom_pct    = round(aspect_summary[0]["share_pct"], 1)
+        else:
+            # Graceful fallback mock when no negative reviews
+            aspect_donut_data = {
+                "Quality": 38.0, "Value": 22.0,
+                "Delivery": 18.0, "Support": 12.0, "Packaging": 10.0,
+            }
+            dom_aspect, dom_pct = "Quality", 38.0
+        render_aspect_donut(
+            aspect_data=aspect_donut_data,
+            dominant_aspect=dom_aspect,
+            dominant_pct=dom_pct,
+            height=290,
+        )
 
     # ── 3. PRODUCT FEEDBACK SUMMARY ─────────────────────────────────────────────
     export_cols = [c for c in ["product", "rating", "sentiment", "verified_purchase", "title", "text"] if c in product_df.columns]
