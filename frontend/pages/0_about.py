@@ -106,6 +106,79 @@ def render():
     </div>
     """)
 
+    # ── Executive System Overview ────────────────────────────────────────────
+    render_html("""
+    <div style="
+        background: rgba(17,21,29,0.8); backdrop-filter: blur(16px);
+        border: 1px solid rgba(36,42,53,0.6);
+        border-left: 3px solid #7C5CFF;
+        border-radius: 12px; padding: 1.2rem 1.5rem; margin-bottom: 1.25rem;
+        animation: fadeInUp 0.4s ease-out both;
+    ">
+        <div style="font-size:0.68rem;font-weight:700;color:#7C5CFF;text-transform:uppercase;
+                    letter-spacing:0.12em;margin-bottom:0.85rem;">🏛️ Executive System Overview</div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:0.9rem;margin-bottom:1rem;">
+
+            <div style="background:#11151D;border:1px solid #1E2533;border-radius:8px;padding:0.85rem;text-align:center;">
+                <div style="font-size:1.6rem;font-weight:900;color:#F5F7FA;line-height:1;">81,700</div>
+                <div style="font-size:0.68rem;color:#98A2B3;font-weight:600;margin-top:4px;text-transform:uppercase;letter-spacing:0.06em;">Reviews Ingested</div>
+                <div style="font-size:0.65rem;color:#667085;margin-top:2px;">Amazon All Beauty 2023</div>
+            </div>
+
+            <div style="background:#11151D;border:1px solid #1E2533;border-radius:8px;padding:0.85rem;text-align:center;">
+                <div style="font-size:1.6rem;font-weight:900;color:#A78BFA;line-height:1;">4</div>
+                <div style="font-size:0.68rem;color:#98A2B3;font-weight:600;margin-top:4px;text-transform:uppercase;letter-spacing:0.06em;">Persistent ML Models</div>
+                <div style="font-size:0.65rem;color:#667085;margin-top:2px;">Balanced LR · LR · SVC · DistilBERT</div>
+            </div>
+
+            <div style="background:#11151D;border:1px solid #1E2533;border-radius:8px;padding:0.85rem;text-align:center;">
+                <div style="font-size:1.6rem;font-weight:900;color:#22D3EE;line-height:1;">15+</div>
+                <div style="font-size:0.68rem;color:#98A2B3;font-weight:600;margin-top:4px;text-transform:uppercase;letter-spacing:0.06em;">FastAPI Endpoints</div>
+                <div style="font-size:0.65rem;color:#667085;margin-top:2px;">Predict · Auth · Stats · Places</div>
+            </div>
+
+            <div style="background:#11151D;border:1px solid #1E2533;border-radius:8px;padding:0.85rem;text-align:center;">
+                <div style="font-size:1.6rem;font-weight:900;color:#22C55E;line-height:1;">60</div>
+                <div style="font-size:0.68rem;color:#98A2B3;font-weight:600;margin-top:4px;text-transform:uppercase;letter-spacing:0.06em;">Automated Tests</div>
+                <div style="font-size:0.65rem;color:#667085;margin-top:2px;">100% pass rate · pytest</div>
+            </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:0.9rem;">
+
+            <div style="background:#11151D;border:1px solid #1E2533;border-radius:8px;padding:0.9rem 1rem;">
+                <div style="font-size:0.68rem;font-weight:700;color:#22C55E;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.5rem;">
+                    🎯 Core Metric: 70.84% Macro Recall
+                </div>
+                <div style="font-size:0.78rem;color:#D0D5DD;line-height:1.55;">
+                    The dataset is <b style="color:#F5F7FA;">severely imbalanced (~70% positive)</b> — a naive classifier
+                    predicting "positive" always would achieve 70% accuracy without detecting a single complaint.
+                    We use <b style="color:#22C55E;">Macro Recall</b> (equal weight per class) as our decisive metric.
+                    Balanced Logistic Regression achieves <b style="color:#22C55E;">70.84% Macro Recall</b>,
+                    boosting Neutral class recall from 11% → 53% (+42 pts) while maintaining 76% Negative recall —
+                    critical for surfacing real customer dissatisfaction.
+                </div>
+            </div>
+
+            <div style="background:#11151D;border:1px solid #1E2533;border-radius:8px;padding:0.9rem 1rem;">
+                <div style="font-size:0.68rem;font-weight:700;color:#38BDF8;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.55rem;">
+                    🛠️ Production Architecture Stack
+                </div>
+                <div style="display:flex;flex-direction:column;gap:0.3rem;">
+                    <div style="font-size:0.76rem;color:#D0D5DD;"><span style="color:#38BDF8;font-weight:700;">API Layer:</span> FastAPI (async REST, JWT/RBAC)</div>
+                    <div style="font-size:0.76rem;color:#D0D5DD;"><span style="color:#A78BFA;font-weight:700;">ML Core:</span> Scikit-Learn TF-IDF + HuggingFace DistilBERT</div>
+                    <div style="font-size:0.76rem;color:#D0D5DD;"><span style="color:#22D3EE;font-weight:700;">Semantics:</span> KeyBERT (MMR phrase extraction)</div>
+                    <div style="font-size:0.76rem;color:#D0D5DD;"><span style="color:#4ADE80;font-weight:700;">Database:</span> SQLite + SQLAlchemy ORM</div>
+                    <div style="font-size:0.76rem;color:#D0D5DD;"><span style="color:#F59E0B;font-weight:700;">Frontend:</span> Streamlit 6-page analytics suite</div>
+                    <div style="font-size:0.76rem;color:#D0D5DD;"><span style="color:#F87171;font-weight:700;">External:</span> Google Places API (live ingestion)</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    """)
+
     # ── Row 1: Dataset + Model Performance ───────────────────────────────────
     col_data, col_models = st.columns([1, 1.8])
 

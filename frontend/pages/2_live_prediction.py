@@ -163,8 +163,10 @@ def render():
                     <!-- Explainability Block -->
                     <div style="background:#151A24;border:1px solid #242A35;border-radius:6px;padding:0.75rem 0.85rem;">
                         <div style="font-size:0.68rem;font-weight:700;color:#22D3EE;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.4rem;display:flex;align-items:center;gap:5px;">
-                            <span>🔍</span> <span>MODEL EXPLAINABILITY (TF-IDF WEIGHT ATTRIBUTION)</span>
+                            <span>🔍</span>
+                            <span>{"SURROGATE ATTRIBUTION — Balanced LR Proxy (DistilBERT selected)" if model_choice == "distilbert" else "MODEL EXPLAINABILITY — TF-IDF WEIGHT ATTRIBUTION"}</span>
                         </div>
+                        {"<div style='font-size:0.72rem;color:#F59E0B;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:4px;padding:4px 10px;margin-bottom:0.5rem;line-height:1.4;'><b>ℹ️ Explainability Note:</b> DistilBERT is a black-box transformer; token importance is approximated using aligned Balanced Logistic Regression surrogate coefficients (LIME-style linear proxy).</div>" if model_choice == "distilbert" else ""}
                         <div style="font-size:0.86rem;line-height:1.6;color:#F5F7FA;background:#0D1017;border:1px solid #1E2533;border-radius:6px;padding:0.65rem 0.85rem;margin-bottom:0.65rem;">
                             {explanation.get("highlighted_html", review_text)}
                         </div>

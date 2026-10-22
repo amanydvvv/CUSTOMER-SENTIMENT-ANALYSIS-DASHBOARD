@@ -95,6 +95,59 @@ DEMO_PLACES = {
                 "source": "google_places_api"
             }
         ]
+    },
+    "Premium Skincare Hub (MG Road)": {
+        "place_info": {
+            "name": "Premium Skincare Hub",
+            "address": "MG Road, Brigade Road Junction, Bangalore",
+            "overall_rating": 3.8,
+            "user_rating_count": 2140,
+            "maps_uri": "https://maps.google.com"
+        },
+        "reviews": [
+            {
+                "text": "The retinol night cream genuinely reduced my fine lines within three weeks. Absolutely love it!",
+                "rating": 5.0,
+                "author_name": "Meera Krishnan",
+                "relativePublishTimeDescription": "1 day ago",
+                "source": "google_places_api"
+            },
+            {
+                "text": "The hyaluronic acid serum is lightweight and absorbed instantly. Skin feels plump and hydrated all morning.",
+                "rating": 5.0,
+                "author_name": "Tanvi Bose",
+                "relativePublishTimeDescription": "4 days ago",
+                "source": "google_places_api"
+            },
+            {
+                "text": "Packaging was completely broken on arrival — the glass dropper shattered inside the box. Terrible packing.",
+                "rating": 1.0,
+                "author_name": "Rahul Nair",
+                "relativePublishTimeDescription": "1 week ago",
+                "source": "google_places_api"
+            },
+            {
+                "text": "Caused severe skin irritation after two uses. Not suitable for sensitive skin despite the label claim.",
+                "rating": 2.0,
+                "author_name": "Divya Sundar",
+                "relativePublishTimeDescription": "2 weeks ago",
+                "source": "google_places_api"
+            },
+            {
+                "text": "Decent SPF 50 sunscreen but nothing remarkable. Average texture and leaves a white cast on darker skin tones.",
+                "rating": 3.0,
+                "author_name": "Karan Malhotra",
+                "relativePublishTimeDescription": "3 weeks ago",
+                "source": "google_places_api"
+            },
+            {
+                "text": "Waited 30 minutes at the counter with no staff to assist. Poor in-store experience for the price point.",
+                "rating": 2.0,
+                "author_name": "Pooja Rao",
+                "relativePublishTimeDescription": "1 month ago",
+                "source": "google_places_api"
+            }
+        ]
     }
 }
 
