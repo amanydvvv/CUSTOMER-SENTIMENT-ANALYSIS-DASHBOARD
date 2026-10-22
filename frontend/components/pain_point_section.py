@@ -4,7 +4,6 @@ pain_point_section.py
 Customer Pain-Point Analytics & Top Concerns component.
 Transforms negative reviews into:
 Aspect → Detected Issue → Priority → Recommended Action
-Uses render_html from frontend.ui_utils to guarantee zero raw HTML leaks.
 """
 
 import streamlit as st
@@ -23,7 +22,6 @@ def analyze_negative_aspects(neg_reviews: pd.DataFrame):
     if total_neg == 0:
         return [], {}, 0
 
-    # Sample for speed if large, maintaining deterministic output
     sample_neg = neg_reviews if total_neg <= 2500 else neg_reviews.sample(2500, random_state=42)
     sample_size = len(sample_neg)
 
@@ -89,11 +87,11 @@ def render_pain_point_section(df: pd.DataFrame):
 
     if total_neg == 0:
         render_html("""
-        <div style="background:#11151D;border:1px solid #242A35;border-radius:8px;padding:1.25rem;">
-            <div style="font-size:0.75rem;font-weight:700;color:#7C5CFF;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.25rem;">
+        <div style="background:#111317;border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:20px;">
+            <div style="font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">
                 PAIN-POINT INTELLIGENCE
             </div>
-            <div style="color:#22C55E;font-size:0.85rem;">No negative customer complaints detected in the active filter selection.</div>
+            <div style="color:#10b981;font-size:13px;">No negative customer complaints detected in the active filter selection.</div>
         </div>
         """)
         return
@@ -106,16 +104,16 @@ def render_pain_point_section(df: pd.DataFrame):
 
     # ── 1. TOP CUSTOMER CONCERNS (Ranked Visualization) ─────────────────────────
     render_html("""
-    <div style="background:#11151D;border:1px solid #242A35;border-radius:8px;padding:1.1rem 1.25rem;margin-bottom:1rem;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.35rem;">
-            <span style="font-size:0.75rem;font-weight:700;color:#7C5CFF;text-transform:uppercase;letter-spacing:0.08em;">
+    <div style="background:#111317;border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:20px;margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <span style="font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;">
                 TOP CUSTOMER CONCERNS
             </span>
-            <span style="font-size:0.72rem;color:#98A2B3;">
+            <span style="font-size:11px;color:#6b7280;">
                 Where negative feedback is concentrated
             </span>
         </div>
-        <div style="font-size:0.78rem;color:#98A2B3;margin-bottom:0.75rem;">
+        <div style="font-size:13px;color:#d1d5db;margin-bottom:12px;">
             Relative share and volume of complaints across key customer experience dimensions
         </div>
     </div>
@@ -130,36 +128,36 @@ def render_pain_point_section(df: pd.DataFrame):
         orientation="h",
         text=df_chart.apply(lambda r: f"{r['count']:,} reviews ({r['share_pct']:.1f}%)", axis=1),
         color="share_pct",
-        color_continuous_scale=[[0, "#3B82F6"], [0.5, "#F59E0B"], [1, "#EF4444"]],
+        color_continuous_scale=[[0, "#3b82f6"], [0.5, "#f59e0b"], [1, "#ef4444"]],
     )
     fig.update_traces(
         textposition="outside",
-        textfont=dict(color="#F5F7FA", size=11),
+        textfont=dict(color="#ffffff", size=11),
         marker=dict(line=dict(width=0))
     )
     fig.update_layout(
         height=max(180, len(aspect_summary) * 38),
-        margin=dict(l=10, r=70, t=10, b=10),
+        margin=dict(l=10, r=10, t=25, b=10),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         coloraxis_showscale=False,
-        yaxis=dict(autorange="reversed", tickfont=dict(color="#F5F7FA", size=11), title=""),
-        xaxis=dict(showgrid=True, gridcolor="#1E2533", tickfont=dict(color="#98A2B3", size=10), range=[0, max(df_chart['share_pct'].max() * 1.35, 10)], title="% of Negative Feedback")
+        yaxis=dict(autorange="reversed", tickfont=dict(color="#ffffff", size=11), title=""),
+        xaxis=dict(showgrid=True, gridcolor="#1e2533", tickfont=dict(color="#9ca3af", size=10), range=[0, max(df_chart['share_pct'].max() * 1.35, 10)], title="% of Negative Feedback")
     )
-    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+    st.plotly_chart(fig, width='stretch', config={"displayModeBar": False})
 
     # ── 2. PAIN-POINT INTELLIGENCE (Aspect Detail Breakdown) ─────────────────────
     render_html(f"""
-    <div style="background:#11151D;border:1px solid #242A35;border-radius:8px;padding:1.1rem 1.25rem;margin-bottom:1rem;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.35rem;">
-            <span style="font-size:0.75rem;font-weight:700;color:#7C5CFF;text-transform:uppercase;letter-spacing:0.08em;">
-                PAIN-POINT INTELLIGENCE — WHAT ARE CUSTOMERS COMPLAINING ABOUT?
+    <div style="background:#111317;border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:20px;margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <span style="font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;">
+                PAIN-POINT INTELLIGENCE
             </span>
-            <span style="font-size:0.72rem;color:#EF4444;background:rgba(239,68,68,0.12);padding:2px 8px;border-radius:4px;border:1px solid rgba(239,68,68,0.3);font-weight:600;">
+            <span style="font-size:11px;color:#ef4444;background:rgba(239,68,68,0.12);padding:2px 8px;border-radius:4px;border:1px solid rgba(239,68,68,0.3);font-weight:600;">
                 {total_neg:,} Negative Reviews
             </span>
         </div>
-        <div style="font-size:0.78rem;color:#98A2B3;margin-bottom:0.9rem;">
+        <div style="font-size:13px;color:#d1d5db;margin-bottom:14px;">
             Empirical breakdown of customer complaint themes, severity priority, and suggested business interventions
         </div>
     </div>
@@ -169,30 +167,30 @@ def render_pain_point_section(df: pd.DataFrame):
     cols = st.columns(2)
 
     for i, item in enumerate(top_aspects):
-        pri_col = {"HIGH": "#EF4444", "MEDIUM": "#F59E0B", "LOW": "#22C55E"}.get(item["priority"], "#98A2B3")
-        pri_bg = {"HIGH": "rgba(239,68,68,0.12)", "MEDIUM": "rgba(245,158,11,0.12)", "LOW": "rgba(34,197,94,0.12)"}.get(item["priority"], "#151A24")
-        pri_bdr = {"HIGH": "rgba(239,68,68,0.3)", "MEDIUM": "rgba(245,158,11,0.3)", "LOW": "rgba(34,197,94,0.3)"}.get(item["priority"], "#242A35")
+        pri_col = {"HIGH": "#ef4444", "MEDIUM": "#f59e0b", "LOW": "#10b981"}.get(item["priority"], "#9ca3af")
+        pri_bg = {"HIGH": "rgba(239,68,68,0.12)", "MEDIUM": "rgba(245,158,11,0.12)", "LOW": "rgba(16,185,129,0.12)"}.get(item["priority"], "#181b21")
+        pri_bdr = {"HIGH": "rgba(239,68,68,0.3)", "MEDIUM": "rgba(245,158,11,0.3)", "LOW": "rgba(16,185,129,0.3)"}.get(item["priority"], "rgba(255,255,255,0.07)")
 
         with cols[i % 2]:
             render_html(f"""
-            <div style="background:#151A24;border:1px solid #242A35;border-radius:6px;padding:0.9rem 1rem;margin-bottom:0.75rem;">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.4rem;">
-                    <span style="font-size:0.85rem;font-weight:800;color:#F5F7FA;text-transform:uppercase;letter-spacing:0.04em;">
+            <div style="background:#111317;border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:16px;margin-bottom:12px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                    <span style="font-size:13px;font-weight:600;color:#ffffff;text-transform:uppercase;letter-spacing:0.02em;">
                         {item['aspect']}
                     </span>
-                    <span style="background:{pri_bg};color:{pri_col};border:1px solid {pri_bdr};padding:2px 8px;border-radius:4px;font-size:0.68rem;font-weight:800;">
+                    <span style="background:{pri_bg};color:{pri_col};border:1px solid {pri_bdr};padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;">
                         {item['priority']} PRIORITY
                     </span>
                 </div>
-                <div style="display:flex;gap:0.75rem;font-size:0.75rem;color:#98A2B3;margin-bottom:0.5rem;">
-                    <span><b>Volume:</b> <span style="color:#F5F7FA;">{item['count']:,} reviews</span></span>
-                    <span><b>Share of complaints:</b> <span style="color:#EF4444;">{item['share_pct']:.1f}%</span></span>
+                <div style="display:flex;gap:12px;font-size:12px;color:#9ca3af;margin-bottom:8px;">
+                    <span><b>Volume:</b> <span style="color:#ffffff;">{item['count']:,} reviews</span></span>
+                    <span><b>Share:</b> <span style="color:#ef4444;">{item['share_pct']:.1f}%</span></span>
                 </div>
-                <div style="font-size:0.78rem;color:#D0D5DD;margin-bottom:0.55rem;">
-                    <b style="color:#98A2B3;">Detected Issue:</b> {item['issue']}
+                <div style="font-size:12px;color:#d1d5db;margin-bottom:8px;">
+                    <b style="color:#9ca3af;">Detected Issue:</b> {item['issue']}
                 </div>
-                <div style="background:#11151D;border-left:3px solid #7C5CFF;padding:0.4rem 0.65rem;border-radius:0 4px 4px 0;font-size:0.74rem;color:#98A2B3;">
-                    <b style="color:#F5F7FA;">Suggested Action:</b> {item['action']}
+                <div style="background:#181b21;border-left:3px solid #10b981;padding:8px 10px;border-radius:0 4px 4px 0;font-size:11px;color:#9ca3af;">
+                    <b style="color:#ffffff;">Suggested Action:</b> {item['action']}
                 </div>
             </div>
             """)
@@ -200,28 +198,28 @@ def render_pain_point_section(df: pd.DataFrame):
     # ── 3. AREAS TO INVESTIGATE (Action Priority List) ───────────────────────────
     top_3 = aspect_summary[:3]
     investigate_header = """
-    <div style="background:#11151D;border:1px solid #242A35;border-radius:8px;padding:1.1rem 1.25rem;margin-bottom:1rem;">
-        <div style="font-size:0.75rem;font-weight:700;color:#22D3EE;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.25rem;">
+    <div style="background:#111317;border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:20px;margin-bottom:16px;">
+        <div style="font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">
             AREAS TO INVESTIGATE — RECOMMENDED NEXT STEPS
         </div>
-        <div style="font-size:0.78rem;color:#98A2B3;margin-bottom:0.75rem;">
-            These areas account for the largest portions of negative feedback in the current dataset:
+        <div style="font-size:13px;color:#d1d5db;margin-bottom:12px;">
+            Key dimensions accounting for the highest concentrations of negative feedback:
         </div>
     """
     render_html(investigate_header)
 
     for rank, item in enumerate(top_3, 1):
         item_html = f"""
-        <div style="display:flex;align-items:flex-start;gap:0.85rem;background:#151A24;border:1px solid #242A35;border-radius:6px;padding:0.65rem 0.85rem;margin-bottom:0.5rem;">
-            <div style="background:#7C5CFF;color:#fff;font-weight:800;font-size:0.75rem;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;">
+        <div style="display:flex;align-items:flex-start;gap:12px;background:#181b21;border:1px solid rgba(255,255,255,0.07);border-radius:6px;padding:12px 14px;margin-bottom:8px;">
+            <div style="background:rgba(255,255,255,0.08);color:#ffffff;border:1px solid rgba(255,255,255,0.15);font-weight:700;font-size:11px;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;">
                 {rank}
             </div>
             <div style="flex-grow:1;">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">
-                    <b style="color:#F5F7FA;font-size:0.85rem;">{item['aspect']}</b>
-                    <span style="color:#EF4444;font-size:0.75rem;font-weight:700;">{item['count']:,} negative reviews ({item['share_pct']:.1f}%)</span>
+                    <b style="color:#ffffff;font-size:13px;">{item['aspect']}</b>
+                    <span style="color:#ef4444;font-size:11px;font-weight:600;">{item['count']:,} negative reviews ({item['share_pct']:.1f}%)</span>
                 </div>
-                <div style="color:#98A2B3;font-size:0.76rem;line-height:1.4;">
+                <div style="color:#9ca3af;font-size:12px;line-height:1.4;">
                     <b>Focus:</b> {item['issue']} — <i>{item['action']}</i>
                 </div>
             </div>
@@ -230,8 +228,8 @@ def render_pain_point_section(df: pd.DataFrame):
         render_html(item_html)
 
     render_html("""
-        <div style="font-size:0.72rem;color:#667085;margin-top:0.4rem;">
-            Prioritizing remediation in these top 3 areas addresses the majority of customer friction identified in this review set.
+        <div style="font-size:11px;color:#6b7280;margin-top:8px;">
+            Prioritizing remediation in these top areas addresses the majority of customer friction identified in this review set.
         </div>
     </div>
     """)

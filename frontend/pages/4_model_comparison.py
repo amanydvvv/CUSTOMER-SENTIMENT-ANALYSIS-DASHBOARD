@@ -2,8 +2,7 @@
 4_model_comparison.py
 ─────────────────────
 Model Performance & Comparison page.
-Dark-themed, objective benchmark presentation without rankings or gimmicks.
-Uses render_html from frontend.ui_utils to guarantee zero raw HTML leaks.
+Dark-themed, objective empirical benchmark presentation without gimmicks.
 """
 
 import streamlit as st
@@ -29,17 +28,16 @@ def _load_eval_details():
 
 
 def render():
-    header_html = """
-    <div style="margin-bottom:1.25rem;border-bottom:1px solid #1E2533;padding-bottom:1rem;">
-        <h1 style="font-size:1.85rem;font-weight:800;color:#F5F7FA;letter-spacing:-0.02em;margin:0 0 0.2rem;line-height:1.2;">
-            MODEL BENCHMARK & EVALUATION
+    render_html("""
+    <div style="margin-bottom:20px;border-bottom:1px solid rgba(255,255,255,0.06);padding-bottom:16px;">
+        <h1 style="font-size:22px;font-weight:700;color:#ffffff;letter-spacing:-0.02em;margin:0 0 4px;line-height:1.2;">
+            Model Benchmark &amp; Evaluation
         </h1>
-        <div style="color:#98A2B3;font-size:0.88rem;margin:0;">
+        <div style="color:#9ca3af;font-size:13px;margin:0;">
             Objective empirical evaluation on held-out test split (16,336 Amazon Customer Reviews)
         </div>
     </div>
-    """
-    render_html(header_html)
+    """)
 
     eval_data = _load_eval_details()
     if not eval_data:
@@ -62,26 +60,26 @@ def render():
 
         with [col1, col2, col3][i % 3]:
             card_html = f"""
-            <div style="background:#11151D;border:1px solid #242A35;border-radius:8px;padding:1rem;margin-bottom:0.75rem;">
-                <div style="font-size:0.72rem;font-weight:700;color:#7C5CFF;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.3rem;">
+            <div style="background:#111317;border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:20px;margin-bottom:12px;">
+                <div style="font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">
                     {m_name}
                 </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-top:0.5rem;">
-                    <div style="background:#151A24;padding:0.5rem;border-radius:4px;border:1px solid #242A35;">
-                        <div style="font-size:0.65rem;color:#98A2B3;text-transform:uppercase;">Accuracy</div>
-                        <div style="font-size:1.15rem;font-weight:800;color:#F5F7FA;">{item['accuracy'] * 100:.2f}%</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;">
+                    <div style="background:#181b21;padding:12px;border-radius:6px;border:1px solid rgba(255,255,255,0.07);">
+                        <div style="font-size:10px;color:#9ca3af;text-transform:uppercase;">Accuracy</div>
+                        <div style="font-size:20px;font-weight:700;color:#ffffff;">{item['accuracy'] * 100:.2f}%</div>
                     </div>
-                    <div style="background:#151A24;padding:0.5rem;border-radius:4px;border:1px solid #242A35;">
-                        <div style="font-size:0.65rem;color:#98A2B3;text-transform:uppercase;">Macro F1</div>
-                        <div style="font-size:1.15rem;font-weight:800;color:#22D3EE;">{item.get('macro_f1', item.get('f1', 0.0)):.4f}</div>
+                    <div style="background:#181b21;padding:12px;border-radius:6px;border:1px solid rgba(255,255,255,0.07);">
+                        <div style="font-size:10px;color:#9ca3af;text-transform:uppercase;">Macro F1</div>
+                        <div style="font-size:20px;font-weight:700;color:#10b981;">{item.get('macro_f1', item.get('f1', 0.0)):.4f}</div>
                     </div>
-                    <div style="background:#151A24;padding:0.5rem;border-radius:4px;border:1px solid #242A35;">
-                        <div style="font-size:0.65rem;color:#98A2B3;text-transform:uppercase;">Weighted F1</div>
-                        <div style="font-size:1.15rem;font-weight:800;color:#A78BFA;">{item.get('weighted_f1', 0.0):.4f}</div>
+                    <div style="background:#181b21;padding:12px;border-radius:6px;border:1px solid rgba(255,255,255,0.07);">
+                        <div style="font-size:10px;color:#9ca3af;text-transform:uppercase;">Weighted F1</div>
+                        <div style="font-size:20px;font-weight:700;color:#ffffff;">{item.get('weighted_f1', 0.0):.4f}</div>
                     </div>
-                    <div style="background:#151A24;padding:0.5rem;border-radius:4px;border:1px solid #242A35;">
-                        <div style="font-size:0.65rem;color:#98A2B3;text-transform:uppercase;">Macro Recall</div>
-                        <div style="font-size:1.15rem;font-weight:800;color:#22C55E;">{item.get('macro_recall', item.get('recall', 0.0)) * 100:.2f}%</div>
+                    <div style="background:#181b21;padding:12px;border-radius:6px;border:1px solid rgba(255,255,255,0.07);">
+                        <div style="font-size:10px;color:#9ca3af;text-transform:uppercase;">Macro Recall</div>
+                        <div style="font-size:20px;font-weight:700;color:#10b981;">{item.get('macro_recall', item.get('recall', 0.0)) * 100:.2f}%</div>
                     </div>
                 </div>
             </div>
@@ -90,13 +88,13 @@ def render():
 
     # Explanatory Evaluation Protocol Callout
     render_html("""
-    <div style="background:#11151D;border:1px solid #242A35;border-left:4px solid #7C5CFF;border-radius:6px;padding:0.75rem 1rem;margin:0.5rem 0 0.85rem 0;">
-        <div style="font-size:0.72rem;font-weight:700;color:#7C5CFF;margin-bottom:0.2rem;display:flex;align-items:center;gap:6px;text-transform:uppercase;letter-spacing:0.05em;">
-            <span>⚡</span> <span>Evaluation Protocol: Macro vs. Weighted Metrics</span>
+    <div style="background:#111317;border:1px solid rgba(255,255,255,0.07);border-left:3px solid #10b981;border-radius:0 8px 8px 0;padding:14px 18px;margin:12px 0 16px 0;">
+        <div style="font-size:11px;font-weight:600;color:#10b981;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em;">
+            Evaluation Protocol: Macro vs. Weighted Metrics
         </div>
-        <div style="font-size:0.74rem;color:#98A2B3;line-height:1.45;">
-            Due to customer review class imbalance (~70% positive), <b>Macro Recall & Macro Precision</b> evaluate unweighted per-class performance across Positive, Neutral, and Negative categories. 
-            While Standard LR achieves higher raw accuracy by defaulting to positive, <b>Balanced Logistic Regression achieves higher Macro Recall (70.84% vs 61.89%) and Macro F1 (0.6677 vs 0.6253)</b>, accurately detecting customer dissatisfaction.
+        <div style="font-size:13px;color:#9ca3af;line-height:1.5;">
+            Due to natural customer review class imbalance (~70% positive), <b>Macro Recall and Macro Precision</b> evaluate unweighted per-class performance across Positive, Neutral, and Negative categories. 
+            While Standard LR achieves higher raw accuracy by prioritizing majority-class positive samples, <b>Balanced Logistic Regression achieves higher Macro Recall (70.84% vs 61.89%) and Macro F1 (0.6677 vs 0.6253)</b>, reliably surfacing critical customer friction.
         </div>
     </div>
     """)
@@ -120,15 +118,15 @@ def render():
     ])
 
     render_html("""
-    <div style="background:#11151D;border:1px solid #242A35;border-radius:8px;padding:0.75rem 1rem;margin-top:0.5rem;margin-bottom:0.85rem;">
-        <div style="font-size:0.72rem;font-weight:700;color:#7C5CFF;text-transform:uppercase;letter-spacing:0.08em;">
+    <div style="background:#111317;border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:14px 18px;margin-bottom:12px;">
+        <div style="font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;">
             Comparative Metrics Table
         </div>
     </div>
     """)
-    st.dataframe(df_metrics, use_container_width=True, hide_index=True)
+    st.dataframe(df_metrics, width='stretch', hide_index=True)
 
-    # Visual Comparison Bar Charts
+    # Visual Comparison Bar Charts (Rule 4: side-by-side st.columns(2))
     col_f1, col_acc = st.columns(2)
 
     df_chart = pd.DataFrame([
@@ -143,11 +141,11 @@ def render():
 
     with col_f1:
         render_html("""
-        <div style="background:#11151D;border:1px solid #242A35;border-radius:8px;padding:1rem 1.25rem;">
-            <div style="font-size:0.75rem;font-weight:700;color:#7C5CFF;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.25rem;">
+        <div style="background:#111317;border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:16px 20px;">
+            <div style="font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">
                 Macro F1 Score (Minority Class Balance)
             </div>
-            <div style="font-size:0.78rem;color:#98A2B3;margin-bottom:0.75rem;">
+            <div style="font-size:12px;color:#6b7280;margin-bottom:12px;">
                 Higher Macro F1 reflects balanced detection across Positive, Neutral, Negative
             </div>
         </div>
@@ -157,29 +155,28 @@ def render():
             df_chart,
             x="Model",
             y="Macro F1",
-            color="Model",
             text="Macro F1",
-            color_discrete_sequence=["#7C5CFF", "#22D3EE", "#22C55E"]
+            color_discrete_sequence=["#10b981"]
         )
-        fig_f1.update_traces(texttemplate="%{text:.4f}", textposition="outside", textfont=dict(color="#F5F7FA"))
+        fig_f1.update_traces(texttemplate="%{text:.4f}", textposition="outside", textfont=dict(color="#ffffff"))
         fig_f1.update_layout(
             height=250,
-            margin=dict(l=10, r=10, t=10, b=10),
+            margin=dict(l=10, r=10, t=25, b=10),
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
-            yaxis=dict(range=[0, 1.0], showgrid=True, gridcolor="#1E2533", tickfont=dict(color="#98A2B3")),
-            xaxis=dict(tickfont=dict(color="#F5F7FA")),
+            yaxis=dict(range=[0, 1.0], showgrid=True, gridcolor="rgba(255,255,255,0.06)", tickfont=dict(color="#9ca3af")),
+            xaxis=dict(tickfont=dict(color="#ffffff")),
             showlegend=False
         )
-        st.plotly_chart(fig_f1, use_container_width=True, config={"displayModeBar": False})
+        st.plotly_chart(fig_f1, width='stretch', config={"displayModeBar": False})
 
     with col_acc:
         render_html("""
-        <div style="background:#11151D;border:1px solid #242A35;border-radius:8px;padding:1rem 1.25rem;">
-            <div style="font-size:0.75rem;font-weight:700;color:#7C5CFF;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.25rem;">
+        <div style="background:#111317;border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:16px 20px;">
+            <div style="font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">
                 Overall Classification Accuracy
             </div>
-            <div style="font-size:0.78rem;color:#98A2B3;margin-bottom:0.75rem;">
+            <div style="font-size:12px;color:#6b7280;margin-bottom:12px;">
                 Percentage of correct predictions over 16,336 test samples
             </div>
         </div>
@@ -189,30 +186,29 @@ def render():
             df_chart,
             x="Model",
             y="Accuracy",
-            color="Model",
             text="Accuracy",
-            color_discrete_sequence=["#7C5CFF", "#22D3EE", "#22C55E"]
+            color_discrete_sequence=["#3b82f6"]
         )
-        fig_acc.update_traces(texttemplate="%{text:.2%}", textposition="outside", textfont=dict(color="#F5F7FA"))
+        fig_acc.update_traces(texttemplate="%{text:.2%}", textposition="outside", textfont=dict(color="#ffffff"))
         fig_acc.update_layout(
             height=250,
-            margin=dict(l=10, r=10, t=10, b=10),
+            margin=dict(l=10, r=10, t=25, b=10),
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
-            yaxis=dict(range=[0, 1.0], showgrid=True, gridcolor="#1E2533", tickfont=dict(color="#98A2B3")),
-            xaxis=dict(tickfont=dict(color="#F5F7FA")),
+            yaxis=dict(range=[0, 1.0], showgrid=True, gridcolor="rgba(255,255,255,0.06)", tickfont=dict(color="#9ca3af")),
+            xaxis=dict(tickfont=dict(color="#ffffff")),
             showlegend=False
         )
-        st.plotly_chart(fig_acc, use_container_width=True, config={"displayModeBar": False})
+        st.plotly_chart(fig_acc, width='stretch', config={"displayModeBar": False})
 
     # Confusion Matrices
     render_html("""
-    <div style="background:#11151D;border:1px solid #242A35;border-radius:8px;padding:1.1rem 1.25rem;margin-top:1.25rem;">
-        <div style="font-size:0.75rem;font-weight:700;color:#7C5CFF;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.25rem;">
+    <div style="background:#111317;border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:16px 20px;margin-top:20px;margin-bottom:14px;">
+        <div style="font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">
             Confusion Matrices on Held-Out Test Set (16,336 Reviews)
         </div>
-        <div style="font-size:0.78rem;color:#98A2B3;margin-bottom:1rem;">
-            Breakdown of True vs. Predicted classes across all three models
+        <div style="font-size:12px;color:#6b7280;">
+            Breakdown of True vs. Predicted classes across all three benchmark models
         </div>
     </div>
     """)
@@ -231,18 +227,18 @@ def render():
                     x=labels,
                     y=labels,
                     text_auto=True,
-                    color_continuous_scale=[[0, "#151A24"], [0.5, "#3730A3"], [1, "#7C5CFF"]]
+                    color_continuous_scale=[[0, "#111317"], [0.5, "#1e293b"], [1, "#10b981"]]
                 )
                 fig_cm.update_layout(
-                    title=f"<b style='color:#F5F7FA;font-size:13px;'>{m_name}</b>",
+                    title=f"<b style='color:#ffffff;font-size:13px;'>{m_name}</b>",
                     height=260,
                     margin=dict(l=10, r=10, t=30, b=10),
                     paper_bgcolor="rgba(0,0,0,0)",
                     plot_bgcolor="rgba(0,0,0,0)",
-                    font=dict(color="#F5F7FA"),
+                    font=dict(color="#ffffff"),
                     coloraxis_showscale=False
                 )
-                st.plotly_chart(fig_cm, use_container_width=True, config={"displayModeBar": False})
+                st.plotly_chart(fig_cm, width='stretch', config={"displayModeBar": False})
 
 
 if __name__ == "__main__":

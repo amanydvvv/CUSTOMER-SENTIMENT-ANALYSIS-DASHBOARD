@@ -1,4 +1,4 @@
- Customer Feedback Intelligence & Sentiment Analysis Dashboard
+# Customer Feedback Intelligence & Sentiment Analysis Dashboard
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
@@ -21,27 +21,27 @@ mini/
 │   │   ├── api/
 │   │   │   ├── predict.py              # POST /predict, POST /predict/batch (DistilBERT + TF-IDF)
 │   │   │   ├── reviews.py              # GET /reviews (sentiment + product filter + pagination)
-│   │   │   ├── stats.py                # GET /stats, /stats/keywords/{sentiment}
-│   │   │   ├── places.py               # GET /places/search, GET /places/reviews
-│   │   │   └── auth.py                 # POST /auth/register, /auth/login, GET /auth/me (JWT RBAC)
+│   │   │   ├── stats.py                # GET /stats, /stats/keywords/{sentiment}, /stats/keywords/keybert
+│   │   │   ├── places.py               # GET /places/search, GET /places/{id}/analyze
+│   │   │   └── auth.py                 # POST /auth/register, /auth/login, GET /auth/me (JWT HS256 RBAC)
 │   │   ├── ml/
-│   │   │   ├── preprocessing.py        # clean_text() — negation-aware, deduplicated
-│   │   │   ├── features.py             # TF-IDF (unigrams + bigrams, top 10k features)
+│   │   │   ├── preprocessing.py        # clean_text() — negation-aware, deduplicated (21-token whitelist)
+│   │   │   ├── features.py             # TF-IDF (unigrams + bigrams, top 10,000 features, L2-normalized)
 │   │   │   ├── train.py                # LR, Balanced LR, LinearSVC training pipeline
-│   │   │   ├── evaluate.py             # Empirical evaluation (Macro F1, Macro Recall)
-│   │   │   ├── keywords.py             # Top-N class keywords from model coefficients (TF-IDF)
-│   │   │   ├── keybert_extractor.py    # KeyBERT semantic keyword extraction (BERT embeddings)
+│   │   │   ├── evaluate.py             # Empirical evaluation (Macro F1, Macro Recall, Confusion Matrix)
+│   │   │   ├── keywords.py             # Linear coefficient word attribution & surrogate explainability
+│   │   │   ├── keybert_extractor.py    # KeyBERT semantic aspect extractor (all-MiniLM-L6-v2 + MMR)
 │   │   │   └── distilbert_model.py     # DistilBERT multilingual transformer inference pipeline
 │   │   ├── db/
 │   │   │   ├── database.py             # SQLAlchemy session & SQLite engine
-│   │   │   ├── models.py               # DB: reviews, predictions, model_metrics, users, query_history
+│   │   │   ├── models.py               # DB tables: reviews, predictions, model_metrics, users, query_history
 │   │   │   └── crud.py                 # DB read/write helpers (sentiment-joined queries)
 │   │   ├── services/
 │   │   │   └── google_places.py        # Google Places API (Text Search + Place Details + mock fallback)
 │   │   └── schemas.py                  # Pydantic request/response validation schemas
 │   ├── data/
 │   │   └── processed/
-│   │       ├── amazon_all_beauty_reviews.csv   # 81.7K preprocessed genuine reviews
+│   │       ├── amazon_all_beauty_reviews.csv   # 81.7K preprocessed genuine customer reviews
 │   │       ├── dataset_info.json               # Class distribution & metadata
 │   │       └── app.db                          # SQLite database
 │   ├── models/                         # Serialized ML artifacts (.joblib)
@@ -49,39 +49,42 @@ mini/
 │   │   ├── logistic_regression.joblib
 │   │   ├── balanced_logistic_regression.joblib
 │   │   ├── linearsvc.joblib
-│   │   └── evaluation_results.json
+│   │   ├── evaluation_results.json
+│   │   └── label_info.json
 │   ├── init_db.py                      # Database schema creator & metric seeder
 │   ├── migrate_db.py                   # Safe, non-destructive schema migration
 │   ├── prepare_dataset.py              # Raw review extractor & preprocessor
 │   ├── requirements.txt                # Backend dependencies
-│   └── tests/                          # Automated backend test suites
+│   └── tests/                          # Automated backend test suites (60 tests)
 │       ├── test_api.py                 # Core API endpoint tests (14 tests)
-│       ├── test_phase5_google_places.py# Google Places integration tests (36 tests)
+│       ├── test_auth_and_models.py     # Auth, JWT, and Model Registry tests (5 tests)
+│       ├── test_phase5_google_places.py# Google Places integration & resilience tests (36 tests)
 │       └── test_preprocessing.py       # NLP cleaning unit tests (5 tests)
 ├── frontend/
 │   ├── streamlit_app.py                # App shell, dark design system, sidebar navigation
 │   ├── api_client.py                   # Unified HTTP client communicating with backend
 │   ├── data_loader.py                  # Cached review dataset loader
-│   ├── unseen_review_loader.py         # Held-out validation review sampler
+│   ├── unseen_review_loader.py         # Held-out validation review sampler (16,336 split)
 │   ├── ui_utils.py                     # Safe HTML rendering utilities
 │   ├── components/                     # Modular dashboard components
 │   │   ├── sentiment_pulse.py          # Interactive Sentiment Pulse gauge
 │   │   ├── review_feed.py              # Filterable review feed with attribution badges
 │   │   ├── pain_point_section.py       # Aspect & complaint breakdown engine
 │   │   ├── mismatch_section.py         # Star rating vs. AI sentiment mismatch detector
-│   │   ├── aspect_analyzer.py          # Aspect & issue priority extractor
+│   │   ├── aspect_analyzer.py          # 7-dimension aspect & issue priority extractor
+│   │   ├── vibe_meter.py               # Moctale 180° Semicircular Purchase Confidence Meter & Donut
 │   │   └── live_places_section.py      # Google Places live analysis component
 │   └── pages/                          # Multi-page dashboard modules
 │       ├── 0_about.py                  # Executive Overview & system architecture
 │       ├── 1_overview.py               # Overall Analysis & historical explorer
 │       ├── 2_live_prediction.py        # Live single & batch review inference
 │       ├── 3_keyword_insights.py       # Aspect, TF-IDF & KeyBERT vocabulary explorer
-│       ├── 4_model_comparison.py       # Model benchmark & evaluation metrics
+│       ├── 4_model_comparison.py       # Model benchmark & evaluation matrices
 │       └── 5_product_intelligence.py   # ASIN-level product intelligence
 ├── .streamlit/
 │   ├── config.toml                     # Theme & server configuration
 │   └── secrets.toml.example            # Safe template for API keys
-├── run_project.bat                     # Windows 1-click launcher (starts backend + frontend)
+├── run_project.bat                     # Windows 1-click launcher (Python 3.10 pinned)
 ├── smoke_test_unseen.py                # Latency & held-out review split smoke test
 ├── verify_final_audit.py               # Full 6-tier system integrity audit
 ├── pytest.ini                          # Test configuration & path setup
@@ -92,25 +95,28 @@ mini/
 
 ## 📊 Model Evaluation & Empirical Benchmark
 
-Evaluated on a **held-out 20% stratified test set (16,336 genuine Amazon reviews)**.
+Evaluated on the **held-out 20% stratified test set (16,336 genuine Amazon customer reviews)**:
 
-| Model | Accuracy | Macro Recall *(Unweighted)* | Macro Precision | Macro F1 | Weighted F1 | Latency |
+| Model Architecture | Test Accuracy | Macro Recall *(Decisive)* | Macro Precision | Macro F1 | Weighted F1 | Per-Sample Latency |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Standard Logistic Regression** | **85.02%** | 61.89% | 68.15% | 0.6253 | 0.8282 | 0.0001 ms |
-| **Balanced Logistic Regression** 🏆 | 79.70% | **70.84%** *(+8.95%)* | 65.57% | **0.6677** *(+0.042)* | 0.8179 | 0.0002 ms |
-| **LinearSVC** | 84.67% | 62.48% | 67.12% | 0.6311 | 0.8285 | 0.0001 ms |
+| **Balanced Logistic Regression** 🏆 | 79.70% | **70.84%** *(+8.95%)* | 65.57% | **0.6677** *(+0.042)* | 0.8179 | **0.000186 ms** (186 ns) |
+| **LinearSVC** | 84.67% | 62.48% | 67.12% | 0.6311 | 0.8285 | 0.000122 ms |
+| **Standard Logistic Regression** | **85.02%** | 61.89% | **68.15%** | 0.6253 | **0.8282** | 0.000122 ms |
+| **DistilBERT Multilingual** | SOTA Contextual | Robust Semantic | Contextual | Contextual | High Semantic | ~250.0 ms |
 
 > ### 💡 Why Macro Recall & Macro F1 are the Decisive Metrics:
-> Customer review datasets suffer from severe class imbalance (**~70% positive, 22% negative, 8% neutral**). A standard classifier achieves high raw accuracy by almost always guessing positive (achieving only **11% recall on neutral reviews**).  
-> **Balanced Logistic Regression** trades a small fraction of overall accuracy to boost **Neutral Recall from 11% to 53%** and **Negative Recall to 76%**, ensuring critical customer dissatisfaction is never ignored.
+> Customer review datasets suffer from severe class imbalance (**~70% positive, 21.6% negative, 8.4% neutral**). A standard classifier achieves high raw accuracy by almost always predicting positive (achieving only **11.27% recall on neutral reviews**).  
+> **Balanced Logistic Regression** applies inverse class frequency weighting ($w_c = \frac{N}{|C| \cdot N_c}$), boosting **Neutral Recall from 11.27% to 52.65% (+41.38 percentage points)** and preserving **75.66% Negative Recall**, ensuring critical customer dissatisfaction is never ignored.
+>
+> **Catastrophic Error Reduction:** Misclassifying an angry customer review as Positive collapses from **644 instances** in Standard LR down to **187 instances** in Balanced LR—a **70.96% relative reduction** in catastrophic dissatisfaction leakage.
 
 ---
 
 ## ⚡ Quick Start
 
 ### Option A: 1-Click Launch (Windows)
-Simply double-click the **`run_project.bat`** file in the root folder. It will:
-1. Initialize the SQLite database.
+Double-click the **`run_project.bat`** file in the root folder. It will:
+1. Initialize the SQLite database schema and seed model benchmarks.
 2. Launch the FastAPI backend on port `8000`.
 3. Launch the Streamlit dashboard on port `8501`.
 
@@ -152,10 +158,10 @@ streamlit run frontend/streamlit_app.py
 
 ## 🧪 Automated Testing & QA
 
-Run the full automated test suite (66 tests covering NLP cleaning, API endpoints, and Google Places integration):
+Run the full automated test suite (60 tests covering NLP cleaning, API endpoints, auth security, and Google Places integration):
 
 ```bash
-python -m pytest
+python -m pytest backend/tests -v
 ```
 
 Run independent smoke and integrity checks:
@@ -166,30 +172,29 @@ python verify_final_audit.py
 
 ---
 
-## 🌐 Google Places API Configuration (Optional)
+## 🛠️ API Reference
 
-To enable live Google Maps review ingestion for businesses and restaurants:
-
-1. Copy `.streamlit/secrets.toml.example` to `.streamlit/secrets.toml`:
-   ```bash
-   cp .streamlit/secrets.toml.example .streamlit/secrets.toml
-   ```
-2. Add your Google Places API Key:
-   ```toml
-   GOOGLE_PLACES_API_KEY = "AIzaSy..."
-   ```
+| Method | Endpoint | Request Schema | Description |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/predict/` | `ReviewCreate` | Real-time sentiment prediction with calibrated confidence score |
+| `POST` | `/predict/batch` | `BatchPredictRequest` | High-throughput batch inference over arrays of review texts |
+| `GET` | `/reviews/` | Query Params | Fetch paginated historical reviews with sentiment and product filters |
+| `GET` | `/stats/` | None | Dashboard summary metrics, top keywords, and class distributions |
+| `GET` | `/stats/keywords/{sentiment}` | Path Param | Linear model coefficient-derived keywords per sentiment class |
+| `GET` | `/stats/keywords/keybert` | Query Params | Dense transformer keyphrase extraction using KeyBERT (MMR) |
+| `GET` | `/places/search` | Query Params | Search businesses via Google Places API (with resilient fallback) |
+| `GET` | `/places/{id}/analyze` | Path Param | Ingest and analyze live Google reviews with custom ML model |
+| `POST` | `/auth/register` | `UserRegister` | Register user account with bcrypt password hashing |
+| `POST` | `/auth/login` | `UserLogin` | Authenticate user and issue signed HS256 JWT access token |
+| `GET` | `/auth/me` | Bearer Token | Retrieve currently authenticated user context and role |
+| `GET` | `/models/metrics` | None | Retrieve live empirical evaluation metrics from SQLite DB |
+| `GET` | `/models` | None | List available models in the active model zoo |
+| `GET` | `/health` | None | Backend service health, DB connectivity, and ML artifact check |
 
 ---
 
-## 🛠️ API Reference
+## 👥 Project Team & Work Share
 
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| `POST` | `/predict/` | Predict sentiment for a single review with confidence score |
-| `POST` | `/predict/batch` | Batch sentiment inference over multiple reviews |
-| `GET` | `/reviews/` | Fetch paginated historical reviews with optional filters |
-| `GET` | `/stats/` | Dashboard summary metrics, top keywords, and class distributions |
-| `GET` | `/places/search` | Search businesses via Google Places API |
-| `GET` | `/places/{id}/analyze` | Ingest and analyze live Google reviews for a specific place |
-| `GET` | `/models/metrics` | Retrieve live empirical evaluation metrics from SQLite DB |
-| `GET` | `/health` | Backend service health and model status check |
+* **🧠 Aman (ML, Architecture & Security Lead — 40%)**: NLP pipeline engineering, TF-IDF + Classical ML models (Balanced LR, LinearSVC), DistilBERT transformer integration, KeyBERT aspect extraction, JWT authentication with bcrypt & RBAC, and system orchestration.
+* **🎨 Pasha (Frontend Lead — 30%)**: Streamlit 6-page dark minimalist dashboard, multi-model selection interfaces, Moctale visual analytics (180° Semicircular Purchase Confidence Meter, Aspect Donut), and CSV session export.
+* **⚙️ Guru (Backend Lead — 30%)**: FastAPI async REST gateway, Google Places API live review ingestion with resilient mock fallbacks, SQLite SQLAlchemy relational models, and 60-test automated verification suite.

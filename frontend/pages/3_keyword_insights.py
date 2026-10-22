@@ -3,7 +3,6 @@
 ─────────────────────
 Aspect & Keyword Explorer page.
 Displays TF-IDF keyword weights, positive drivers, and negative friction terms on dark cards.
-Uses render_html from frontend.ui_utils to guarantee zero raw HTML leaks.
 """
 
 import streamlit as st
@@ -14,27 +13,23 @@ from frontend.api_client import load_keywords, load_keybert_keywords
 
 
 def render():
-    header_html = """
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;border-bottom:1px solid #1E2533;padding-bottom:0.75rem;">
+    render_html("""
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;border-bottom:1px solid rgba(255,255,255,0.06);padding-bottom:12px;">
         <div>
-            <h1 style="font-size:1.6rem;font-weight:800;color:#F5F7FA;letter-spacing:-0.02em;margin:0 0 0.2rem;line-height:1.2;">
-                ASPECT & KEYWORD INTELLIGENCE
+            <h1 style="font-size:22px;font-weight:700;color:#ffffff;letter-spacing:-0.02em;margin:0 0 4px;line-height:1.2;">
+                Aspect &amp; Keyword Intelligence
             </h1>
-            <div style="color:#98A2B3;font-size:0.82rem;margin:0;">
-                TF-IDF feature vocabulary & KeyBERT semantic aspect phrase extraction
+            <div style="color:#9ca3af;font-size:13px;margin:0;">
+                TF-IDF vocabulary weights and KeyBERT semantic keyphrase extraction
             </div>
         </div>
-        <div style="display:flex;gap:0.45rem;align-items:center;flex-wrap:wrap;">
-            <span style="background:rgba(124,92,255,0.1);border:1px solid rgba(124,92,255,0.25);color:#7C5CFF;font-size:0.68rem;font-weight:700;padding:2px 8px;border-radius:4px;">
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+            <span style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:#ffffff;font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;">
                 DUAL NLP ENGINE
-            </span>
-            <span style="background:rgba(34,211,238,0.1);border:1px solid rgba(34,211,238,0.25);color:#22D3EE;font-size:0.68rem;font-weight:700;padding:2px 8px;border-radius:4px;">
-                TF-IDF + KeyBERT
             </span>
         </div>
     </div>
-    """
-    render_html(header_html)
+    """)
 
     col_eng, col_sel, col_k = st.columns([1.8, 1.2, 1])
 
@@ -61,30 +56,26 @@ def render():
     is_keybert = "KeyBERT" in engine_mode
     keywords_data = []
 
-    # Engine explanation callout
     if is_keybert:
         render_html("""
-        <div style="background:rgba(34,211,238,0.06);border:1px solid rgba(34,211,238,0.2);border-radius:8px;
-                    padding:0.65rem 1rem;margin-bottom:0.75rem;font-size:0.78rem;color:#98A2B3;line-height:1.5;">
-            <b style="color:#22D3EE;">⚡ KeyBERT Semantic Extraction:</b>
+        <div style="background:#111317;border:1px solid rgba(255,255,255,0.07);border-radius:8px;
+                    padding:16px 20px;margin-bottom:16px;font-size:13px;color:#9ca3af;line-height:1.5;">
+            <b style="color:#ffffff;">KeyBERT Semantic Extraction:</b>
             Uses sentence-transformer embeddings (all-MiniLM-L6-v2) with Maximal Marginal Relevance (MMR)
-            to extract diverse, domain-relevant multi-word aspect phrases.
-            Unlike TF-IDF (frequency-based), KeyBERT captures <b style="color:#F5F7FA;">semantic context</b>
-            — surfacing phrases like <i>"broken pump"</i>, <i>"skin irritation"</i>, and <i>"fast shipping"</i>.
+            to extract diverse, domain-relevant multi-word aspect phrases. Captures semantic context
+            such as <i>"broken pump"</i>, <i>"skin irritation"</i>, and <i>"fast shipping"</i>.
         </div>
         """)
     else:
         render_html("""
-        <div style="background:rgba(124,92,255,0.06);border:1px solid rgba(124,92,255,0.2);border-radius:8px;
-                    padding:0.65rem 1rem;margin-bottom:0.75rem;font-size:0.78rem;color:#98A2B3;line-height:1.5;">
-            <b style="color:#A78BFA;">📊 TF-IDF Coefficient Weights:</b>
-            Shows the highest-weight unigrams and bigrams from the Balanced Logistic Regression feature matrix.
-            These are the exact tokens the model uses to classify sentiment — interpretable, fast, and directly
-            tied to the production model's decision boundary.
+        <div style="background:#111317;border:1px solid rgba(255,255,255,0.07);border-radius:8px;
+                    padding:16px 20px;margin-bottom:16px;font-size:13px;color:#9ca3af;line-height:1.5;">
+            <b style="color:#ffffff;">TF-IDF Coefficient Weights:</b>
+            Highest-weight unigrams and bigrams from the Balanced Logistic Regression feature matrix.
+            Directly reflects the production model's linear decision boundary for sentiment classification.
         </div>
         """)
 
-    # Domain-specific curated KeyBERT fallback phrases (used if backend unavailable)
     _KEYBERT_FALLBACK = {
         "positive": [
             {"word": "hydrating moisturizer", "score": 0.82},
@@ -140,55 +131,40 @@ def render():
     }
 
     if is_keybert:
-        with st.spinner("Extracting contextual aspect phrases using KeyBERT embeddings..."):
+        with st.spinner("Extracting contextual aspect phrases using KeyBERT..."):
             res = load_keybert_keywords(sentiment=sentiment_choice, top_k=top_k)
-            if res and res.get("status") == "ok" and res.get("keywords"):
+            if res and res.get("keywords"):
                 keywords_data = [
                     {"word": item["keyword"], "score": item.get("score", 1.0)}
                     for item in res.get("keywords", [])
                 ]
-            elif res and res.get("keywords"):
-                keywords_data = [
-                    {"word": item["keyword"], "score": item.get("score", 1.0)}
-                    for item in res.get("keywords", [])
-                ]
-            # Use domain-specific curated fallback if backend unavailable
             if not keywords_data:
                 fallback = _KEYBERT_FALLBACK.get(sentiment_choice, _KEYBERT_FALLBACK["positive"])
                 keywords_data = fallback[:top_k]
-                render_html("""
-                <div style="background:rgba(245,158,11,0.07);border:1px solid rgba(245,158,11,0.2);
-                            border-radius:6px;padding:5px 12px;margin-bottom:0.5rem;font-size:0.75rem;color:#F59E0B;">
-                    ℹ️ Using pre-extracted domain keyphrases (backend KeyBERT model offline — curated Amazon Beauty corpus phrases shown).
-                </div>
-                """)
-
-    if not keywords_data:
-        # TF-IDF mode or final fallback
+    else:
         with st.spinner(f"Loading top {sentiment_choice} keyword drivers..."):
             keywords_data = load_keywords(sentiment_choice, top_k=top_k) or []
-
 
     if keywords_data:
         words = [item["word"] for item in keywords_data]
         df_kws = pd.DataFrame({"Keyword": words, "Rank": list(range(len(words), 0, -1))})
 
         color_map = {
-            "positive": "#22C55E",
-            "neutral": "#F59E0B",
-            "negative": "#EF4444"
+            "positive": "#10b981",
+            "neutral": "#f59e0b",
+            "negative": "#ef4444"
         }
 
         col_left, col_right = st.columns([1.5, 1])
 
         with col_left:
             render_html(f"""
-            <div style="background:#11151D;border:1px solid #242A35;border-radius:10px;padding:0.95rem 1.15rem;margin-bottom:0.4rem;">
-                <div style="font-size:0.72rem;font-weight:700;color:#7C5CFF;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.2rem;">
+            <div style="background:#111317;border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:16px 20px;margin-bottom:8px;">
+                <div style="font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">
                     Top {sentiment_choice.capitalize()} Vocabulary Drivers
                 </div>
-                <div style="font-size:0.72rem;color:#98A2B3;">
-                    Relative importance weights in TF-IDF feature matrix
+                <div style="font-size:11px;color:#6b7280;">
+                    Relative importance weights in feature matrix
                 </div>
             </div>
             """)
@@ -198,33 +174,33 @@ def render():
                 x="Rank",
                 y="Keyword",
                 orientation="h",
-                color_discrete_sequence=[color_map.get(sentiment_choice, "#7C5CFF")]
+                color_discrete_sequence=[color_map.get(sentiment_choice, "#10b981")]
             )
             fig.update_layout(
                 height=360,
-                margin=dict(l=10, r=20, t=10, b=10),
+                margin=dict(l=10, r=10, t=25, b=10),
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
                 xaxis_title="",
                 yaxis_title="",
-                yaxis=dict(autorange="reversed", tickfont=dict(color="#F5F7FA", size=11)),
-                xaxis=dict(showgrid=True, gridcolor="#1E2533", tickfont=dict(color="#98A2B3", size=10))
+                yaxis=dict(autorange="reversed", tickfont=dict(color="#ffffff", size=11)),
+                xaxis=dict(showgrid=True, gridcolor="rgba(255,255,255,0.06)", tickfont=dict(color="#9ca3af", size=10))
             )
-            st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+            st.plotly_chart(fig, width='stretch', config={"displayModeBar": False})
 
         with col_right:
             badge_html = "".join([
-                f'<span style="display:inline-block;background:#151A24;border:1px solid #242A35;border-radius:4px;padding:4px 10px;margin:3px;font-size:0.8rem;font-weight:600;color:#F5F7FA;">{w}</span>'
+                f'<span style="display:inline-block;background:#181b21;border:1px solid rgba(255,255,255,0.07);border-radius:4px;padding:4px 10px;margin:3px;font-size:12px;font-weight:600;color:#ffffff;">{w}</span>'
                 for w in words
             ])
 
             render_html(f"""
-            <div style="background:#11151D;border:1px solid #242A35;border-radius:8px;padding:1.1rem 1.25rem;">
-                <div style="font-size:0.75rem;font-weight:700;color:#7C5CFF;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.25rem;">
+            <div style="background:#111317;border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:20px;">
+                <div style="font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">
                     Extracted N-Gram Cloud
                 </div>
-                <div style="font-size:0.78rem;color:#98A2B3;margin-bottom:1rem;">
-                    Strongest predictive terms for {sentiment_choice} classification
+                <div style="font-size:12px;color:#6b7280;margin-bottom:14px;">
+                    Predictive terms for {sentiment_choice} classification
                 </div>
                 <div style="line-height:1.8;">
                     {badge_html}
@@ -236,11 +212,11 @@ def render():
 
     # ── Section: Side-by-Side Sentiment Driver Comparison ─────────────────
     render_html("""
-    <div style="margin-top:1.75rem;margin-bottom:0.85rem;border-top:1px solid #1E2533;padding-top:1.1rem;">
-        <h3 style="font-size:1.05rem;font-weight:700;color:#F5F7FA;margin:0 0 0.2rem;">
-            📊 Side-by-Side Sentiment Driver Comparison
+    <div style="margin-top:28px;margin-bottom:14px;border-top:1px solid rgba(255,255,255,0.06);padding-top:16px;">
+        <h3 style="font-size:16px;font-weight:600;color:#ffffff;margin:0 0 4px;">
+            Side-by-Side Sentiment Driver Comparison
         </h3>
-        <div style="font-size:0.78rem;color:#98A2B3;">
+        <div style="font-size:13px;color:#9ca3af;">
             Comparative view of high-impact terms distinguishing positive satisfaction from critical complaints
         </div>
     </div>
@@ -254,13 +230,13 @@ def render():
 
     with c_pos:
         pos_badges = "".join([
-            f'<span style="display:inline-block;background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.3);border-radius:4px;padding:3px 8px;margin:3px;font-size:0.78rem;font-weight:600;color:#22C55E;">{item["word"]}</span>'
+            f'<span style="display:inline-block;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);border-radius:4px;padding:3px 8px;margin:3px;font-size:12px;font-weight:600;color:#10b981;">{item["word"]}</span>'
             for item in pos_data
-        ]) if pos_data else '<span style="color:#98A2B3;font-size:0.78rem;">No keywords</span>'
+        ]) if pos_data else '<span style="color:#6b7280;font-size:12px;">No keywords</span>'
         render_html(f"""
-        <div style="background:#11151D;border:1px solid rgba(34,197,94,0.25);border-radius:8px;padding:0.9rem 1rem;min-height:220px;">
-            <div style="color:#22C55E;font-size:0.82rem;font-weight:700;margin-bottom:0.6rem;">
-                🟢 Positive Drivers
+        <div style="background:#111317;border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:16px 20px;min-height:220px;">
+            <div style="color:#10b981;font-size:12px;font-weight:700;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.04em;">
+                Positive Drivers
             </div>
             <div style="line-height:1.7;">{pos_badges}</div>
         </div>
@@ -268,13 +244,13 @@ def render():
 
     with c_neu:
         neu_badges = "".join([
-            f'<span style="display:inline-block;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.3);border-radius:4px;padding:3px 8px;margin:3px;font-size:0.78rem;font-weight:600;color:#F59E0B;">{item["word"]}</span>'
+            f'<span style="display:inline-block;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.3);border-radius:4px;padding:3px 8px;margin:3px;font-size:12px;font-weight:600;color:#f59e0b;">{item["word"]}</span>'
             for item in neu_data
-        ]) if neu_data else '<span style="color:#98A2B3;font-size:0.78rem;">No keywords</span>'
+        ]) if neu_data else '<span style="color:#6b7280;font-size:12px;">No keywords</span>'
         render_html(f"""
-        <div style="background:#11151D;border:1px solid rgba(245,158,11,0.25);border-radius:8px;padding:0.9rem 1rem;min-height:220px;">
-            <div style="color:#F59E0B;font-size:0.82rem;font-weight:700;margin-bottom:0.6rem;">
-                ⚪ Neutral Aspects
+        <div style="background:#111317;border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:16px 20px;min-height:220px;">
+            <div style="color:#f59e0b;font-size:12px;font-weight:700;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.04em;">
+                Neutral Aspects
             </div>
             <div style="line-height:1.7;">{neu_badges}</div>
         </div>
@@ -282,18 +258,17 @@ def render():
 
     with c_neg:
         neg_badges = "".join([
-            f'<span style="display:inline-block;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);border-radius:4px;padding:3px 8px;margin:3px;font-size:0.78rem;font-weight:600;color:#EF4444;">{item["word"]}</span>'
+            f'<span style="display:inline-block;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);border-radius:4px;padding:3px 8px;margin:3px;font-size:12px;font-weight:600;color:#ef4444;">{item["word"]}</span>'
             for item in neg_data
-        ]) if neg_data else '<span style="color:#98A2B3;font-size:0.78rem;">No keywords</span>'
+        ]) if neg_data else '<span style="color:#6b7280;font-size:12px;">No keywords</span>'
         render_html(f"""
-        <div style="background:#11151D;border:1px solid rgba(239,68,68,0.25);border-radius:8px;padding:0.9rem 1rem;min-height:220px;">
-            <div style="color:#EF4444;font-size:0.82rem;font-weight:700;margin-bottom:0.6rem;">
-                🔴 Negative Signals
+        <div style="background:#111317;border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:16px 20px;min-height:220px;">
+            <div style="color:#ef4444;font-size:12px;font-weight:700;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.04em;">
+                Negative Signals
             </div>
             <div style="line-height:1.7;">{neg_badges}</div>
         </div>
         """)
-
 
 
 if __name__ == "__main__":

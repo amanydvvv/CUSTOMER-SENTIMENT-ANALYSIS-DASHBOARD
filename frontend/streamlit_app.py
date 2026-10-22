@@ -3,8 +3,8 @@ from frontend.ui_utils import render_html
 from frontend.pages import about, overview, product_intelligence, live_prediction, keyword_insights, model_comparison
 
 st.set_page_config(
-    page_title="Customer Feedback Intelligence",
-    page_icon="⚡",
+    page_title="Sentiment Core Intelligence",
+    page_icon="●",
     layout="wide",
     initial_sidebar_state="locked",
 )
@@ -13,94 +13,68 @@ DARK_THEME_CSS = """
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
+    /* ── Design Tokens: Linear / Vercel Minimalist Standard ──────────────── */
     :root {
-        --bg-app: #090B10;
-        --bg-sidebar: #0D1017;
-        --bg-card: rgba(17, 21, 29, 0.65);
-        --bg-card-solid: #11151D;
-        --bg-card-hover: rgba(23, 28, 38, 0.8);
-        --bg-input: #151A24;
-        --border-subtle: rgba(30, 37, 51, 0.6);
-        --border-card: rgba(36, 42, 53, 0.5);
-        --border-active: #7C5CFF;
-        --border-glow: rgba(124, 92, 255, 0.12);
+        --bg-app:          #090a0d;
+        --bg-sidebar:      #0c0d12;
+        --bg-card:         #111317;
+        --bg-hover:        #181b21;
+        --border:          rgba(255, 255, 255, 0.07);
+        --border-focus:    rgba(255, 255, 255, 0.16);
 
-        --accent-primary: #7C5CFF;
-        --accent-primary-hover: #9074FF;
-        --accent-primary-muted: rgba(124, 92, 255, 0.12);
-        --accent-secondary: #22D3EE;
-        --accent-gradient: linear-gradient(135deg, #7C5CFF 0%, #22D3EE 100%);
+        --text-primary:    #ffffff;
+        --text-value:      #d1d5db;
+        --text-secondary:  #9ca3af;
+        --text-muted:      #6b7280;
+        --text-caption:    #4b5563;
 
-        --sentiment-pos: #22C55E;
-        --sentiment-neg: #EF4444;
-        --sentiment-neu: #F59E0B;
+        --accent-pos:      #10b981;
+        --accent-pos-soft: #00e599;
+        --accent-warn:     #f59e0b;
+        --accent-crit:     #ef4444;
+        --accent-toptier:  #b5179e;
 
-        --text-primary: #F5F7FA;
-        --text-secondary: #98A2B3;
-        --text-muted: #667085;
-
-        --glass-blur: blur(16px);
-        --card-radius: 12px;
-        --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        --radius-card:     8px;
+        --radius-pill:     4px;
+        --transition:      all 0.15s ease;
     }
 
-    /* ── Keyframe Animations ──────────────────────────────────────────── */
-    @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(12px); }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(6px); }
         to   { opacity: 1; transform: translateY(0); }
-    }
-
-    @keyframes pulse-glow {
-        0%, 100% { box-shadow: 0 0 8px rgba(124, 92, 255, 0.15); }
-        50%      { box-shadow: 0 0 20px rgba(124, 92, 255, 0.3); }
-    }
-
-    @keyframes shimmer {
-        0%   { background-position: -200% center; }
-        100% { background-position: 200% center; }
-    }
-
-    @keyframes gradient-shift {
-        0%   { background-position: 0% 50%; }
-        50%  { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
     }
 
     @keyframes live-pulse {
         0%, 100% { opacity: 1; }
-        50%      { opacity: 0.4; }
+        50%       { opacity: 0.3; }
     }
 
-    /* ── Base Layout ──────────────────────────────────────────────────── */
-    html, body, [data-testid="stAppViewContainer"], .main, [data-testid="stMainBlockContainer"], .block-container {
-        overflow-x: hidden !important;
-        max-width: 100% !important;
+    /* ── Base ────────────────────────────────────────────────────────────── */
+    html, body,
+    [data-testid="stAppViewContainer"],
+    .main,
+    [data-testid="stMainBlockContainer"],
+    .block-container {
         background-color: var(--bg-app) !important;
         color: var(--text-primary) !important;
+        overflow-x: hidden !important;
+        max-width: 100% !important;
     }
 
-    /* Subtle radial gradient background for depth */
     [data-testid="stAppViewContainer"] > .main {
-        background: radial-gradient(ellipse at 20% 0%, rgba(124, 92, 255, 0.04) 0%, transparent 50%),
-                    radial-gradient(ellipse at 80% 100%, rgba(34, 211, 238, 0.03) 0%, transparent 50%),
-                    var(--bg-app) !important;
+        background: var(--bg-app) !important;
         padding-top: 0 !important;
         margin-top: 0 !important;
     }
 
-    /* Typography — preserve material icon fonts */
     body, p, h1, h2, h3, h4, h5, h6, label, input, select, textarea {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
         box-sizing: border-box !important;
     }
 
-    [data-testid*="stIcon"],
-    [data-testid="stIconMaterial"],
-    [class*="material-symbols"],
-    [class*="material-icons"],
-    .material-symbols-rounded,
-    .material-symbols-outlined,
-    .material-icons,
+    [data-testid*="stIcon"], [data-testid="stIconMaterial"],
+    [class*="material-symbols"], [class*="material-icons"],
+    .material-symbols-rounded, .material-symbols-outlined, .material-icons,
     [data-testid="stSidebarCollapseButton"] span,
     [data-testid="stSidebarCollapseButton"] svg {
         font-family: 'Material Symbols Rounded', 'Material Symbols Outlined', 'Material Icons', sans-serif !important;
@@ -111,7 +85,7 @@ DARK_THEME_CSS = """
         word-break: break-word !important;
     }
 
-    /* ── Hide Streamlit Chrome ────────────────────────────────────────── */
+    /* ── Hide Streamlit Chrome ───────────────────────────────────────────── */
     #MainMenu, footer { display: none !important; visibility: hidden !important; height: 0 !important; }
 
     [data-testid="stSidebarNav"],
@@ -130,149 +104,225 @@ DARK_THEME_CSS = """
         display: none !important;
     }
 
-    /* ── Sidebar: Premium Dark Panel ─────────────────────────────────── */
+    /* ── Sidebar: Linear / Vercel Developer Console ─────────────────────── */
     section[data-testid="stSidebar"],
     [data-testid="stSidebar"] {
         display: flex !important;
         visibility: visible !important;
         opacity: 1 !important;
-        width: 260px !important;
-        min-width: 250px !important;
-        max-width: 275px !important;
+        width: 256px !important;
+        min-width: 256px !important;
+        max-width: 256px !important;
         transform: none !important;
         margin-left: 0 !important;
         left: 0 !important;
         z-index: 999 !important;
         position: relative !important;
-        background: linear-gradient(180deg, #0D1017 0%, #0A0D14 100%) !important;
-        border-right: 1px solid rgba(124, 92, 255, 0.08) !important;
-        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.3) !important;
+        background: #0c0d12 !important;
+        border-right: 1px solid rgba(255, 255, 255, 0.06) !important;
+        box-shadow: none !important;
+        animation: none !important;
     }
 
     [data-testid="stSidebar"][aria-expanded="false"],
     [data-testid="stSidebar"][aria-expanded="true"] {
-        display: flex !important; visibility: visible !important;
-        width: 260px !important; min-width: 250px !important; max-width: 275px !important;
-        transform: none !important; margin-left: 0 !important; left: 0 !important;
+        display: flex !important;
+        visibility: visible !important;
+        width: 256px !important;
+        min-width: 256px !important;
+        max-width: 256px !important;
+        transform: none !important;
+        margin-left: 0 !important;
+        left: 0 !important;
     }
 
     [data-testid="stSidebarUserContent"],
     [data-testid="stSidebar"] > div:first-child,
     [data-testid="stSidebar"] .block-container {
-        padding-top: 0.75rem !important;
-        padding-bottom: 1rem !important;
-        padding-left: 0.75rem !important;
-        padding-right: 0.75rem !important;
+        padding-top: 24px !important;
+        padding-bottom: 24px !important;
+        padding-left: 16px !important;
+        padding-right: 16px !important;
         width: 100% !important;
     }
 
     [data-testid="stSidebarCollapseButton"],
     button[data-testid="stSidebarCollapseButton"],
-    [data-testid="stSidebarCollapsedControl"] {
-        display: none !important;
+    [data-testid="stSidebarCollapsedControl"] { display: none !important; }
+
+    [data-testid="stSidebar"] * {
+        box-sizing: border-box;
     }
 
-    [data-testid="stSidebar"] * { color: var(--text-primary); }
-
-    /* Sidebar branding */
+    /* ── Sidebar Branding ─────────────────────────────────────────────────── */
     .sidebar-brand {
-        padding: 0.35rem 0.25rem 0.95rem;
-        border-bottom: 1px solid rgba(124, 92, 255, 0.12);
-        margin-bottom: 0.85rem;
+        padding-bottom: 18px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        margin-bottom: 18px;
+    }
+
+    .sidebar-brand-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .sidebar-brand-left {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .sidebar-brand-badge {
+        width: 16px;
+        height: 16px;
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
     }
 
     .sidebar-brand-title {
-        font-size: 0.95rem;
-        font-weight: 800;
-        letter-spacing: -0.01em;
-        color: var(--text-primary);
-        display: flex;
-        align-items: center;
-        gap: 0.4rem;
-        margin: 0;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        color: #f3f4f6;
+        text-transform: uppercase;
         line-height: 1.2;
     }
 
-    .sidebar-brand-sub {
-        font-size: 0.72rem;
+    .sidebar-env-pill {
+        font-size: 10px;
         font-weight: 500;
-        background: var(--accent-gradient);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
+        color: #6b7280;
+        background: rgba(255, 255, 255, 0.04);
+        border-radius: 4px;
+        padding: 2px 6px;
         letter-spacing: 0.02em;
-        margin-top: 0.25rem;
+        line-height: 1.2;
+        border: 1px solid rgba(255, 255, 255, 0.04);
     }
 
     .nav-label {
-        font-size: 0.62rem;
-        font-weight: 700;
+        font-size: 10px;
+        font-weight: 600;
         text-transform: uppercase;
-        letter-spacing: 0.12em;
-        color: var(--text-muted);
-        padding: 0 0.25rem;
-        margin: 1rem 0 0.4rem;
+        letter-spacing: 0.08em;
+        color: #4b5563;
+        padding: 0 4px;
+        margin: 0 0 8px 0;
     }
 
-    /* Navigation Buttons — with active glow bar */
+    /* ── Sidebar Nav Buttons ──────────────────────────────────────────────── */
+    [data-testid="stSidebar"] .stButton {
+        margin-bottom: 2px !important;
+    }
+
     [data-testid="stSidebar"] .stButton > button {
-        background-color: transparent !important;
-        border: 1px solid transparent !important;
-        border-left: 3px solid transparent !important;
-        color: var(--text-secondary) !important;
-        font-size: 0.82rem !important;
-        font-weight: 500 !important;
-        text-align: left !important;
-        padding: 0.5rem 0.75rem 0.5rem 0.85rem !important;
-        border-radius: 0 8px 8px 0 !important;
-        transition: var(--transition-smooth) !important;
-        width: 100% !important;
         display: flex !important;
+        align-items: center !important;
         justify-content: flex-start !important;
+        text-align: left !important;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        font-size: 13px !important;
+        font-weight: 400 !important;
+        color: #8b949e !important;
+        background: transparent !important;
+        border: 1px solid transparent !important;
+        border-left: 2px solid transparent !important;
+        border-radius: 4px !important;
+        padding: 8px 12px !important;
+        transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease !important;
+        width: 100% !important;
+        box-shadow: none !important;
+    }
+
+    [data-testid="stSidebar"] .stButton > button * {
+        color: inherit !important;
+        font-size: inherit !important;
+        font-weight: inherit !important;
+        text-align: left !important;
     }
 
     [data-testid="stSidebar"] .stButton > button:hover {
-        background-color: rgba(124, 92, 255, 0.06) !important;
-        color: var(--text-primary) !important;
-        border-left-color: rgba(124, 92, 255, 0.3) !important;
+        background: rgba(255, 255, 255, 0.02) !important;
+        color: #d1d5db !important;
+        border-color: transparent !important;
+        border-left: 2px solid transparent !important;
     }
 
     [data-testid="stSidebar"] .stButton > button[kind="primary"] {
-        background: linear-gradient(90deg, rgba(124, 92, 255, 0.1) 0%, transparent 100%) !important;
-        color: var(--text-primary) !important;
+        background: rgba(255, 255, 255, 0.06) !important;
+        color: #ffffff !important;
+        font-weight: 500 !important;
         border: 1px solid transparent !important;
-        border-left: 3px solid var(--accent-primary) !important;
-        font-weight: 700 !important;
-        box-shadow: inset 0 0 20px rgba(124, 92, 255, 0.06), 0 0 12px rgba(124, 92, 255, 0.08) !important;
+        border-left: 2px solid #10b981 !important;
+        border-radius: 0 4px 4px 0 !important;
     }
 
-    /* Sidebar Metadata Card */
-    .sidebar-meta-card {
-        background: var(--bg-card);
-        backdrop-filter: var(--glass-blur);
-        border: 1px solid var(--border-glow);
-        border-radius: 10px;
-        padding: 0.85rem;
-        margin-top: 1.5rem;
+    [data-testid="stSidebar"] .stButton > button[kind="primary"]:hover {
+        background: rgba(255, 255, 255, 0.08) !important;
+        color: #ffffff !important;
+        border-left: 2px solid #10b981 !important;
     }
 
-    .sidebar-meta-title {
-        font-size: 0.6rem; font-weight: 700; color: var(--text-muted);
-        text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.15rem;
+    /* ── Pinned Bottom Telemetry Footer ──────────────────────────────────── */
+    .sidebar-telemetry {
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+        padding-top: 16px;
+        margin-top: 32px;
     }
 
-    .sidebar-meta-val {
-        color: var(--text-secondary); font-weight: 500; margin-bottom: 0.55rem; line-height: 1.35;
+    .sidebar-engine-status {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 14px;
     }
 
-    .sidebar-meta-val:last-child { margin-bottom: 0; }
+    .sidebar-engine-text {
+        font-size: 11px;
+        font-weight: 500;
+        color: #d1d5db;
+        letter-spacing: 0.01em;
+    }
 
-    /* ── Main Content Space ───────────────────────────────────────────── */
+    .sidebar-data-spec {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .sidebar-spec-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .sidebar-spec-label {
+        font-family: 'JetBrains Mono', monospace;
+        color: #6b7280;
+        font-size: 10px;
+        font-weight: 500;
+        letter-spacing: 0.05em;
+    }
+
+    .sidebar-spec-val {
+        font-family: 'JetBrains Mono', monospace;
+        color: #d1d5db;
+        font-size: 11px;
+        font-weight: 400;
+    }
+
+    /* ── Main content padding ────────────────────────────────────────────── */
     .main .block-container,
     [data-testid="stMainBlockContainer"],
     [data-testid="stAppViewBlockContainer"],
     .block-container {
-        padding-top: 0.65rem !important;
+        padding-top: 0.75rem !important;
         padding-bottom: 1.5rem !important;
         padding-left: 1.5rem !important;
         padding-right: 1.5rem !important;
@@ -281,229 +331,173 @@ DARK_THEME_CSS = """
         margin: 0 !important;
     }
 
-    [data-testid="stVerticalBlock"] {
-        gap: 0.7rem !important;
-    }
+    [data-testid="stVerticalBlock"] { gap: 0.6rem !important; }
 
-    /* ── Glassmorphic Cards (Global) ─────────────────────────────────── */
+    /* ── Metric cards ────────────────────────────────────────────────────── */
     [data-testid="stMetric"] {
         background: var(--bg-card) !important;
-        backdrop-filter: var(--glass-blur);
-        border: 1px solid var(--border-card) !important;
-        border-top: 2px solid rgba(124, 92, 255, 0.2) !important;
-        border-radius: var(--card-radius) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: var(--radius-card) !important;
         padding: 0.85rem 1rem !important;
-        transition: var(--transition-smooth) !important;
-        animation: fadeInUp 0.5s ease-out both;
+        transition: var(--transition) !important;
     }
 
     [data-testid="stMetric"]:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 32px rgba(124, 92, 255, 0.12);
-        border-top-color: rgba(124, 92, 255, 0.4) !important;
+        background: var(--bg-hover) !important;
+        border-color: var(--border-focus) !important;
     }
 
     [data-testid="stMetricLabel"] {
         color: var(--text-muted) !important;
-        font-size: 0.68rem !important;
-        font-weight: 700 !important;
+        font-size: 0.65rem !important;
+        font-weight: 500 !important;
         text-transform: uppercase !important;
         letter-spacing: 0.08em !important;
     }
 
     [data-testid="stMetricValue"] {
         color: var(--text-primary) !important;
-        font-size: 1.4rem !important;
-        font-weight: 800 !important;
+        font-size: 1.35rem !important;
+        font-weight: 600 !important;
     }
 
-    /* ── Dark Tabs ────────────────────────────────────────────────────── */
+    /* ── Tabs ────────────────────────────────────────────────────────────── */
     .stTabs [data-baseweb="tab-list"] {
         background: var(--bg-card);
-        backdrop-filter: var(--glass-blur);
-        border-radius: 10px;
-        padding: 4px;
-        gap: 4px;
-        border: 1px solid var(--border-card);
+        border-radius: var(--radius-card);
+        padding: 3px;
+        gap: 2px;
+        border: 1px solid var(--border);
     }
 
     .stTabs [data-baseweb="tab"] {
         background-color: transparent !important;
-        border-radius: 8px !important;
-        color: var(--text-secondary) !important;
-        font-size: 0.82rem !important;
-        font-weight: 600 !important;
-        padding: 0.45rem 1rem !important;
+        border-radius: 6px !important;
+        color: var(--text-muted) !important;
+        font-size: 0.8rem !important;
+        font-weight: 500 !important;
+        padding: 0.4rem 0.9rem !important;
         border: none !important;
-        transition: var(--transition-smooth) !important;
+        transition: var(--transition) !important;
     }
 
     .stTabs [data-baseweb="tab"]:hover {
         color: var(--text-primary) !important;
-        background-color: rgba(124, 92, 255, 0.08) !important;
+        background-color: var(--bg-hover) !important;
     }
 
     .stTabs [aria-selected="true"] {
-        background: linear-gradient(135deg, #7C5CFF 0%, #6342E8 100%) !important;
-        color: #ffffff !important;
-        box-shadow: 0 4px 16px rgba(124, 92, 255, 0.35) !important;
+        background: var(--bg-hover) !important;
+        color: var(--text-primary) !important;
+        border: 1px solid var(--border-focus) !important;
     }
 
     .stTabs [data-baseweb="tab-highlight"] { display: none !important; }
 
-    /* ── Input Controls ───────────────────────────────────────────────── */
+    /* ── Inputs ──────────────────────────────────────────────────────────── */
     .stTextInput input, .stTextArea textarea, .stSelectbox > div > div {
-        background-color: var(--bg-input) !important;
-        border: 1px solid var(--border-card) !important;
+        background-color: var(--bg-card) !important;
+        border: 1px solid var(--border) !important;
         color: var(--text-primary) !important;
-        border-radius: 8px !important;
-        transition: var(--transition-smooth) !important;
+        border-radius: var(--radius-card) !important;
+        transition: var(--transition) !important;
     }
 
-    .stTextInput input:focus, .stTextArea textarea:focus, .stSelectbox > div > div:focus-within {
-        border-color: var(--accent-primary) !important;
-        box-shadow: 0 0 0 2px rgba(124, 92, 255, 0.15) !important;
+    .stTextInput input:focus, .stTextArea textarea:focus,
+    .stSelectbox > div > div:focus-within {
+        border-color: var(--border-focus) !important;
+        box-shadow: none !important;
     }
 
     [data-baseweb="tag"] {
-        background-color: var(--accent-primary-muted) !important;
-        border: 1px solid rgba(124, 92, 255, 0.3) !important;
+        background-color: var(--bg-hover) !important;
+        border: 1px solid var(--border) !important;
         color: var(--text-primary) !important;
-        border-radius: 6px !important;
+        border-radius: var(--radius-pill) !important;
     }
 
-    /* ── Buttons ──────────────────────────────────────────────────────── */
+    /* ── Buttons ─────────────────────────────────────────────────────────── */
     .stButton > button {
-        background: var(--bg-card-solid);
-        border: 1px solid var(--border-card);
-        color: var(--text-primary);
-        font-weight: 600;
-        border-radius: 8px;
-        padding: 0.5rem 1.15rem;
-        transition: var(--transition-smooth);
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        color: var(--text-secondary);
+        font-weight: 500;
+        border-radius: var(--radius-card);
+        padding: 0.45rem 1.1rem;
+        transition: var(--transition);
     }
 
     .stButton > button:hover {
-        background-color: var(--bg-card-hover);
-        border-color: var(--accent-primary);
-        color: #ffffff;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(124, 92, 255, 0.2);
+        background: var(--bg-hover);
+        border-color: var(--border-focus);
+        color: var(--text-primary);
     }
 
     .stButton > button[kind="primary"] {
-        background: linear-gradient(135deg, #7C5CFF 0%, #6342E8 100%) !important;
-        border: 1px solid rgba(124, 92, 255, 0.5) !important;
-        color: #ffffff !important;
-        box-shadow: 0 4px 16px rgba(124, 92, 255, 0.3) !important;
+        background: var(--bg-hover) !important;
+        border: 1px solid var(--border-focus) !important;
+        color: var(--text-primary) !important;
+        font-weight: 600 !important;
     }
 
-    .stButton > button[kind="primary"]:hover {
-        background: linear-gradient(135deg, #9074FF 0%, #7C5CFF 100%) !important;
-        box-shadow: 0 6px 24px rgba(124, 92, 255, 0.45) !important;
-        transform: translateY(-1px) !important;
-    }
-
-    /* ── Dark Expanders ───────────────────────────────────────────────── */
+    /* ── Expanders ───────────────────────────────────────────────────────── */
     .streamlit-expanderHeader {
         background: var(--bg-card) !important;
-        backdrop-filter: var(--glass-blur);
-        border: 1px solid var(--border-card) !important;
-        border-radius: 8px !important;
+        border: 1px solid var(--border) !important;
+        border-radius: var(--radius-card) !important;
         color: var(--text-primary) !important;
-        transition: var(--transition-smooth) !important;
+        transition: var(--transition) !important;
     }
 
     .streamlit-expanderHeader:hover {
-        border-color: rgba(124, 92, 255, 0.2) !important;
+        background: var(--bg-hover) !important;
+        border-color: var(--border-focus) !important;
     }
 
     .streamlit-expanderContent {
         background-color: var(--bg-app) !important;
-        border: 1px solid var(--border-card) !important;
+        border: 1px solid var(--border) !important;
         border-top: none !important;
-        border-radius: 0 0 8px 8px !important;
+        border-radius: 0 0 var(--radius-card) var(--radius-card) !important;
     }
 
-    /* ── Scrollbar ────────────────────────────────────────────────────── */
-    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    /* ── Scrollbar ───────────────────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(124, 92, 255, 0.2); border-radius: 4px; }
-    ::-webkit-scrollbar-thumb:hover { background: rgba(124, 92, 255, 0.4); }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.14); }
 
-    /* ── Utility Classes for Page Components ──────────────────────────── */
-    .glass-card {
-        background: var(--bg-card);
-        backdrop-filter: var(--glass-blur);
-        border: 1px solid var(--border-card);
-        border-radius: var(--card-radius);
-        padding: 1.1rem 1.25rem;
-        transition: var(--transition-smooth);
-        animation: fadeInUp 0.4s ease-out both;
-    }
-
-    .glass-card:hover {
-        border-color: var(--border-glow);
-        transform: translateY(-2px);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), 0 0 20px rgba(124, 92, 255, 0.06);
-    }
-
-    .glass-card-accent {
-        background: var(--bg-card);
-        backdrop-filter: var(--glass-blur);
-        border: 1px solid var(--border-card);
-        border-top: 2px solid;
-        border-image: linear-gradient(90deg, #7C5CFF, #22D3EE) 1;
-        border-image-slice: 1 1 0 1;
-        border-radius: var(--card-radius);
-        padding: 1.1rem 1.25rem;
-        transition: var(--transition-smooth);
-        animation: fadeInUp 0.4s ease-out both;
-    }
-
-    .gradient-text {
-        background: var(--accent-gradient);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-    }
-
+    /* ── Utility ─────────────────────────────────────────────────────────── */
     .live-dot {
         display: inline-block;
-        width: 7px; height: 7px;
+        width: 6px; height: 6px;
         border-radius: 50%;
-        background: #22C55E;
-        animation: live-pulse 2s ease-in-out infinite;
-        box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+        background: var(--accent-pos);
+        animation: live-pulse 2.5s ease-in-out infinite;
     }
 
     .section-label {
-        font-size: 0.68rem;
-        font-weight: 700;
-        color: var(--accent-primary);
+        font-size: 0.62rem;
+        font-weight: 500;
+        color: var(--text-muted);
         text-transform: uppercase;
         letter-spacing: 0.1em;
         margin-bottom: 0.3rem;
     }
-
-    .stat-big {
-        font-size: 1.8rem;
-        font-weight: 800;
-        color: var(--text-primary);
-        line-height: 1.1;
-    }
 </style>
 """
+
+
 
 render_html(DARK_THEME_CSS)
 
 PAGES = {
-    "ℹ️  Executive Overview": about,
-    "📊  Overall Analysis": overview,
-    "🔬  Product Intelligence": product_intelligence,
-    "⚡  Live Review Intelligence": live_prediction,
-    "🔑  Aspect & Keyword Explorer": keyword_insights,
-    "📈  Model Benchmark": model_comparison,
+    "01 · System Overview": about,
+    "02 · Historical Pulse": overview,
+    "03 · Live Inference": live_prediction,
+    "04 · Aspect Explorer": keyword_insights,
+    "05 · Benchmark Zoo": model_comparison,
+    "06 · Product Insights": product_intelligence,
 }
 
 
@@ -511,13 +505,17 @@ def render_sidebar():
     with st.sidebar:
         render_html("""
         <div class="sidebar-brand">
-            <div class="sidebar-brand-title">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7C5CFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-                </svg>
-                <span>CUSTOMER FEEDBACK</span>
+            <div class="sidebar-brand-row">
+                <div class="sidebar-brand-left">
+                    <div class="sidebar-brand-badge">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#f3f4f6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                        </svg>
+                    </div>
+                    <span class="sidebar-brand-title">SENTIMENT CORE</span>
+                </div>
+                <span class="sidebar-env-pill">v1.0-prod</span>
             </div>
-            <div class="sidebar-brand-sub">AI-Powered Sentiment Intelligence</div>
         </div>
         """)
 
@@ -528,27 +526,35 @@ def render_sidebar():
             if st.button(
                 page_name,
                 key=f"nav_{page_name}",
-                use_container_width=True,
+                width='stretch',
                 type="primary" if is_active else "secondary",
             ):
                 st.session_state["current_page"] = page_name
                 st.rerun()
 
         render_html("""
-        <div class="sidebar-meta-card">
-            <div class="sidebar-meta-title">DATA SOURCE</div>
-            <div class="sidebar-meta-val">
-                Amazon Reviews 2023<br>
-                <span style="color:#667085;font-size:0.68rem;">81.7K unique reviews · All Beauty</span>
-            </div>
-            <div class="sidebar-meta-title">ML MODELS</div>
-            <div class="sidebar-meta-val" style="font-size:0.72rem;">
-                DistilBERT · Balanced LR · LinearSVC
-            </div>
-            <div class="sidebar-meta-title">INFERENCE</div>
-            <div class="sidebar-meta-val" style="display:flex;align-items:center;gap:6px;font-weight:700;font-size:0.75rem;color:#22C55E;">
+        <div class="sidebar-telemetry">
+            <div class="sidebar-engine-status">
                 <span class="live-dot"></span>
-                LOCAL · REAL-TIME
+                <span class="sidebar-engine-text">FastAPI: Connected (Port 8000)</span>
+            </div>
+            <div class="sidebar-data-spec">
+                <div class="sidebar-spec-row">
+                    <span class="sidebar-spec-label">Corpus</span>
+                    <span class="sidebar-spec-val">81,700 Reviews</span>
+                </div>
+                <div class="sidebar-spec-row">
+                    <span class="sidebar-spec-label">Split</span>
+                    <span class="sidebar-spec-val">80 / 20 Stratified</span>
+                </div>
+                <div class="sidebar-spec-row">
+                    <span class="sidebar-spec-label">Model</span>
+                    <span class="sidebar-spec-val">Balanced LR</span>
+                </div>
+                <div class="sidebar-spec-row">
+                    <span class="sidebar-spec-label">Metric</span>
+                    <span class="sidebar-spec-val">70.84% Macro Recall</span>
+                </div>
             </div>
         </div>
         """)
@@ -558,13 +564,29 @@ def main():
     # Backwards compatibility for session state
     current = st.session_state.get("current_page", "")
     if current not in PAGES:
-        # Map old names (without emoji) to new names
-        for page_key in PAGES:
-            if current in page_key:
-                st.session_state["current_page"] = page_key
+        old_mapping = {
+            "Executive Overview": "01 · System Overview",
+            "Overview": "01 · System Overview",
+            "Overall Analysis": "02 · Historical Pulse",
+            "Historical": "02 · Historical Pulse",
+            "Live": "03 · Live Inference",
+            "Inference": "03 · Live Inference",
+            "Keyword": "04 · Aspect Explorer",
+            "Aspect": "04 · Aspect Explorer",
+            "Benchmark": "05 · Benchmark Zoo",
+            "Product": "06 · Product Insights",
+        }
+        for old_sub, new_key in old_mapping.items():
+            if old_sub.lower() in current.lower():
+                st.session_state["current_page"] = new_key
                 break
         else:
-            st.session_state["current_page"] = list(PAGES.keys())[0]
+            for page_key in PAGES:
+                if current and current.lower() in page_key.lower():
+                    st.session_state["current_page"] = page_key
+                    break
+            else:
+                st.session_state["current_page"] = list(PAGES.keys())[0]
 
     render_sidebar()
 

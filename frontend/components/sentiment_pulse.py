@@ -34,12 +34,12 @@ def render_sentiment_pulse(df_filtered: pd.DataFrame, df_total: pd.DataFrame = N
     # ── LEFT: CUSTOMER SENTIMENT PULSE ──────────────────────────────────────────
     with col_left:
         render_html(f"""
-        <div style="background:#11151D;border:1px solid #242A35;border-radius:10px;padding:1rem 1.15rem;margin-bottom:0.5rem;">
+        <div style="background:#111317;border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:20px;margin-bottom:8px;">
             <div style="display:flex;justify-content:space-between;align-items:center;">
-                <span style="font-size:0.72rem;font-weight:700;color:#7C5CFF;text-transform:uppercase;letter-spacing:0.08em;">
+                <span style="font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;">
                     CUSTOMER SENTIMENT PULSE
                 </span>
-                <span style="font-size:0.7rem;color:#98A2B3;font-family:'JetBrains Mono',monospace;">
+                <span style="font-size:11px;color:#6b7280;font-family:monospace;">
                     {total_active:,} reviews
                 </span>
             </div>
@@ -50,7 +50,7 @@ def render_sentiment_pulse(df_filtered: pd.DataFrame, df_total: pd.DataFrame = N
             labels=["Positive", "Neutral", "Negative"],
             values=[pos_count, neu_count, neg_count],
             hole=0.68,
-            marker=dict(colors=["#22C55E", "#F59E0B", "#EF4444"], line=dict(color="#11151D", width=2)),
+            marker=dict(colors=["#10b981", "#f59e0b", "#ef4444"], line=dict(color="#111317", width=2)),
             textinfo="none",
             hoverinfo="label+percent+value",
             sort=False,
@@ -58,56 +58,56 @@ def render_sentiment_pulse(df_filtered: pd.DataFrame, df_total: pd.DataFrame = N
         fig_donut.update_layout(
             showlegend=False,
             height=160,
-            margin=dict(l=10, r=10, t=5, b=5),
+            margin=dict(l=10, r=10, t=10, b=10),
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
             annotations=[
                 dict(
-                    text=f"<b style='font-size:22px;color:#F5F7FA;'>{pos_pct:.1f}%</b><br><span style='font-size:10px;color:#22C55E;font-weight:700;'>POSITIVE</span>",
+                    text=f"<b style='font-size:22px;color:#ffffff;'>{pos_pct:.1f}%</b><br><span style='font-size:10px;color:#10b981;font-weight:700;'>POSITIVE</span>",
                     x=0.5, y=0.5,
                     font=dict(family="Inter, sans-serif"),
                     showarrow=False,
                 )
             ]
         )
-        st.plotly_chart(fig_donut, use_container_width=True, config={"displayModeBar": False})
+        st.plotly_chart(fig_donut, width='stretch', config={"displayModeBar": False})
 
     # ── RIGHT: SENTIMENT COMPOSITION ────────────────────────────────────────────
     with col_right:
         render_html(f"""
-        <div style="background:#11151D;border:1px solid #242A35;border-radius:10px;padding:1rem 1.25rem;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.65rem;">
-                <span style="font-size:0.72rem;font-weight:700;color:#98A2B3;text-transform:uppercase;letter-spacing:0.08em;">
+        <div style="background:#111317;border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:20px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                <span style="font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;">
                     SENTIMENT COMPOSITION
                 </span>
-                <span style="font-size:0.7rem;color:#22D3EE;background:rgba(34,211,238,0.1);padding:2px 7px;border-radius:4px;border:1px solid rgba(34,211,238,0.25);">
+                <span style="font-size:11px;color:#9ca3af;background:rgba(255,255,255,0.05);padding:2px 8px;border-radius:4px;border:1px solid rgba(255,255,255,0.07);">
                     3-Class Classification
                 </span>
             </div>
 
-            <div style="display:flex;height:8px;border-radius:4px;overflow:hidden;background:#1E2533;margin-bottom:0.85rem;">
-                <div style="width:{pos_pct}%;background:#22C55E;"></div>
-                <div style="width:{neu_pct}%;background:#F59E0B;"></div>
-                <div style="width:{neg_pct}%;background:#EF4444;"></div>
+            <div style="display:flex;height:8px;border-radius:4px;overflow:hidden;background:#1e2533;margin-bottom:14px;">
+                <div style="width:{pos_pct}%;background:#10b981;"></div>
+                <div style="width:{neu_pct}%;background:#f59e0b;"></div>
+                <div style="width:{neg_pct}%;background:#ef4444;"></div>
             </div>
 
-            <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:0.65rem;">
-                <div style="background:#151A24;border:1px solid rgba(34,197,94,0.25);border-radius:6px;padding:0.65rem 0.75rem;text-align:center;">
-                    <div style="font-size:0.68rem;font-weight:700;color:#22C55E;text-transform:uppercase;">Positive</div>
-                    <div style="font-size:1.3rem;font-weight:800;color:#F5F7FA;margin:0.1rem 0;">{pos_pct:.1f}%</div>
-                    <div style="font-size:0.7rem;color:#98A2B3;">{pos_count:,} reviews</div>
+            <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:10px;">
+                <div style="background:#181b21;border:1px solid rgba(255,255,255,0.07);border-radius:6px;padding:12px 14px;text-align:center;">
+                    <div style="font-size:11px;font-weight:600;color:#10b981;text-transform:uppercase;">Positive</div>
+                    <div style="font-size:22px;font-weight:700;color:#ffffff;margin:2px 0;">{pos_pct:.1f}%</div>
+                    <div style="font-size:11px;color:#6b7280;">{pos_count:,} reviews</div>
                 </div>
 
-                <div style="background:#151A24;border:1px solid rgba(245,158,11,0.25);border-radius:6px;padding:0.65rem 0.75rem;text-align:center;">
-                    <div style="font-size:0.68rem;font-weight:700;color:#F59E0B;text-transform:uppercase;">Neutral</div>
-                    <div style="font-size:1.3rem;font-weight:800;color:#F5F7FA;margin:0.1rem 0;">{neu_pct:.1f}%</div>
-                    <div style="font-size:0.7rem;color:#98A2B3;">{neu_count:,} reviews</div>
+                <div style="background:#181b21;border:1px solid rgba(255,255,255,0.07);border-radius:6px;padding:12px 14px;text-align:center;">
+                    <div style="font-size:11px;font-weight:600;color:#f59e0b;text-transform:uppercase;">Neutral</div>
+                    <div style="font-size:22px;font-weight:700;color:#ffffff;margin:2px 0;">{neu_pct:.1f}%</div>
+                    <div style="font-size:11px;color:#6b7280;">{neu_count:,} reviews</div>
                 </div>
 
-                <div style="background:#151A24;border:1px solid rgba(239,68,68,0.25);border-radius:6px;padding:0.65rem 0.75rem;text-align:center;">
-                    <div style="font-size:0.68rem;font-weight:700;color:#EF4444;text-transform:uppercase;">Negative</div>
-                    <div style="font-size:1.3rem;font-weight:800;color:#F5F7FA;margin:0.1rem 0;">{neg_pct:.1f}%</div>
-                    <div style="font-size:0.7rem;color:#98A2B3;">{neg_count:,} reviews</div>
+                <div style="background:#181b21;border:1px solid rgba(255,255,255,0.07);border-radius:6px;padding:12px 14px;text-align:center;">
+                    <div style="font-size:11px;font-weight:600;color:#ef4444;text-transform:uppercase;">Negative</div>
+                    <div style="font-size:22px;font-weight:700;color:#ffffff;margin:2px 0;">{neg_pct:.1f}%</div>
+                    <div style="font-size:11px;color:#6b7280;">{neg_count:,} reviews</div>
                 </div>
             </div>
         </div>

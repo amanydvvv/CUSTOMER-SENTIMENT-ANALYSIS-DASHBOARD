@@ -3,7 +3,7 @@ vibe_meter.py
 ─────────────
 Moctale-inspired visual analytics components for consumer intelligence dashboards.
 
-Provides two premium Plotly chart functions:
+Provides two clean, production-grade Plotly chart functions:
   - render_purchase_meter(): 180-degree semicircular gauge showing purchase confidence
     with four colored tiers (Avoid / Mixed / Buy / Top Tier) and center annotation.
   - render_aspect_donut(): Dark-mode hollow donut chart showing aspect discussion
@@ -13,20 +13,20 @@ Provides two premium Plotly chart functions:
 import streamlit as st
 import plotly.graph_objects as go
 
-# Colour palette (Moctale-inspired)
-_AVOID_COLOR   = "#ff385c"
-_MIXED_COLOR   = "#fca311"
-_BUY_COLOR     = "#00e599"
-_TOPTIER_COLOR = "#b5179e"
+# Functional Color Palette (Moctale-inspired, strict semantic rules)
+_AVOID_COLOR   = "#ff385c"  # Crimson
+_MIXED_COLOR   = "#fca311"  # Amber
+_BUY_COLOR     = "#00e599"  # Neon Emerald
+_TOPTIER_COLOR = "#b5179e"  # Vivid Purple (reserved exclusively for Top Tier)
 _HIDDEN_COLOR  = "rgba(0,0,0,0)"
 
 _ASPECT_PALETTE = [
-    "#7C5CFF", "#22D3EE", "#00e599", "#fca311",
-    "#ff385c", "#b5179e", "#38BDF8", "#F59E0B",
+    "#00e599", "#38bdf8", "#fca311", "#9ca3af",
+    "#ff385c", "#6b7280", "#4b5563", "#d1d5db"
 ]
 
 
-def _score_to_tier(score_pct):
+def _score_to_tier(score_pct: float):
     """Map a 0-100 confidence score to (tier_label, tier_color)."""
     if score_pct < 35:
         return "AVOID", _AVOID_COLOR
@@ -39,11 +39,11 @@ def _score_to_tier(score_pct):
 
 
 def render_purchase_meter(
-    score_pct,
-    total_reviews,
-    positive_count,
-    distribution=None,
-    height=300,
+    score_pct: float,
+    total_reviews: int,
+    positive_count: int,
+    distribution: dict = None,
+    height: int = 280,
 ):
     """
     Render a semicircular Purchase Confidence Meter gauge.
@@ -51,11 +51,11 @@ def render_purchase_meter(
     Parameters
     ----------
     score_pct       : 0-100 overall purchase confidence (e.g., positive %).
-    total_reviews   : Total number of reviews in the current scope.
+    total_reviews   : Total number of reviews in current scope.
     positive_count  : Number of positive reviews.
     distribution    : Optional dict with keys 'avoid', 'mixed', 'buy', 'toptier'
                       and float values. If None, auto-derived from score_pct.
-    height          : Chart height in pixels (default 300).
+    height          : Chart height in pixels (default 280).
     """
     score_pct = max(0.0, min(100.0, float(score_pct)))
     tier_label, tier_color = _score_to_tier(score_pct)
@@ -86,12 +86,12 @@ def render_purchase_meter(
             go.Pie(
                 labels=labels,
                 values=values,
-                hole=0.75,
+                hole=0.76,
                 rotation=270,
                 direction="clockwise",
                 marker=dict(
                     colors=colors,
-                    line=dict(color="#0D1017", width=3),
+                    line=dict(color="#111317", width=2),
                 ),
                 textinfo="none",
                 hovertemplate="%{label}: %{value:.1f}%<extra></extra>",
@@ -103,19 +103,19 @@ def render_purchase_meter(
     fig.update_layout(
         showlegend=False,
         height=height,
-        margin=dict(l=20, r=20, t=20, b=0),
+        margin=dict(l=10, r=10, t=25, b=10),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         annotations=[
             dict(
                 text=(
-                    f"<b><span style='font-size:26px;color:{tier_color};'>"
+                    f"<b><span style='font-size:30px;color:{tier_color};'>"
                     f"{score_pct:.0f}%</span></b><br>"
-                    f"<span style='font-size:11px;color:#98A2B3;'>"
+                    f"<span style='font-size:11px;color:#9ca3af;font-weight:400;'>"
                     f"{positive_count:,} / {total_reviews:,} Verified Reviews</span>"
                 ),
                 x=0.5, y=0.28,
-                font=dict(family="Inter, sans-serif", size=14, color="#F5F7FA"),
+                font=dict(family="Inter, -apple-system, sans-serif", size=13, color="#f3f4f6"),
                 showarrow=False,
                 align="center",
                 xanchor="center",
@@ -123,66 +123,67 @@ def render_purchase_meter(
         ],
     )
 
-    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+    st.plotly_chart(fig, width='stretch', config={"displayModeBar": False})
 
     pills_html = (
-        "<div style='display:flex;justify-content:center;gap:0.75rem;flex-wrap:wrap;"
-        "margin-top:-0.5rem;margin-bottom:0.75rem;'>"
-        f"<span style='background:{_AVOID_COLOR}22;border:1px solid {_AVOID_COLOR}66;"
-        f"color:{_AVOID_COLOR};font-size:0.72rem;font-weight:700;"
-        f"padding:3px 12px;border-radius:20px;'>&#x2717; Avoid&nbsp;{avoid_v:.0f}%</span>"
-        f"<span style='background:{_MIXED_COLOR}22;border:1px solid {_MIXED_COLOR}66;"
-        f"color:{_MIXED_COLOR};font-size:0.72rem;font-weight:700;"
-        f"padding:3px 12px;border-radius:20px;'>~ Mixed&nbsp;{mixed_v:.0f}%</span>"
-        f"<span style='background:{_BUY_COLOR}22;border:1px solid {_BUY_COLOR}66;"
-        f"color:{_BUY_COLOR};font-size:0.72rem;font-weight:700;"
-        f"padding:3px 12px;border-radius:20px;'>&#x2713; Buy&nbsp;{buy_v:.0f}%</span>"
-        f"<span style='background:{_TOPTIER_COLOR}22;border:1px solid {_TOPTIER_COLOR}66;"
-        f"color:{_TOPTIER_COLOR};font-size:0.72rem;font-weight:700;"
-        f"padding:3px 12px;border-radius:20px;'>&#9733; Top Tier&nbsp;{toptier_v:.0f}%</span>"
+        "<div style='display:flex;justify-content:center;gap:0.5rem;flex-wrap:wrap;"
+        "margin-top:-0.5rem;margin-bottom:0.6rem;'>"
+        f"<span style='background:{_AVOID_COLOR}15;border:1px solid {_AVOID_COLOR}35;"
+        f"color:{_AVOID_COLOR};font-size:0.72rem;font-weight:500;"
+        f"padding:3px 10px;border-radius:4px;'>Avoid {avoid_v:.0f}%</span>"
+        f"<span style='background:{_MIXED_COLOR}15;border:1px solid {_MIXED_COLOR}35;"
+        f"color:{_MIXED_COLOR};font-size:0.72rem;font-weight:500;"
+        f"padding:3px 10px;border-radius:4px;'>Mixed {mixed_v:.0f}%</span>"
+        f"<span style='background:{_BUY_COLOR}15;border:1px solid {_BUY_COLOR}35;"
+        f"color:{_BUY_COLOR};font-size:0.72rem;font-weight:500;"
+        f"padding:3px 10px;border-radius:4px;'>Buy {buy_v:.0f}%</span>"
+        f"<span style='background:{_TOPTIER_COLOR}15;border:1px solid {_TOPTIER_COLOR}35;"
+        f"color:{_TOPTIER_COLOR};font-size:0.72rem;font-weight:500;"
+        f"padding:3px 10px;border-radius:4px;'>Top Tier {toptier_v:.0f}%</span>"
         "</div>"
-        f"<div style='text-align:center;margin-bottom:0.5rem;'>"
-        f"<span style='background:{tier_color}22;border:1px solid {tier_color}55;"
-        f"color:{tier_color};font-size:0.8rem;font-weight:800;"
-        f"padding:4px 18px;border-radius:20px;letter-spacing:0.06em;'>"
+        f"<div style='text-align:center;margin-bottom:0.25rem;'>"
+        f"<span style='background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);"
+        f"color:{tier_color};font-size:0.75rem;font-weight:600;"
+        f"padding:3px 14px;border-radius:4px;letter-spacing:0.06em;'>"
         f"VERDICT: {tier_label}</span></div>"
     )
     st.markdown(pills_html, unsafe_allow_html=True)
 
 
 def render_aspect_donut(
-    aspect_data,
-    dominant_aspect,
-    dominant_pct,
-    height=280,
+    aspect_data: dict,
+    dominant_aspect: str = None,
+    dominant_pct: float = None,
+    height: int = 280,
 ):
     """
-    Render a dark-mode hollow donut showing aspect discussion distribution.
+    Render a clean dark-mode hollow donut showing aspect discussion distribution.
 
     Parameters
     ----------
     aspect_data     : dict mapping aspect name to percentage (0-100).
-                      E.g. {"Quality": 38.2, "Value": 21.5, "Delivery": 18.0}
     dominant_aspect : Label for the most-discussed aspect (shown in center).
-    dominant_pct    : Percentage of the dominant aspect (0-100).
+    dominant_pct    : Percentage of dominant aspect (0-100).
     height          : Chart height in pixels (default 280).
     """
     if not aspect_data:
         aspect_data = {
-            "Quality": 38.0,
-            "Value": 22.0,
-            "Delivery": 18.0,
-            "Support": 12.0,
-            "Packaging": 10.0,
+            "Build Quality": 42.0,
+            "Price & Value": 24.0,
+            "Delivery": 16.0,
+            "Customer Support": 10.0,
+            "Packaging": 8.0,
         }
-        dominant_aspect = "Quality"
-        dominant_pct = 38.0
+
+    if dominant_aspect is None or dominant_pct is None:
+        dominant_aspect = max(aspect_data.items(), key=lambda x: x[1])[0]
+        dominant_pct = aspect_data[dominant_aspect]
 
     labels = list(aspect_data.keys())
     values = list(aspect_data.values())
     colors = list(_ASPECT_PALETTE[: len(labels)])
     while len(colors) < len(labels):
-        colors.append("#667085")
+        colors.append("#6b7280")
 
     fig = go.Figure(
         data=[
@@ -192,40 +193,41 @@ def render_aspect_donut(
                 hole=0.68,
                 marker=dict(
                     colors=colors,
-                    line=dict(color="#0D1017", width=2),
+                    line=dict(color="#111317", width=2),
                 ),
                 textinfo="none",
                 hovertemplate="%{label}: %{value:.1f}%<extra></extra>",
+                sort=False,
             )
         ]
     )
 
-    dominant_color = colors[labels.index(dominant_aspect)] if dominant_aspect in labels else "#7C5CFF"
+    dominant_color = colors[labels.index(dominant_aspect)] if dominant_aspect in labels else "#00e599"
 
     fig.update_layout(
         showlegend=True,
         legend=dict(
-            font=dict(color="#98A2B3", size=11, family="Inter"),
+            font=dict(color="#9ca3af", size=10, family="Inter, -apple-system, sans-serif"),
             bgcolor="rgba(0,0,0,0)",
             bordercolor="rgba(0,0,0,0)",
             orientation="v",
             x=1.02, y=0.5,
         ),
         height=height,
-        margin=dict(l=10, r=120, t=10, b=10),
+        margin=dict(l=10, r=10, t=25, b=10),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         annotations=[
             dict(
                 text=(
-                    "<span style='font-size:9px;color:#667085;'>TOP ASPECT</span><br>"
-                    f"<b><span style='font-size:15px;color:{dominant_color};'>"
+                    "<span style='font-size:10px;color:#6b7280;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;'>Top Aspect</span><br>"
+                    f"<b><span style='font-size:15px;color:#ffffff;'>"
                     f"{dominant_aspect}</span></b><br>"
-                    f"<span style='font-size:12px;color:#F5F7FA;font-weight:700;'>"
+                    f"<span style='font-size:13px;color:{dominant_color};font-weight:600;font-family:JetBrains Mono,monospace;'>"
                     f"{dominant_pct:.1f}%</span>"
                 ),
-                x=0.38, y=0.5,
-                font=dict(family="Inter, sans-serif", size=12, color="#F5F7FA"),
+                x=0.42, y=0.5,
+                font=dict(family="Inter, -apple-system, sans-serif", size=12, color="#f3f4f6"),
                 showarrow=False,
                 align="center",
                 xanchor="center",
@@ -233,4 +235,4 @@ def render_aspect_donut(
         ],
     )
 
-    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+    st.plotly_chart(fig, width='stretch', config={"displayModeBar": False})
