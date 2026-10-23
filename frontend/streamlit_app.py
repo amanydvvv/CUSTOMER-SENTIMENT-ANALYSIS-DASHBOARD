@@ -383,27 +383,54 @@ def _check_backend_status() -> bool:
 
 
 # -------------------------------------------------------------------------
-# SIDEBAR: TOP NAVIGATION + MIDDLE VOID + BOTTOM DOCKED STATUS CARD
+# SIDEBAR: TOP-ALIGNED NAVIGATION + VIEWPORT-PINNED BOTTOM DOCK
 # -------------------------------------------------------------------------
 
 def render_sidebar():
-    # 1. Clean Sidebar CSS (Top-to-Bottom Flex with Bottom Anchor)
     st.markdown(
         """
         <style>
-        /* Force Streamlit sidebar container to use full height flex layout */
-        [data-testid="stSidebar"] [data-testid="stVerticalBlock"] {
+        /* 1. Force sidebar viewport container to full height flexbox */
+        section[data-testid="stSidebar"] {
+            height: 100vh !important;
+        }
+        
+        section[data-testid="stSidebar"] > div:first-child,
+        [data-testid="stSidebarUserContent"],
+        [data-testid="stSidebar"] [data-testid="stVerticalBlock"]:first-child {
             display: flex !important;
             flex-direction: column !important;
-            min-height: 94vh !important;
-            height: 94vh !important;
+            height: 100% !important;
+            min-height: calc(100vh - 1.5rem) !important;
             justify-content: flex-start !important;
-            padding-top: 1rem !important;
-            padding-bottom: 0.5rem !important;
-            gap: 0.35rem !important;
+            padding-top: 0.5rem !important;
+            padding-bottom: 0.8rem !important;
+            padding-left: 0.6rem !important;
+            padding-right: 0.6rem !important;
+            box-sizing: border-box !important;
+            gap: 6px !important;
         }
 
-        /* Clean navigation button styling */
+        /* 2. Top Navigation Section */
+        .sidebar-top-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            width: 100%;
+            margin-top: 0 !important;
+            padding-top: 0 !important;
+        }
+
+        .nav-header-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: #52525b;
+            letter-spacing: 1.2px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        /* Streamlit button style overrides for navigation */
         .stButton > button {
             width: 100% !important;
             text-align: left !important;
@@ -411,7 +438,8 @@ def render_sidebar():
             border-radius: 6px !important;
             font-weight: 500 !important;
             font-size: 13.5px !important;
-            padding: 8px 12px !important;
+            padding: 9px 12px !important;
+            margin: 0 !important;
             background: transparent !important;
             color: #9ca3af !important;
             border: 1px solid transparent !important;
@@ -440,24 +468,35 @@ def render_sidebar():
             border-left: 3px solid transparent !important;
         }
 
-        /* Pushes everything below this element to the absolute bottom */
-        .sidebar-bottom-anchor {
-            margin-top: auto !important;
-            padding-top: 1rem !important;
-            width: 100% !important;
+        /* 3. Middle Dynamic Space Filler */
+        .sidebar-spacer {
+            flex-grow: 1 !important;
+            min-height: 40px !important;
         }
 
-        /* Sleek bottom status card - No text clipping, no overflow ellipsis */
-        .telemetry-card {
+        [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > div:has(.sidebar-spacer) {
+            flex-grow: 1 !important;
+            display: flex !important;
+        }
+
+        /* 4. Bottom Pinned Telemetry Dock */
+        .telemetry-bottom-dock {
+            width: 100% !important;
+            margin-top: auto !important;
+            margin-bottom: 0 !important;
+            padding: 12px 14px;
             background: #111217;
             border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 8px;
-            padding: 12px 14px;
             box-sizing: border-box;
-            width: 100%;
         }
 
-        .telemetry-header {
+        [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > div:has(.telemetry-bottom-dock) {
+            margin-top: auto !important;
+            width: 100% !important;
+        }
+
+        .telemetry-status-header {
             display: flex;
             align-items: center;
             gap: 8px;
@@ -468,7 +507,7 @@ def render_sidebar():
             white-space: nowrap;
         }
 
-        .telemetry-dot {
+        .telemetry-status-dot {
             width: 7px;
             height: 7px;
             background-color: #00e599;
@@ -478,43 +517,49 @@ def render_sidebar():
             flex-shrink: 0;
         }
 
-        .telemetry-row {
+        .telemetry-table-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 3px 0;
+            padding: 3.5px 0;
             font-size: 11px;
             font-family: monospace;
             white-space: nowrap;
             border-bottom: 1px solid rgba(255, 255, 255, 0.03);
         }
-        .telemetry-row:last-child {
+
+        .telemetry-table-row:last-child {
             border-bottom: none;
         }
 
-        .telemetry-label {
+        .telemetry-col-label {
             color: #71717a;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         }
 
-        .telemetry-val {
+        .telemetry-col-value {
             color: #e4e4e7;
             font-weight: 600;
+            text-align: right;
         }
         </style>
         """,
         unsafe_allow_html=True,
     )
 
-    # 2. Render Navigation at the Very Top
     with st.sidebar:
+        # --- TOP: NAVIGATION ---
         st.markdown(
-            "<span style='font-size:10px; font-weight:700; color:#52525b; letter-spacing:1px; margin-bottom:12px; display:block;'>NAVIGATION</span>",
+            """
+            <div class="sidebar-top-wrapper">
+                <div class="nav-header-label">Navigation</div>
+            </div>
+            """,
             unsafe_allow_html=True,
         )
 
         for page_name in PAGES.keys():
             is_active = st.session_state.get("current_page") == page_name
-            # Simple, clean active state
             if st.button(
                 page_name,
                 key=f"nav_btn_{page_name}",
@@ -524,7 +569,10 @@ def render_sidebar():
                 st.session_state["current_page"] = page_name
                 st.rerun()
 
-        # 3. Bottom Dock Anchor (Pushed down by margin-top: auto)
+        # --- MIDDLE: FLEX SPACER ---
+        st.markdown('<div class="sidebar-spacer"></div>', unsafe_allow_html=True)
+
+        # --- BOTTOM: PINNED TELEMETRY STATUS DOCK ---
         is_connected = _check_backend_status()
         dot_color = "#00e599" if is_connected else "#ef4444"
         dot_shadow = "rgba(0, 229, 153, 0.8)" if is_connected else "rgba(239, 68, 68, 0.8)"
@@ -533,28 +581,26 @@ def render_sidebar():
 
         st.markdown(
             f"""
-            <div class="sidebar-bottom-anchor">
-                <div class="telemetry-card">
-                    <div class="telemetry-header" style="color: {header_color};">
-                        <span class="telemetry-dot" style="background-color: {dot_color}; box-shadow: 0 0 6px {dot_shadow};"></span>
-                        <span>{status_text}</span>
-                    </div>
-                    <div class="telemetry-row">
-                        <span class="telemetry-label">Corpus</span>
-                        <span class="telemetry-val">81,700 Reviews</span>
-                    </div>
-                    <div class="telemetry-row">
-                        <span class="telemetry-label">Split</span>
-                        <span class="telemetry-val">80 / 20 Stratified</span>
-                    </div>
-                    <div class="telemetry-row">
-                        <span class="telemetry-label">Model</span>
-                        <span class="telemetry-val">Balanced LR</span>
-                    </div>
-                    <div class="telemetry-row">
-                        <span class="telemetry-label">Metric</span>
-                        <span class="telemetry-val" style="color:#00e599;">70.84% Macro Recall</span>
-                    </div>
+            <div class="telemetry-bottom-dock">
+                <div class="telemetry-status-header" style="color: {header_color};">
+                    <span class="telemetry-status-dot" style="background-color: {dot_color}; box-shadow: 0 0 6px {dot_shadow};"></span>
+                    <span>{status_text}</span>
+                </div>
+                <div class="telemetry-table-row">
+                    <span class="telemetry-col-label">Corpus</span>
+                    <span class="telemetry-col-value">81,700 Reviews</span>
+                </div>
+                <div class="telemetry-table-row">
+                    <span class="telemetry-col-label">Split</span>
+                    <span class="telemetry-col-value">80 / 20 Stratified</span>
+                </div>
+                <div class="telemetry-table-row">
+                    <span class="telemetry-col-label">Model</span>
+                    <span class="telemetry-col-value">Balanced LR</span>
+                </div>
+                <div class="telemetry-table-row">
+                    <span class="telemetry-col-label">Metric</span>
+                    <span class="telemetry-col-value" style="color:#00e599;">70.84% Macro Recall</span>
                 </div>
             </div>
             """,
