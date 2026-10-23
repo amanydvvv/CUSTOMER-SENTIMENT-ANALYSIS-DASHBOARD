@@ -28,11 +28,11 @@ DARK_THEME_CSS = """
         --text-muted:      #6b7280;
         --text-caption:    #4b5563;
 
-        --accent-pos:      #10b981;
+        --accent-pos:      #00e599;
         --accent-pos-soft: #00e599;
-        --accent-warn:     #f59e0b;
-        --accent-crit:     #ef4444;
-        --accent-toptier:  #b5179e;
+        --accent-warn:     #fca311;
+        --accent-crit:     #ff385c;
+        --accent-toptier:  #00e599;
 
         --radius-card:     8px;
         --radius-pill:     4px;
@@ -397,18 +397,24 @@ def render_sidebar():
         
         section[data-testid="stSidebar"] > div:first-child,
         [data-testid="stSidebarUserContent"],
+        [data-testid="stSidebar"] [data-testid="stVerticalBlock"],
         [data-testid="stSidebar"] [data-testid="stVerticalBlock"]:first-child {
             display: flex !important;
             flex-direction: column !important;
             height: 100% !important;
-            min-height: calc(100vh - 1.5rem) !important;
+            min-height: calc(100vh - 2.5rem) !important;
             justify-content: flex-start !important;
             padding-top: 0.5rem !important;
-            padding-bottom: 0.8rem !important;
+            padding-bottom: 2.5rem !important;
             padding-left: 0.6rem !important;
             padding-right: 0.6rem !important;
             box-sizing: border-box !important;
             gap: 6px !important;
+        }
+
+        [data-testid="stSidebar"] [data-testid="stVerticalBlock"] {
+            padding-bottom: 2.5rem !important;
+            min-height: calc(100vh - 2.5rem) !important;
         }
 
         /* 2. Top Navigation Section */
@@ -441,10 +447,11 @@ def render_sidebar():
             padding: 9px 12px !important;
             margin: 0 !important;
             background: transparent !important;
-            color: #9ca3af !important;
+            color: #a1a1aa !important;
             border: 1px solid transparent !important;
             border-left: 3px solid transparent !important;
             transition: all 0.15s ease !important;
+            box-shadow: none !important;
         }
 
         .stButton > button:hover {
@@ -454,18 +461,20 @@ def render_sidebar():
         }
 
         .stButton > button[kind="primary"] {
-            background: rgba(124, 58, 237, 0.15) !important;
+            background: #18181b !important;
             color: #ffffff !important;
             font-weight: 600 !important;
-            border: 1px solid rgba(124, 58, 237, 0.3) !important;
-            border-left: 3px solid #7c3aed !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            border-left: 3px solid #00e599 !important;
+            box-shadow: none !important;
         }
 
         .stButton > button[kind="secondary"] {
             background: transparent !important;
-            color: #9ca3af !important;
+            color: #a1a1aa !important;
             border: 1px solid transparent !important;
             border-left: 3px solid transparent !important;
+            box-shadow: none !important;
         }
 
         /* 3. Middle Dynamic Space Filler */

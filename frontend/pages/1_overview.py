@@ -10,6 +10,7 @@ Structured around the 5-tier production layout:
 5. Full Customer Review Feed & Filters
 """
 
+import textwrap
 import plotly.graph_objects as go
 import streamlit as st
 import pandas as pd
@@ -50,104 +51,118 @@ def _get_sentiment_metrics(df):
     }
 
 
-def _render_hero_centerpiece(metrics):
-    """Renders the balanced, height-locked Hero Centerpiece."""
+def _render_hero_centerpiece(df):
+    """Renders the Customer Sentiment Pulse Donut and 3-Class Composition hero lockup."""
+    if isinstance(df, dict):
+        total = df.get("total", 85663)
+        pos = df.get("pos", 60474)
+        neu = df.get("neu", 7022)
+        neg = df.get("neg", 18167)
+        pct_pos = df.get("pct_pos", (pos / total) * 100 if total > 0 else 70.6)
+        pct_neu = df.get("pct_neu", (neu / total) * 100 if total > 0 else 8.2)
+        pct_neg = df.get("pct_neg", (neg / total) * 100 if total > 0 else 21.2)
+    else:
+        total = len(df) if df is not None and not df.empty else 85663
+        if df is not None and not df.empty and "sentiment" in df.columns:
+            counts = df["sentiment"].value_counts().to_dict()
+            pos = counts.get("positive", counts.get("Positive", 60474))
+            neu = counts.get("neutral", counts.get("Neutral", 7022))
+            neg = counts.get("negative", counts.get("Negative", 18167))
+        else:
+            pos, neu, neg = 60474, 7022, 18167
+
+        pct_pos = (pos / total) * 100 if total > 0 else 70.6
+        pct_neu = (neu / total) * 100 if total > 0 else 8.2
+        pct_neg = (neg / total) * 100 if total > 0 else 21.2
+
     col_donut, col_comp = st.columns([1.1, 2.2], gap="medium")
 
-    # --- LEFT CARD: SENTIMENT PULSE DONUT ---
+    # ==================== LEFT CARD: SENTIMENT PULSE DONUT ====================
     with col_donut:
-        st.markdown(
-            f"""
-            <div style="background:#111217; border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:18px 20px; min-height:270px; display:flex; flex-direction:column; justify-content:space-between;">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <span style="font-size:11px; font-weight:700; letter-spacing:0.8px; color:#a1a1aa;">CUSTOMER SENTIMENT PULSE</span>
-                    <span style="font-size:11.5px; color:#71717a; font-family:monospace;">{metrics['total']:,} reviews</span>
-                </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        with st.container(border=True):
+            header_html = (
+                f'<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">'
+                f'<span style="font-size:11px; font-weight:700; letter-spacing:0.8px; color:#a1a1aa;">CUSTOMER SENTIMENT PULSE</span>'
+                f'<span style="font-size:11.5px; color:#71717a; font-family:monospace;">{total:,} reviews</span>'
+                f'</div>'
+            )
+            st.markdown(header_html, unsafe_allow_html=True)
 
-        fig_donut = go.Figure(
-            data=[
-                go.Pie(
-                    values=[metrics["pos"], metrics["neu"], metrics["neg"]],
-                    labels=["Positive", "Neutral", "Negative"],
-                    hole=0.72,
-                    direction="clockwise",
-                    sort=False,
-                    marker=dict(
-                        colors=["#00e599", "#fca311", "#ff385c"],
-                        line=dict(color="#111217", width=3),
-                    ),
-                    hoverinfo="label+percent+value",
-                    textinfo="none",
-                )
-            ]
-        )
-        fig_donut.update_layout(
-            showlegend=False,
-            margin=dict(t=5, b=5, l=5, r=5),
-            height=180,
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(0,0,0,0)",
-            annotations=[
-                dict(
-                    text=f"<b style='font-size:22px; color:#ffffff;'>{metrics['pct_pos']:.1f}%</b><br><span style='font-size:10px; color:#00e599; font-weight:600; letter-spacing:0.5px;'>POSITIVE</span>",
-                    x=0.5,
-                    y=0.5,
-                    font_size=16,
-                    showarrow=False,
-                )
-            ],
-        )
-        st.plotly_chart(
-            fig_donut, use_container_width=True, config={"displayModeBar": False}
-        )
-        st.markdown("</div>", unsafe_allow_html=True)
+            fig_donut = go.Figure(
+                data=[
+                    go.Pie(
+                        values=[pos, neu, neg],
+                        labels=["Positive", "Neutral", "Negative"],
+                        hole=0.72,
+                        direction="clockwise",
+                        sort=False,
+                        marker=dict(
+                            colors=["#00e599", "#fca311", "#ff385c"],
+                            line=dict(color="#111217", width=3),
+                        ),
+                        hoverinfo="label+percent+value",
+                        textinfo="none",
+                    )
+                ]
+            )
+            fig_donut.update_layout(
+                showlegend=False,
+                margin=dict(t=5, b=5, l=5, r=5),
+                height=180,
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                annotations=[
+                    dict(
+                        text=f"<b style='font-size:22px; color:#ffffff;'>{pct_pos:.1f}%</b><br><span style='font-size:10px; color:#00e599; font-weight:600; letter-spacing:0.5px;'>POSITIVE</span>",
+                        x=0.5,
+                        y=0.5,
+                        font_size=16,
+                        showarrow=False,
+                    )
+                ],
+            )
+            st.plotly_chart(
+                fig_donut,
+                use_container_width=True,
+                config={"displayModeBar": False},
+            )
 
-    # --- RIGHT CARD: SENTIMENT COMPOSITION & METRIC TILES ---
+    # ==================== RIGHT CARD: SENTIMENT COMPOSITION ====================
     with col_comp:
-        st.markdown(
-            f"""
-            <div style="background:#111217; border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:18px 22px; min-height:270px; display:flex; flex-direction:column; justify-content:space-between;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                    <span style="font-size:11px; font-weight:700; letter-spacing:0.8px; color:#a1a1aa;">SENTIMENT COMPOSITION</span>
-                    <span style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); padding:3px 8px; border-radius:4px; font-size:10.5px; color:#a1a1aa; font-family:monospace;">3-Class Classification</span>
-                </div>
-                
-                <!-- 3-Class Segmented Bar -->
-                <div style="display:flex; width:100%; height:9px; border-radius:999px; overflow:hidden; background:#27272a; margin-bottom:22px;">
-                    <div style="width:{metrics['pct_pos']:.2f}%; background-color:#00e599;"></div>
-                    <div style="width:{metrics['pct_neu']:.2f}%; background-color:#fca311;"></div>
-                    <div style="width:{metrics['pct_neg']:.2f}%; background-color:#ff385c;"></div>
-                </div>
-
-                <!-- 3 Metric Cards -->
-                <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; margin-top:auto;">
-                    <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:8px; padding:12px; text-align:center;">
-                        <span style="font-size:11px; font-weight:700; color:#00e599; letter-spacing:0.5px;">POSITIVE</span>
-                        <div style="font-size:22px; font-weight:800; color:#ffffff; margin:4px 0 2px 0; font-family:monospace;">{metrics['pct_pos']:.1f}%</div>
-                        <span style="font-size:11px; color:#71717a;">{metrics['pos']:,} reviews</span>
-                    </div>
-                    <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:8px; padding:12px; text-align:center;">
-                        <span style="font-size:11px; font-weight:700; color:#fca311; letter-spacing:0.5px;">NEUTRAL</span>
-                        <div style="font-size:22px; font-weight:800; color:#ffffff; margin:4px 0 2px 0; font-family:monospace;">{metrics['pct_neu']:.1f}%</div>
-                        <span style="font-size:11px; color:#71717a;">{metrics['neu']:,} reviews</span>
-                    </div>
-                    <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:8px; padding:12px; text-align:center;">
-                        <span style="font-size:11px; font-weight:700; color:#ff385c; letter-spacing:0.5px;">NEGATIVE</span>
-                        <div style="font-size:22px; font-weight:800; color:#ffffff; margin:4px 0 2px 0; font-family:monospace;">{metrics['pct_neg']:.1f}%</div>
-                        <span style="font-size:11px; color:#71717a;">{metrics['neg']:,} reviews</span>
-                    </div>
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        with st.container(border=True):
+            comp_html = (
+                f'<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">'
+                f'<span style="font-size:11px; font-weight:700; letter-spacing:0.8px; color:#a1a1aa;">SENTIMENT COMPOSITION</span>'
+                f'<span style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); padding:3px 8px; border-radius:4px; font-size:10.5px; color:#a1a1aa; font-family:monospace;">3-Class Classification</span>'
+                f'</div>'
+                f'<div style="display:flex; width:100%; height:9px; border-radius:999px; overflow:hidden; background:#27272a; margin-bottom:22px;">'
+                f'<div style="width:{pct_pos:.2f}%; background-color:#00e599;"></div>'
+                f'<div style="width:{pct_neu:.2f}%; background-color:#fca311;"></div>'
+                f'<div style="width:{pct_neg:.2f}%; background-color:#ff385c;"></div>'
+                f'</div>'
+                f'<div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:12px;">'
+                f'<div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:8px; padding:12px; text-align:center;">'
+                f'<span style="font-size:11px; font-weight:700; color:#00e599; letter-spacing:0.5px;">POSITIVE</span>'
+                f'<div style="font-size:22px; font-weight:800; color:#ffffff; margin:4px 0 2px 0; font-family:monospace;">{pct_pos:.1f}%</div>'
+                f'<span style="font-size:11px; color:#71717a;">{pos:,} reviews</span>'
+                f'</div>'
+                f'<div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:8px; padding:12px; text-align:center;">'
+                f'<span style="font-size:11px; font-weight:700; color:#fca311; letter-spacing:0.5px;">NEUTRAL</span>'
+                f'<div style="font-size:22px; font-weight:800; color:#ffffff; margin:4px 0 2px 0; font-family:monospace;">{pct_neu:.1f}%</div>'
+                f'<span style="font-size:11px; color:#71717a;">{neu:,} reviews</span>'
+                f'</div>'
+                f'<div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:8px; padding:12px; text-align:center;">'
+                f'<span style="font-size:11px; font-weight:700; color:#ff385c; letter-spacing:0.5px;">NEGATIVE</span>'
+                f'<div style="font-size:22px; font-weight:800; color:#ffffff; margin:4px 0 2px 0; font-family:monospace;">{pct_neg:.1f}%</div>'
+                f'<span style="font-size:11px; color:#71717a;">{neg:,} reviews</span>'
+                f'</div>'
+                f'</div>'
+            )
+            st.markdown(comp_html, unsafe_allow_html=True)
 
 
-def _build_trajectory_figure(df):
-    """Builds quarterly review volume area chart."""
+def _build_trajectory_figure(df, metric="Review Volume"):
+    """Builds quarterly review volume or positive ratio area chart."""
     if df is not None and not df.empty and "date_dt" in df.columns and df["date_dt"].notna().sum() > 0:
         df_dates = df.dropna(subset=["date_dt"]).copy()
         quarterly = (
@@ -170,18 +185,34 @@ def _build_trajectory_figure(df):
         })
 
     fig = go.Figure()
-    fig.add_trace(
-        go.Scatter(
-            x=quarterly["quarter_str"],
-            y=quarterly["total"],
-            mode="lines",
-            name="Review Volume",
-            line=dict(color="#00e599", width=2),
-            fill="tozeroy",
-            fillcolor="rgba(0, 229, 153, 0.10)",
-            hovertemplate="<b>Quarter:</b> %{x}<br><b>Volume:</b> %{y:,} reviews<extra></extra>",
+    if metric == "Positive Ratio (%)":
+        fig.add_trace(
+            go.Scatter(
+                x=quarterly["quarter_str"],
+                y=quarterly["pos_ratio"],
+                mode="lines",
+                name="Positive Ratio (%)",
+                line=dict(color="#00e599", width=2),
+                fill="tozeroy",
+                fillcolor="rgba(0, 229, 153, 0.10)",
+                hovertemplate="<b>Quarter:</b> %{x}<br><b>Positive Ratio:</b> %{y:.1f}%<extra></extra>",
+            )
         )
-    )
+        y_title = "Positive %"
+    else:
+        fig.add_trace(
+            go.Scatter(
+                x=quarterly["quarter_str"],
+                y=quarterly["total"],
+                mode="lines",
+                name="Review Volume",
+                line=dict(color="#00e599", width=2),
+                fill="tozeroy",
+                fillcolor="rgba(0, 229, 153, 0.10)",
+                hovertemplate="<b>Quarter:</b> %{x}<br><b>Volume:</b> %{y:,} reviews<extra></extra>",
+            )
+        )
+        y_title = "Review Count"
 
     # To guarantee clean yearly milestones if category axis has many quarters:
     all_quarters = list(quarterly["quarter_str"])
@@ -196,25 +227,34 @@ def _build_trajectory_figure(df):
             ticktext=tickvals,
         )
 
-    return fig
+    return fig, y_title
 
 
 def _render_clean_trajectory(df):
-    """Renders the Historical Quarterly Trajectory with a clean, sparsified x-axis."""
-    st.markdown(
-        """
-        <div style="background:#111217; border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:18px 20px; margin-top:16px; margin-bottom:16px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                <div>
-                    <span style="font-size:11px; font-weight:700; letter-spacing:0.8px; color:#a1a1aa;">HISTORICAL QUARTERLY TRAJECTORY</span>
-                    <div style="font-size:12px; color:#71717a; margin-top:2px;">Quarterly review volume and positive sentiment ratio</div>
-                </div>
+    """Renders the Historical Quarterly Trajectory with a clean, sparsified x-axis and metric toggles."""
+    header_col, toggle_col = st.columns([2.5, 1.2])
+    with header_col:
+        st.markdown(
+            """
+            <div style="padding-top: 6px;">
+                <span style="font-size:11px; font-weight:700; letter-spacing:0.8px; color:#a1a1aa;">HISTORICAL QUARTERLY TRAJECTORY</span>
+                <div style="font-size:12px; color:#71717a; margin-top:2px;">Quarterly review volume and positive sentiment ratio</div>
             </div>
-        """,
-        unsafe_allow_html=True,
-    )
+            """,
+            unsafe_allow_html=True,
+        )
+    with toggle_col:
+        trend_metric = st.segmented_control(
+            "Trend View",
+            options=["Review Volume", "Positive Ratio (%)"],
+            default="Review Volume",
+            key="hist_trend_view_toggle",
+            label_visibility="collapsed",
+        )
+    if not trend_metric:
+        trend_metric = "Review Volume"
 
-    fig_traj = _build_trajectory_figure(df)
+    fig_traj, y_title = _build_trajectory_figure(df, metric=trend_metric)
 
     # CRITICAL FIX FOR THE "BARCODE" X-AXIS:
     # Set nticks or dtick to avoid printing every single quarter label
@@ -227,6 +267,7 @@ def _render_clean_trajectory(df):
     fig_traj.update_yaxes(
         gridcolor="rgba(255, 255, 255, 0.04)",
         showgrid=True,
+        title=dict(text=y_title, font=dict(color="#71717a", size=10)),
     )
     fig_traj.update_layout(
         height=220,
@@ -235,6 +276,12 @@ def _render_clean_trajectory(df):
         plot_bgcolor="rgba(0,0,0,0)",
     )
 
+    st.markdown(
+        """
+        <div style="background:#111217; border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:12px 20px 18px 20px; margin-top:8px; margin-bottom:16px;">
+        """,
+        unsafe_allow_html=True,
+    )
     st.plotly_chart(
         fig_traj, use_container_width=True, config={"displayModeBar": False}
     )
@@ -253,10 +300,29 @@ def _render_historical(df=None):
 
     metrics = _get_sentiment_metrics(df)
 
-    # 1. Hero Centerpiece (Top Position)
-    _render_hero_centerpiece(metrics)
+    # Top Page Header
+    render_html("""
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;border-bottom:1px solid rgba(255,255,255,0.06);padding-bottom:12px;">
+        <div>
+            <h1 style="font-size:22px;font-weight:700;color:#ffffff;letter-spacing:-0.02em;margin:0 0 4px;line-height:1.2;">
+                Historical Sentiment Pulse
+            </h1>
+            <div style="color:#9ca3af;font-size:13px;margin:0;">
+                Macro customer sentiment, temporal trajectory, aspect concerns, and review diagnostics
+            </div>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+            <span style="background:rgba(16,185,129,0.1);border:1px solid rgba(255,255,255,0.07);color:#10b981;font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;">
+                HISTORICAL CORPUS (81,700)
+            </span>
+        </div>
+    </div>
+    """)
 
-    # 2. Clean Trajectory Timeline (Second Position)
+    # 1. Hero Centerpiece (BLOCK B: Top Position immediately under page header)
+    _render_hero_centerpiece(df)
+
+    # 2. Clean Trajectory Timeline (BLOCK A: Positioned directly below Hero Centerpiece)
     _render_clean_trajectory(df)
 
     # 3. Top Customer Concerns & Action Intelligence (Third Position)
