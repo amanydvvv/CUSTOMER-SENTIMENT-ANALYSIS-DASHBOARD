@@ -136,21 +136,21 @@ DARK_THEME_CSS = """
         left: 0 !important;
     }
 
-    /* Ensure the sidebar inner container uses full height flexbox */
-    [data-testid="stSidebarUserContent"],
+    /* Force Streamlit sidebar container to use full viewport height flexbox */
     [data-testid="stSidebar"] > div:first-child,
+    [data-testid="stSidebarUserContent"],
     [data-testid="stSidebar"] .block-container,
     [data-testid="stSidebar"] [data-testid="stVerticalBlock"]:first-child {
         display: flex !important;
         flex-direction: column !important;
         justify-content: space-between !important;
-        height: 100% !important;
-        min-height: calc(100vh - 32px) !important;
-        padding-top: 16px !important;
-        padding-bottom: 1.5rem !important;
-        padding-left: 14px !important;
-        padding-right: 14px !important;
-        width: 100% !important;
+        height: 100vh !important;
+        max-height: 100vh !important;
+        padding-top: 1.2rem !important;
+        padding-bottom: 1.2rem !important;
+        padding-left: 0.8rem !important;
+        padding-right: 0.8rem !important;
+        box-sizing: border-box !important;
     }
 
     [data-testid="stSidebarCollapseButton"],
@@ -224,62 +224,77 @@ DARK_THEME_CSS = """
         border-left: 2px solid #10b981 !important;
     }
 
-    /* ── Sleek Bottom-Pinned Telemetry Card ─────────────────────────────── */
-    .telemetry-card {
-        background: rgba(255, 255, 255, 0.02);
-        border: 1px solid rgba(255, 255, 255, 0.07);
-        border-radius: 10px;
-        padding: 14px 16px;
-        margin-top: auto !important;
-        margin-bottom: 0.5rem;
-        margin-left: 0.25rem;
-        margin-right: 0.25rem;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+    /* Top navigation block */
+    .sidebar-top-section {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        width: 100%;
     }
 
-    .telemetry-header {
+    /* Pushes telemetry to absolute bottom, keeping blank space in the middle */
+    .sidebar-middle-spacer {
+        flex-grow: 1 !important;
+        min-height: 20px;
+    }
+
+    /* Bottom Telemetry Dock - Zero Horizontal Clipping */
+    .telemetry-bottom-dock {
+        width: 100%;
+        margin-top: auto;
+        padding: 12px 14px;
+        background: #111217;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 8px;
+        box-sizing: border-box;
+    }
+
+    .telemetry-status-header {
         display: flex;
         align-items: center;
         gap: 8px;
-        font-size: 12px;
+        font-size: 11.5px;
         font-weight: 600;
         color: #00e599;
-        margin-bottom: 12px;
-        letter-spacing: 0.3px;
+        margin-bottom: 10px;
+        white-space: nowrap;
+        letter-spacing: 0.2px;
     }
 
-    .telemetry-dot {
+    .telemetry-status-dot {
         width: 7px;
         height: 7px;
         background-color: #00e599;
         border-radius: 50%;
-        box-shadow: 0 0 8px rgba(0, 229, 153, 0.6);
-        display: inline-block;
-        animation: live-pulse 2s infinite ease-in-out;
+        box-shadow: 0 0 6px rgba(0, 229, 153, 0.7);
+        flex-shrink: 0;
     }
 
-    .telemetry-row {
+    .telemetry-table-row {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 4px 0;
-        font-size: 11.5px;
+        padding: 3.5px 0;
+        font-size: 11px;
+        white-space: nowrap;
         border-bottom: 1px solid rgba(255, 255, 255, 0.03);
     }
-    .telemetry-row:last-child {
+
+    .telemetry-table-row:last-child {
         border-bottom: none;
     }
 
-    .telemetry-label {
+    .telemetry-col-label {
         color: #71717a;
         font-weight: 500;
-        letter-spacing: 0.2px;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
-    .telemetry-value {
+    .telemetry-col-value {
         color: #e4e4e7;
         font-weight: 600;
-        font-variant-numeric: tabular-nums;
+        font-family: monospace;
+        text-align: right;
     }
 
     /* ── Main content padding ────────────────────────────────────────────── */
@@ -467,43 +482,56 @@ PAGES = {
 
 def render_sidebar():
     with st.sidebar:
-        st.markdown('<div class="nav-label">Navigation</div>', unsafe_allow_html=True)
+        st.markdown('<div class="sidebar-top-section">', unsafe_allow_html=True)
+        st.markdown(
+            "<span style='font-size:10px; font-weight:700; color:#52525b; letter-spacing:1px; margin-bottom:8px; display:block;'>NAVIGATION</span>",
+            unsafe_allow_html=True,
+        )
 
         for page_name in PAGES.keys():
             is_active = st.session_state.get("current_page") == page_name
             if st.button(
                 page_name,
                 key=f"nav_{page_name}",
-                width='stretch',
+                use_container_width=True,
                 type="primary" if is_active else "secondary",
             ):
                 st.session_state["current_page"] = page_name
                 st.rerun()
 
-        render_html("""
-        <div class="telemetry-card">
-            <div class="telemetry-header">
-                <span class="telemetry-dot"></span>
-                <span>FastAPI: Connected (Port 8000)</span>
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        # 3. Middle Empty Space (Maintains flexible gap between nav and bottom telemetry)
+        st.markdown('<div class="sidebar-middle-spacer"></div>', unsafe_allow_html=True)
+
+        # 4. Render Bottom Telemetry Dock (No Text Wrapping, Clean Monospace Values)
+        st.markdown(
+            """
+            <div class="telemetry-bottom-dock">
+                <div class="telemetry-status-header">
+                    <span class="telemetry-status-dot"></span>
+                    <span>FastAPI: Connected (Port 8000)</span>
+                </div>
+                <div class="telemetry-table-row">
+                    <span class="telemetry-col-label">Corpus</span>
+                    <span class="telemetry-col-value">81,700 Reviews</span>
+                </div>
+                <div class="telemetry-table-row">
+                    <span class="telemetry-col-label">Split</span>
+                    <span class="telemetry-col-value">80 / 20 Stratified</span>
+                </div>
+                <div class="telemetry-table-row">
+                    <span class="telemetry-col-label">Model</span>
+                    <span class="telemetry-col-value">Balanced LR</span>
+                </div>
+                <div class="telemetry-table-row">
+                    <span class="telemetry-col-label">Metric</span>
+                    <span class="telemetry-col-value" style="color:#00e599;">70.84% Macro Recall</span>
+                </div>
             </div>
-            <div class="telemetry-row">
-                <span class="telemetry-label">Corpus</span>
-                <span class="telemetry-value">81,700 Reviews</span>
-            </div>
-            <div class="telemetry-row">
-                <span class="telemetry-label">Split</span>
-                <span class="telemetry-value">80 / 20 Stratified</span>
-            </div>
-            <div class="telemetry-row">
-                <span class="telemetry-label">Model</span>
-                <span class="telemetry-value">Balanced LR</span>
-            </div>
-            <div class="telemetry-row">
-                <span class="telemetry-label">Metric</span>
-                <span class="telemetry-value">70.84% Macro Recall</span>
-            </div>
-        </div>
-        """)
+            """,
+            unsafe_allow_html=True,
+        )
 
 
 def main():
