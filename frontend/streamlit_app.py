@@ -136,13 +136,20 @@ DARK_THEME_CSS = """
         left: 0 !important;
     }
 
+    /* Ensure the sidebar inner container uses full height flexbox */
     [data-testid="stSidebarUserContent"],
     [data-testid="stSidebar"] > div:first-child,
-    [data-testid="stSidebar"] .block-container {
+    [data-testid="stSidebar"] .block-container,
+    [data-testid="stSidebar"] [data-testid="stVerticalBlock"]:first-child {
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: space-between !important;
+        height: 100% !important;
+        min-height: calc(100vh - 32px) !important;
         padding-top: 16px !important;
-        padding-bottom: 24px !important;
-        padding-left: 16px !important;
-        padding-right: 16px !important;
+        padding-bottom: 1.5rem !important;
+        padding-left: 14px !important;
+        padding-right: 14px !important;
         width: 100% !important;
     }
 
@@ -217,52 +224,62 @@ DARK_THEME_CSS = """
         border-left: 2px solid #10b981 !important;
     }
 
-    /* ── Pinned Bottom Telemetry Footer ──────────────────────────────────── */
-    .sidebar-telemetry {
-        border-top: 1px solid rgba(255, 255, 255, 0.06);
-        padding-top: 16px;
-        margin-top: 32px;
+    /* ── Sleek Bottom-Pinned Telemetry Card ─────────────────────────────── */
+    .telemetry-card {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        border-radius: 10px;
+        padding: 14px 16px;
+        margin-top: auto !important;
+        margin-bottom: 0.5rem;
+        margin-left: 0.25rem;
+        margin-right: 0.25rem;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
     }
 
-    .sidebar-engine-status {
+    .telemetry-header {
         display: flex;
         align-items: center;
         gap: 8px;
-        margin-bottom: 14px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #00e599;
+        margin-bottom: 12px;
+        letter-spacing: 0.3px;
     }
 
-    .sidebar-engine-text {
-        font-size: 11px;
-        font-weight: 500;
-        color: #d1d5db;
-        letter-spacing: 0.01em;
+    .telemetry-dot {
+        width: 7px;
+        height: 7px;
+        background-color: #00e599;
+        border-radius: 50%;
+        box-shadow: 0 0 8px rgba(0, 229, 153, 0.6);
+        display: inline-block;
+        animation: live-pulse 2s infinite ease-in-out;
     }
 
-    .sidebar-data-spec {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-    }
-
-    .sidebar-spec-row {
+    .telemetry-row {
         display: flex;
         justify-content: space-between;
         align-items: center;
+        padding: 4px 0;
+        font-size: 11.5px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    }
+    .telemetry-row:last-child {
+        border-bottom: none;
     }
 
-    .sidebar-spec-label {
-        font-family: 'JetBrains Mono', monospace;
-        color: #6b7280;
-        font-size: 10px;
+    .telemetry-label {
+        color: #71717a;
         font-weight: 500;
-        letter-spacing: 0.05em;
+        letter-spacing: 0.2px;
     }
 
-    .sidebar-spec-val {
-        font-family: 'JetBrains Mono', monospace;
-        color: #d1d5db;
-        font-size: 11px;
-        font-weight: 400;
+    .telemetry-value {
+        color: #e4e4e7;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
     }
 
     /* ── Main content padding ────────────────────────────────────────────── */
@@ -464,28 +481,26 @@ def render_sidebar():
                 st.rerun()
 
         render_html("""
-        <div class="sidebar-telemetry">
-            <div class="sidebar-engine-status">
-                <span class="live-dot"></span>
-                <span class="sidebar-engine-text">FastAPI: Connected (Port 8000)</span>
+        <div class="telemetry-card">
+            <div class="telemetry-header">
+                <span class="telemetry-dot"></span>
+                <span>FastAPI: Connected (Port 8000)</span>
             </div>
-            <div class="sidebar-data-spec">
-                <div class="sidebar-spec-row">
-                    <span class="sidebar-spec-label">Corpus</span>
-                    <span class="sidebar-spec-val">81,700 Reviews</span>
-                </div>
-                <div class="sidebar-spec-row">
-                    <span class="sidebar-spec-label">Split</span>
-                    <span class="sidebar-spec-val">80 / 20 Stratified</span>
-                </div>
-                <div class="sidebar-spec-row">
-                    <span class="sidebar-spec-label">Model</span>
-                    <span class="sidebar-spec-val">Balanced LR</span>
-                </div>
-                <div class="sidebar-spec-row">
-                    <span class="sidebar-spec-label">Metric</span>
-                    <span class="sidebar-spec-val">70.84% Macro Recall</span>
-                </div>
+            <div class="telemetry-row">
+                <span class="telemetry-label">Corpus</span>
+                <span class="telemetry-value">81,700 Reviews</span>
+            </div>
+            <div class="telemetry-row">
+                <span class="telemetry-label">Split</span>
+                <span class="telemetry-value">80 / 20 Stratified</span>
+            </div>
+            <div class="telemetry-row">
+                <span class="telemetry-label">Model</span>
+                <span class="telemetry-value">Balanced LR</span>
+            </div>
+            <div class="telemetry-row">
+                <span class="telemetry-label">Metric</span>
+                <span class="telemetry-value">70.84% Macro Recall</span>
             </div>
         </div>
         """)
