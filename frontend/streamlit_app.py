@@ -104,7 +104,7 @@ DARK_THEME_CSS = """
         display: none !important;
     }
 
-    /* ── Sidebar: Linear / Vercel Developer Console ─────────────────────── */
+    /* ── Sidebar: Modern Dark Console ────────────────────────────────────── */
     section[data-testid="stSidebar"],
     [data-testid="stSidebar"] {
         display: flex !important;
@@ -118,10 +118,11 @@ DARK_THEME_CSS = """
         left: 0 !important;
         z-index: 999 !important;
         position: relative !important;
-        background: #0c0d12 !important;
-        border-right: 1px solid rgba(255, 255, 255, 0.06) !important;
+        background: #0b0b0f !important;
+        border-right: 1px solid #1f1f26 !important;
         box-shadow: none !important;
         animation: none !important;
+        overflow-x: hidden !important;
     }
 
     [data-testid="stSidebar"][aria-expanded="false"],
@@ -139,18 +140,28 @@ DARK_THEME_CSS = """
     /* Force Streamlit sidebar container to use full viewport height flexbox */
     [data-testid="stSidebar"] > div:first-child,
     [data-testid="stSidebarUserContent"],
-    [data-testid="stSidebar"] .block-container,
+    [data-testid="stSidebar"] .block-container {
+        display: flex !important;
+        flex-direction: column !important;
+        height: 100vh !important;
+        max-height: 100vh !important;
+        padding-top: 14px !important;
+        padding-bottom: 14px !important;
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+        box-sizing: border-box !important;
+        overflow-y: hidden !important;
+        overflow-x: hidden !important;
+    }
+
+    /* Main vertical container inside sidebar: tight 6px gap, flex column */
     [data-testid="stSidebar"] [data-testid="stVerticalBlock"]:first-child {
         display: flex !important;
         flex-direction: column !important;
-        justify-content: space-between !important;
-        height: 100vh !important;
-        max-height: 100vh !important;
-        padding-top: 1.2rem !important;
-        padding-bottom: 1.2rem !important;
-        padding-left: 0.8rem !important;
-        padding-right: 0.8rem !important;
-        box-sizing: border-box !important;
+        height: 100% !important;
+        max-height: calc(100vh - 28px) !important;
+        gap: 6px !important;
+        overflow: hidden !important;
     }
 
     [data-testid="stSidebarCollapseButton"],
@@ -161,19 +172,91 @@ DARK_THEME_CSS = """
         box-sizing: border-box;
     }
 
-    .nav-label {
-        font-size: 10px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: #4b5563;
-        padding: 0 4px;
-        margin: 0 0 8px 0;
+    /* ── Hide inner scrollbars cleanly (Firefox, Chrome, Safari, Edge) ───── */
+    [data-testid="stSidebar"],
+    [data-testid="stSidebar"] > div:first-child,
+    [data-testid="stSidebarUserContent"],
+    [data-testid="stSidebar"] .block-container,
+    section[data-testid="stSidebar"] {
+        scrollbar-width: none !important;
+        -ms-overflow-style: none !important;
+    }
+    [data-testid="stSidebar"]::-webkit-scrollbar,
+    [data-testid="stSidebarUserContent"]::-webkit-scrollbar,
+    [data-testid="stSidebar"] .block-container::-webkit-scrollbar {
+        display: none !important;
+        width: 0px !important;
+        height: 0px !important;
     }
 
-    /* ── Sidebar Nav Buttons ──────────────────────────────────────────────── */
+    /* ── Brand Logo Header ───────────────────────────────────────────────── */
+    .sidebar-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 4px 6px 12px 6px;
+        margin-bottom: 4px;
+        border-bottom: 1px solid #1f1f26;
+        width: 100%;
+    }
+
+    .brand-badge {
+        width: 28px;
+        height: 28px;
+        border-radius: 7px;
+        background: linear-gradient(135deg, #7c3aed, #4f46e5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        box-shadow: 0 2px 8px rgba(124, 58, 237, 0.4);
+    }
+
+    .brand-text {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .brand-title {
+        font-family: 'Inter', -apple-system, sans-serif;
+        font-size: 13px;
+        font-weight: 700;
+        color: #ffffff;
+        letter-spacing: 0.02em;
+        line-height: 1.2;
+    }
+
+    .brand-subtitle {
+        font-family: 'Inter', -apple-system, sans-serif;
+        font-size: 9.5px;
+        font-weight: 500;
+        color: #71717a;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+    }
+
+    /* ── Navigation Section Label ────────────────────────────────────────── */
+    .nav-label {
+        font-family: 'Inter', -apple-system, sans-serif;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #52525b;
+        padding: 2px 8px 4px 8px;
+        margin: 0;
+    }
+
+    /* ── Sidebar Nav Buttons: Compact 42px, 6px Gap, Smooth Hover ────────── */
+    [data-testid="stSidebar"] div[data-testid="stVerticalBlock"] > div:has(.stButton) {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
     [data-testid="stSidebar"] .stButton {
-        margin-bottom: 2px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
     }
 
     [data-testid="stSidebar"] .stButton > button {
@@ -181,17 +264,21 @@ DARK_THEME_CSS = """
         align-items: center !important;
         justify-content: flex-start !important;
         text-align: left !important;
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
-        font-size: 13px !important;
-        font-weight: 400 !important;
-        color: #8b949e !important;
-        background: transparent !important;
-        border: 1px solid transparent !important;
-        border-left: 2px solid transparent !important;
-        border-radius: 4px !important;
-        padding: 8px 12px !important;
-        transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease !important;
         width: 100% !important;
+        height: 42px !important;
+        min-height: 42px !important;
+        max-height: 42px !important;
+        padding: 0 14px !important;
+        border-radius: 6px !important;
+        font-family: 'Inter', -apple-system, sans-serif !important;
+        font-size: 13px !important;
+        font-weight: 500 !important;
+        letter-spacing: 0.01em !important;
+        border: 1px solid transparent !important;
+        border-left: 3px solid transparent !important;
+        background: transparent !important;
+        color: #9ca3af !important;
+        transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1) !important;
         box-shadow: none !important;
     }
 
@@ -203,98 +290,111 @@ DARK_THEME_CSS = """
     }
 
     [data-testid="stSidebar"] .stButton > button:hover {
-        background: rgba(255, 255, 255, 0.02) !important;
-        color: #d1d5db !important;
-        border-color: transparent !important;
-        border-left: 2px solid transparent !important;
+        background: rgba(255, 255, 255, 0.035) !important;
+        color: #ffffff !important;
+        border-color: rgba(255, 255, 255, 0.06) !important;
+        border-left-color: rgba(124, 58, 237, 0.45) !important;
     }
 
     [data-testid="stSidebar"] .stButton > button[kind="primary"] {
-        background: rgba(255, 255, 255, 0.06) !important;
+        background: rgba(124, 58, 237, 0.12) !important;
         color: #ffffff !important;
-        font-weight: 500 !important;
-        border: 1px solid transparent !important;
-        border-left: 2px solid #10b981 !important;
-        border-radius: 0 4px 4px 0 !important;
+        font-weight: 600 !important;
+        border: 1px solid rgba(124, 58, 237, 0.25) !important;
+        border-left: 3px solid #7c3aed !important;
     }
 
     [data-testid="stSidebar"] .stButton > button[kind="primary"]:hover {
-        background: rgba(255, 255, 255, 0.08) !important;
+        background: rgba(124, 58, 237, 0.18) !important;
         color: #ffffff !important;
-        border-left: 2px solid #10b981 !important;
+        border-left: 3px solid #7c3aed !important;
     }
 
-    /* Top navigation block */
-    .sidebar-top-section {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-        width: 100%;
+    /* ── Flexible Middle Spacer ──────────────────────────────────────────── */
+    .sidebar-spacer {
+        flex: 1 1 auto !important;
+        min-height: 12px !important;
     }
 
-    /* Pushes telemetry to absolute bottom, keeping blank space in the middle */
-    .sidebar-middle-spacer {
-        flex-grow: 1 !important;
-        min-height: 20px;
-    }
-
-    /* Bottom Telemetry Dock - Zero Horizontal Clipping */
-    .telemetry-bottom-dock {
-        width: 100%;
-        margin-top: auto;
-        padding: 12px 14px;
-        background: #111217;
-        border: 1px solid rgba(255, 255, 255, 0.08);
+    /* ── Bottom Telemetry Dock Card: Two-Column Aligned, No Collisions ──── */
+    .telemetry-card {
+        margin-top: auto !important;
+        flex-shrink: 0 !important;
+        background: #0f1015;
+        border: 1px solid #1f1f26;
         border-radius: 8px;
+        padding: 12px;
+        width: 100%;
         box-sizing: border-box;
     }
 
-    .telemetry-status-header {
+    .telemetry-header {
         display: flex;
         align-items: center;
         gap: 8px;
+        font-family: 'Inter', -apple-system, sans-serif;
         font-size: 11.5px;
         font-weight: 600;
-        color: #00e599;
+        color: #e4e4e7;
         margin-bottom: 10px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #1f1f26;
         white-space: nowrap;
-        letter-spacing: 0.2px;
     }
 
-    .telemetry-status-dot {
+    .telemetry-dot {
         width: 7px;
         height: 7px;
-        background-color: #00e599;
         border-radius: 50%;
-        box-shadow: 0 0 6px rgba(0, 229, 153, 0.7);
         flex-shrink: 0;
     }
 
-    .telemetry-table-row {
+    .telemetry-dot.connected {
+        background-color: #10b981;
+        box-shadow: 0 0 6px rgba(16, 185, 129, 0.7);
+        animation: live-pulse 2s infinite ease-in-out;
+    }
+
+    .telemetry-dot.disconnected {
+        background-color: #ef4444;
+        box-shadow: 0 0 6px rgba(239, 68, 68, 0.7);
+    }
+
+    .telemetry-grid {
         display: flex;
-        justify-content: space-between;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .telemetry-row {
+        display: grid;
+        grid-template-columns: 55px 1fr;
         align-items: center;
-        padding: 3.5px 0;
+        gap: 8px;
         font-size: 11px;
-        white-space: nowrap;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        line-height: 1.35;
     }
 
-    .telemetry-table-row:last-child {
-        border-bottom: none;
-    }
-
-    .telemetry-col-label {
+    .telemetry-label {
         color: #71717a;
         font-weight: 500;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-family: 'Inter', -apple-system, sans-serif;
+        white-space: nowrap;
     }
 
-    .telemetry-col-value {
-        color: #e4e4e7;
-        font-weight: 600;
-        font-family: monospace;
+    .telemetry-value {
+        color: #d1d5db;
+        font-weight: 500;
+        font-family: 'JetBrains Mono', monospace;
         text-align: right;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .telemetry-value.metric-highlight {
+        color: #10b981;
+        font-weight: 600;
     }
 
     /* ── Main content padding ────────────────────────────────────────────── */
@@ -480,18 +580,49 @@ PAGES = {
 }
 
 
+PAGE_ICONS = {
+    "Historical Pulse": "📈",
+    "Live Inference": "⚡",
+    "Benchmark Zoo": "🔬",
+    "Product Insights": "🛍️",
+    "System Overview": "⚙️",
+}
+
+
+def _check_backend_status() -> bool:
+    import urllib.request
+    try:
+        req = urllib.request.Request("http://localhost:8000/health", headers={"User-Agent": "Streamlit"})
+        with urllib.request.urlopen(req, timeout=0.4) as res:
+            return res.status == 200
+    except Exception:
+        return False
+
+
 def render_sidebar():
     with st.sidebar:
-        st.markdown('<div class="sidebar-top-section">', unsafe_allow_html=True)
-        st.markdown(
-            "<span style='font-size:10px; font-weight:700; color:#52525b; letter-spacing:1px; margin-bottom:8px; display:block;'>NAVIGATION</span>",
-            unsafe_allow_html=True,
-        )
+        # 1. Brand Logo Header
+        render_html("""
+        <div class="sidebar-brand">
+            <div class="brand-badge">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                </svg>
+            </div>
+            <div class="brand-text">
+                <span class="brand-title">Sentiment Core</span>
+                <span class="brand-subtitle">Intelligence Engine</span>
+            </div>
+        </div>
+        <div class="nav-label">Navigation</div>
+        """)
 
+        # 2. Navigation Items (Compact ~42px, 6px gap, left icon, clear active state)
         for page_name in PAGES.keys():
             is_active = st.session_state.get("current_page") == page_name
+            icon = PAGE_ICONS.get(page_name, "●")
             if st.button(
-                page_name,
+                f"{icon}  {page_name}",
                 key=f"nav_{page_name}",
                 use_container_width=True,
                 type="primary" if is_active else "secondary",
@@ -499,39 +630,40 @@ def render_sidebar():
                 st.session_state["current_page"] = page_name
                 st.rerun()
 
-        st.markdown("</div>", unsafe_allow_html=True)
+        # 3. Flexible Middle Spacer (absorbs vacant space, pushing dock to bottom)
+        render_html('<div class="sidebar-spacer"></div>')
 
-        # 3. Middle Empty Space (Maintains flexible gap between nav and bottom telemetry)
-        st.markdown('<div class="sidebar-middle-spacer"></div>', unsafe_allow_html=True)
+        # 4. Status Panel (Bottom-docked, 2-column layout, zero overflow, live dot)
+        is_connected = _check_backend_status()
+        dot_class = "connected" if is_connected else "disconnected"
+        status_text = "FastAPI: Connected (Port 8000)" if is_connected else "FastAPI: Disconnected"
 
-        # 4. Render Bottom Telemetry Dock (No Text Wrapping, Clean Monospace Values)
-        st.markdown(
-            """
-            <div class="telemetry-bottom-dock">
-                <div class="telemetry-status-header">
-                    <span class="telemetry-status-dot"></span>
-                    <span>FastAPI: Connected (Port 8000)</span>
+        render_html(f"""
+        <div class="telemetry-card">
+            <div class="telemetry-header">
+                <span class="telemetry-dot {dot_class}"></span>
+                <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{status_text}</span>
+            </div>
+            <div class="telemetry-grid">
+                <div class="telemetry-row">
+                    <span class="telemetry-label">Corpus</span>
+                    <span class="telemetry-value" title="81,700 Reviews">81,700 Reviews</span>
                 </div>
-                <div class="telemetry-table-row">
-                    <span class="telemetry-col-label">Corpus</span>
-                    <span class="telemetry-col-value">81,700 Reviews</span>
+                <div class="telemetry-row">
+                    <span class="telemetry-label">Split</span>
+                    <span class="telemetry-value" title="80 / 20 Stratified">80 / 20 Stratified</span>
                 </div>
-                <div class="telemetry-table-row">
-                    <span class="telemetry-col-label">Split</span>
-                    <span class="telemetry-col-value">80 / 20 Stratified</span>
+                <div class="telemetry-row">
+                    <span class="telemetry-label">Model</span>
+                    <span class="telemetry-value" title="Balanced LR">Balanced LR</span>
                 </div>
-                <div class="telemetry-table-row">
-                    <span class="telemetry-col-label">Model</span>
-                    <span class="telemetry-col-value">Balanced LR</span>
-                </div>
-                <div class="telemetry-table-row">
-                    <span class="telemetry-col-label">Metric</span>
-                    <span class="telemetry-col-value" style="color:#00e599;">70.84% Macro Recall</span>
+                <div class="telemetry-row">
+                    <span class="telemetry-label">Metric</span>
+                    <span class="telemetry-value metric-highlight" title="70.84% Macro Recall">70.84% Macro Recall</span>
                 </div>
             </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        </div>
+        """)
 
 
 def main():
