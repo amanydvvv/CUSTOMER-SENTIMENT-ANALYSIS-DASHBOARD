@@ -18,7 +18,7 @@ import plotly.graph_objects as go
 import importlib
 
 from frontend.ui_utils import render_html
-from frontend.data_loader import load_historical_dataset, filter_dataset
+from frontend.data_loader import load_historical_dataset
 from frontend.components.sentiment_pulse import render_sentiment_pulse
 from frontend.components.review_feed import render_review_feed
 from frontend.components.pain_point_section import render_pain_point_section, analyze_negative_aspects
@@ -42,75 +42,11 @@ def _render_historical():
         st.error("Cannot load dataset. Ensure backend/data/processed/amazon_all_beauty_reviews.csv exists.")
         return
 
-    # Compact sidebar filters
-    with st.sidebar:
-        render_html('<div style="font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:12px;">FILTER REVIEWS</div>')
-
-        if st.button("Reset Filters", width='stretch'):
-            for k in ["filter_products", "filter_ratings", "filter_sentiments",
-                      "filter_verified", "filter_search", "filter_date_from", "filter_date_to"]:
-                st.session_state.pop(k, None)
-            st.rerun()
-
-        st.markdown("<div style='font-size:12px;color:#9ca3af;font-weight:600;margin-top:12px;'>Date Range</div>", unsafe_allow_html=True)
-        _dcol1, _dcol2 = st.columns(2)
-        with _dcol1:
-            date_from = st.date_input("From", value=None, key="filter_date_from")
-        with _dcol2:
-            date_to = st.date_input("To", value=None, key="filter_date_to")
-
-        top_products = ["All"] + sorted(df_raw["product"].value_counts().head(20).index.tolist())
-        selected_prods = st.multiselect(
-            "Product ASIN", options=top_products,
-            default=st.session_state.get("filter_products", ["All"]),
-            key="filter_products"
-        )
-        selected_ratings = st.multiselect(
-            "Star Rating", options=["All", "5.0", "4.0", "3.0", "2.0", "1.0"],
-            default=st.session_state.get("filter_ratings", ["All"]),
-            key="filter_ratings"
-        )
-        selected_sentiments = st.multiselect(
-            "Sentiment Class", options=["All", "Positive", "Neutral", "Negative"],
-            default=st.session_state.get("filter_sentiments", ["All"]),
-            key="filter_sentiments"
-        )
-        verified_only = st.checkbox(
-            "Verified Purchases Only",
-            value=st.session_state.get("filter_verified", False),
-            key="filter_verified"
-        )
-        search_query = st.text_input(
-            "Keyword search",
-            value=st.session_state.get("filter_search", ""),
-            placeholder="e.g. rash, broken, delivery...",
-            key="filter_search"
-        )
-
-    df = filter_dataset(
-        df_raw,
-        selected_products=selected_prods,
-        selected_ratings=selected_ratings,
-        selected_sentiments=selected_sentiments,
-        verified_only=verified_only,
-        search_query=search_query,
-    )
-
-    _date_from = st.session_state.get("filter_date_from")
-    _date_to = st.session_state.get("filter_date_to")
-    if _date_from and _date_to and _date_from > _date_to:
-        st.warning("Start date must be before end date. Date filter skipped.")
-    else:
-        if "date_dt" in df.columns:
-            import pandas as _pd
-            if _date_from:
-                df = df[df["date_dt"] >= _pd.Timestamp(_date_from)]
-            if _date_to:
-                df = df[df["date_dt"] <= _pd.Timestamp(_date_to)]
+    df = df_raw.copy()
 
     total = len(df)
     if total == 0:
-        st.warning("No reviews match the current filters. Please adjust or reset filters.")
+        st.warning("No reviews available.")
         return
 
     pos_count = (df["sentiment"] == "positive").sum()
@@ -129,7 +65,7 @@ def _render_historical():
     top_aspect_share = aspect_summary[0]["share_pct"] if aspect_summary else 0.0
 
     exec_summary_text = (
-        f"<b>{pos_pct:.1f}%</b> of filtered reviews are classified as positive and <b>{neg_pct:.1f}%</b> as negative. "
+        f"<b>{pos_pct:.1f}%</b> of customer reviews are classified as positive and <b>{neg_pct:.1f}%</b> as negative. "
         f"<b>{top_aspect}</b> ({top_aspect_share:.1f}% of complaints) is currently the most frequent friction area."
     )
 
