@@ -189,214 +189,6 @@ DARK_THEME_CSS = """
         height: 0px !important;
     }
 
-    /* ── Brand Logo Header ───────────────────────────────────────────────── */
-    .sidebar-brand {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 4px 6px 12px 6px;
-        margin-bottom: 4px;
-        border-bottom: 1px solid #1f1f26;
-        width: 100%;
-    }
-
-    .brand-badge {
-        width: 28px;
-        height: 28px;
-        border-radius: 7px;
-        background: linear-gradient(135deg, #7c3aed, #4f46e5);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-        box-shadow: 0 2px 8px rgba(124, 58, 237, 0.4);
-    }
-
-    .brand-text {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .brand-title {
-        font-family: 'Inter', -apple-system, sans-serif;
-        font-size: 13px;
-        font-weight: 700;
-        color: #ffffff;
-        letter-spacing: 0.02em;
-        line-height: 1.2;
-    }
-
-    .brand-subtitle {
-        font-family: 'Inter', -apple-system, sans-serif;
-        font-size: 9.5px;
-        font-weight: 500;
-        color: #71717a;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-    }
-
-    /* ── Navigation Section Label ────────────────────────────────────────── */
-    .nav-label {
-        font-family: 'Inter', -apple-system, sans-serif;
-        font-size: 10px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: #52525b;
-        padding: 2px 8px 4px 8px;
-        margin: 0;
-    }
-
-    /* ── Sidebar Nav Buttons: Compact 42px, 6px Gap, Smooth Hover ────────── */
-    [data-testid="stSidebar"] div[data-testid="stVerticalBlock"] > div:has(.stButton) {
-        margin: 0 !important;
-        padding: 0 !important;
-    }
-
-    [data-testid="stSidebar"] .stButton {
-        margin: 0 !important;
-        padding: 0 !important;
-        width: 100% !important;
-    }
-
-    [data-testid="stSidebar"] .stButton > button {
-        display: flex !important;
-        align-items: center !important;
-        justify-content: flex-start !important;
-        text-align: left !important;
-        width: 100% !important;
-        height: 42px !important;
-        min-height: 42px !important;
-        max-height: 42px !important;
-        padding: 0 14px !important;
-        border-radius: 6px !important;
-        font-family: 'Inter', -apple-system, sans-serif !important;
-        font-size: 13px !important;
-        font-weight: 500 !important;
-        letter-spacing: 0.01em !important;
-        border: 1px solid transparent !important;
-        border-left: 3px solid transparent !important;
-        background: transparent !important;
-        color: #9ca3af !important;
-        transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        box-shadow: none !important;
-    }
-
-    [data-testid="stSidebar"] .stButton > button * {
-        color: inherit !important;
-        font-size: inherit !important;
-        font-weight: inherit !important;
-        text-align: left !important;
-    }
-
-    [data-testid="stSidebar"] .stButton > button:hover {
-        background: rgba(255, 255, 255, 0.035) !important;
-        color: #ffffff !important;
-        border-color: rgba(255, 255, 255, 0.06) !important;
-        border-left-color: rgba(124, 58, 237, 0.45) !important;
-    }
-
-    [data-testid="stSidebar"] .stButton > button[kind="primary"] {
-        background: rgba(124, 58, 237, 0.12) !important;
-        color: #ffffff !important;
-        font-weight: 600 !important;
-        border: 1px solid rgba(124, 58, 237, 0.25) !important;
-        border-left: 3px solid #7c3aed !important;
-    }
-
-    [data-testid="stSidebar"] .stButton > button[kind="primary"]:hover {
-        background: rgba(124, 58, 237, 0.18) !important;
-        color: #ffffff !important;
-        border-left: 3px solid #7c3aed !important;
-    }
-
-    /* ── Flexible Middle Spacer ──────────────────────────────────────────── */
-    .sidebar-spacer {
-        flex: 1 1 auto !important;
-        min-height: 12px !important;
-    }
-
-    /* ── Bottom Telemetry Dock Card: Two-Column Aligned, No Collisions ──── */
-    .telemetry-card {
-        margin-top: auto !important;
-        flex-shrink: 0 !important;
-        background: #0f1015;
-        border: 1px solid #1f1f26;
-        border-radius: 8px;
-        padding: 12px;
-        width: 100%;
-        box-sizing: border-box;
-    }
-
-    .telemetry-header {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-family: 'Inter', -apple-system, sans-serif;
-        font-size: 11.5px;
-        font-weight: 600;
-        color: #e4e4e7;
-        margin-bottom: 10px;
-        padding-bottom: 8px;
-        border-bottom: 1px solid #1f1f26;
-        white-space: nowrap;
-    }
-
-    .telemetry-dot {
-        width: 7px;
-        height: 7px;
-        border-radius: 50%;
-        flex-shrink: 0;
-    }
-
-    .telemetry-dot.connected {
-        background-color: #10b981;
-        box-shadow: 0 0 6px rgba(16, 185, 129, 0.7);
-        animation: live-pulse 2s infinite ease-in-out;
-    }
-
-    .telemetry-dot.disconnected {
-        background-color: #ef4444;
-        box-shadow: 0 0 6px rgba(239, 68, 68, 0.7);
-    }
-
-    .telemetry-grid {
-        display: flex;
-        flex-direction: column;
-        gap: 5px;
-    }
-
-    .telemetry-row {
-        display: grid;
-        grid-template-columns: 55px 1fr;
-        align-items: center;
-        gap: 8px;
-        font-size: 11px;
-        line-height: 1.35;
-    }
-
-    .telemetry-label {
-        color: #71717a;
-        font-weight: 500;
-        font-family: 'Inter', -apple-system, sans-serif;
-        white-space: nowrap;
-    }
-
-    .telemetry-value {
-        color: #d1d5db;
-        font-weight: 500;
-        font-family: 'JetBrains Mono', monospace;
-        text-align: right;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .telemetry-value.metric-highlight {
-        color: #10b981;
-        font-weight: 600;
-    }
-
     /* ── Main content padding ────────────────────────────────────────────── */
     .main .block-container,
     [data-testid="stMainBlockContainer"],
@@ -580,15 +372,6 @@ PAGES = {
 }
 
 
-PAGE_ICONS = {
-    "Historical Pulse": "📈",
-    "Live Inference": "⚡",
-    "Benchmark Zoo": "🔬",
-    "Product Insights": "🛍️",
-    "System Overview": "⚙️",
-}
-
-
 def _check_backend_status() -> bool:
     import urllib.request
     try:
@@ -599,71 +382,184 @@ def _check_backend_status() -> bool:
         return False
 
 
-def render_sidebar():
-    with st.sidebar:
-        # 1. Brand Logo Header
-        render_html("""
-        <div class="sidebar-brand">
-            <div class="brand-badge">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-                </svg>
-            </div>
-            <div class="brand-text">
-                <span class="brand-title">Sentiment Core</span>
-                <span class="brand-subtitle">Intelligence Engine</span>
-            </div>
-        </div>
-        <div class="nav-label">Navigation</div>
-        """)
+# -------------------------------------------------------------------------
+# SIDEBAR: TOP NAVIGATION + MIDDLE VOID + BOTTOM DOCKED STATUS CARD
+# -------------------------------------------------------------------------
 
-        # 2. Navigation Items (Compact ~42px, 6px gap, left icon, clear active state)
+def render_sidebar():
+    # 1. Clean Sidebar CSS (Top-to-Bottom Flex with Bottom Anchor)
+    st.markdown(
+        """
+        <style>
+        /* Force Streamlit sidebar container to use full height flex layout */
+        [data-testid="stSidebar"] [data-testid="stVerticalBlock"] {
+            display: flex !important;
+            flex-direction: column !important;
+            min-height: 94vh !important;
+            height: 94vh !important;
+            justify-content: flex-start !important;
+            padding-top: 1rem !important;
+            padding-bottom: 0.5rem !important;
+            gap: 0.35rem !important;
+        }
+
+        /* Clean navigation button styling */
+        .stButton > button {
+            width: 100% !important;
+            text-align: left !important;
+            justify-content: flex-start !important;
+            border-radius: 6px !important;
+            font-weight: 500 !important;
+            font-size: 13.5px !important;
+            padding: 8px 12px !important;
+            background: transparent !important;
+            color: #9ca3af !important;
+            border: 1px solid transparent !important;
+            border-left: 3px solid transparent !important;
+            transition: all 0.15s ease !important;
+        }
+
+        .stButton > button:hover {
+            background: rgba(255, 255, 255, 0.04) !important;
+            color: #ffffff !important;
+            border-color: rgba(255, 255, 255, 0.06) !important;
+        }
+
+        .stButton > button[kind="primary"] {
+            background: rgba(124, 58, 237, 0.15) !important;
+            color: #ffffff !important;
+            font-weight: 600 !important;
+            border: 1px solid rgba(124, 58, 237, 0.3) !important;
+            border-left: 3px solid #7c3aed !important;
+        }
+
+        .stButton > button[kind="secondary"] {
+            background: transparent !important;
+            color: #9ca3af !important;
+            border: 1px solid transparent !important;
+            border-left: 3px solid transparent !important;
+        }
+
+        /* Pushes everything below this element to the absolute bottom */
+        .sidebar-bottom-anchor {
+            margin-top: auto !important;
+            padding-top: 1rem !important;
+            width: 100% !important;
+        }
+
+        /* Sleek bottom status card - No text clipping, no overflow ellipsis */
+        .telemetry-card {
+            background: #111217;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 12px 14px;
+            box-sizing: border-box;
+            width: 100%;
+        }
+
+        .telemetry-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #00e599;
+            margin-bottom: 10px;
+            white-space: nowrap;
+        }
+
+        .telemetry-dot {
+            width: 7px;
+            height: 7px;
+            background-color: #00e599;
+            border-radius: 50%;
+            box-shadow: 0 0 6px rgba(0, 229, 153, 0.8);
+            display: inline-block;
+            flex-shrink: 0;
+        }
+
+        .telemetry-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 3px 0;
+            font-size: 11px;
+            font-family: monospace;
+            white-space: nowrap;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+        .telemetry-row:last-child {
+            border-bottom: none;
+        }
+
+        .telemetry-label {
+            color: #71717a;
+        }
+
+        .telemetry-val {
+            color: #e4e4e7;
+            font-weight: 600;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # 2. Render Navigation at the Very Top
+    with st.sidebar:
+        st.markdown(
+            "<span style='font-size:10px; font-weight:700; color:#52525b; letter-spacing:1px; margin-bottom:12px; display:block;'>NAVIGATION</span>",
+            unsafe_allow_html=True,
+        )
+
         for page_name in PAGES.keys():
             is_active = st.session_state.get("current_page") == page_name
-            icon = PAGE_ICONS.get(page_name, "●")
+            # Simple, clean active state
             if st.button(
-                f"{icon}  {page_name}",
-                key=f"nav_{page_name}",
+                page_name,
+                key=f"nav_btn_{page_name}",
                 use_container_width=True,
                 type="primary" if is_active else "secondary",
             ):
                 st.session_state["current_page"] = page_name
                 st.rerun()
 
-        # 3. Flexible Middle Spacer (absorbs vacant space, pushing dock to bottom)
-        render_html('<div class="sidebar-spacer"></div>')
-
-        # 4. Status Panel (Bottom-docked, 2-column layout, zero overflow, live dot)
+        # 3. Bottom Dock Anchor (Pushed down by margin-top: auto)
         is_connected = _check_backend_status()
-        dot_class = "connected" if is_connected else "disconnected"
+        dot_color = "#00e599" if is_connected else "#ef4444"
+        dot_shadow = "rgba(0, 229, 153, 0.8)" if is_connected else "rgba(239, 68, 68, 0.8)"
         status_text = "FastAPI: Connected (Port 8000)" if is_connected else "FastAPI: Disconnected"
+        header_color = "#00e599" if is_connected else "#ef4444"
 
-        render_html(f"""
-        <div class="telemetry-card">
-            <div class="telemetry-header">
-                <span class="telemetry-dot {dot_class}"></span>
-                <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{status_text}</span>
+        st.markdown(
+            f"""
+            <div class="sidebar-bottom-anchor">
+                <div class="telemetry-card">
+                    <div class="telemetry-header" style="color: {header_color};">
+                        <span class="telemetry-dot" style="background-color: {dot_color}; box-shadow: 0 0 6px {dot_shadow};"></span>
+                        <span>{status_text}</span>
+                    </div>
+                    <div class="telemetry-row">
+                        <span class="telemetry-label">Corpus</span>
+                        <span class="telemetry-val">81,700 Reviews</span>
+                    </div>
+                    <div class="telemetry-row">
+                        <span class="telemetry-label">Split</span>
+                        <span class="telemetry-val">80 / 20 Stratified</span>
+                    </div>
+                    <div class="telemetry-row">
+                        <span class="telemetry-label">Model</span>
+                        <span class="telemetry-val">Balanced LR</span>
+                    </div>
+                    <div class="telemetry-row">
+                        <span class="telemetry-label">Metric</span>
+                        <span class="telemetry-val" style="color:#00e599;">70.84% Macro Recall</span>
+                    </div>
+                </div>
             </div>
-            <div class="telemetry-grid">
-                <div class="telemetry-row">
-                    <span class="telemetry-label">Corpus</span>
-                    <span class="telemetry-value" title="81,700 Reviews">81,700 Reviews</span>
-                </div>
-                <div class="telemetry-row">
-                    <span class="telemetry-label">Split</span>
-                    <span class="telemetry-value" title="80 / 20 Stratified">80 / 20 Stratified</span>
-                </div>
-                <div class="telemetry-row">
-                    <span class="telemetry-label">Model</span>
-                    <span class="telemetry-value" title="Balanced LR">Balanced LR</span>
-                </div>
-                <div class="telemetry-row">
-                    <span class="telemetry-label">Metric</span>
-                    <span class="telemetry-value metric-highlight" title="70.84% Macro Recall">70.84% Macro Recall</span>
-                </div>
-            </div>
-        </div>
-        """)
+            """,
+            unsafe_allow_html=True,
+        )
 
 
 def main():
