@@ -286,38 +286,45 @@ def render():
             </div>
             <div style="display: flex; flex-direction: column; gap: 0.65rem;">
                 <div style="display: flex; gap: 0.75rem; align-items: flex-start;">
-                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #6b7280; font-weight: 600; min-width: 18px; padding-top: 2px;">02</span>
+                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #10b981; font-weight: 600; min-width: 18px; padding-top: 2px;">01</span>
                     <div>
-                        <div style="color: #ffffff; font-weight: 500; font-size: 0.82rem;">Historical Pulse</div>
+                        <div style="color: #ffffff; font-weight: 500; font-size: 0.82rem;">Historical Pulse (Default)</div>
                         <div style="color: #9ca3af; font-size: 0.75rem; line-height: 1.4;">Global dataset metrics, rating distributions, macro sentiment trend, and review explorer.</div>
                     </div>
                 </div>
                 <div style="display: flex; gap: 0.75rem; align-items: flex-start;">
-                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #6b7280; font-weight: 600; min-width: 18px; padding-top: 2px;">03</span>
+                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #6b7280; font-weight: 600; min-width: 18px; padding-top: 2px;">02</span>
                     <div>
                         <div style="color: #ffffff; font-weight: 500; font-size: 0.82rem;">Live Inference</div>
                         <div style="color: #9ca3af; font-size: 0.75rem; line-height: 1.4;">Interactive multi-model inference with token-level feature attribution and sequence evaluation.</div>
                     </div>
                 </div>
                 <div style="display: flex; gap: 0.75rem; align-items: flex-start;">
-                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #6b7280; font-weight: 600; min-width: 18px; padding-top: 2px;">04</span>
+                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #6b7280; font-weight: 600; min-width: 18px; padding-top: 2px;">03</span>
                     <div>
                         <div style="color: #ffffff; font-weight: 500; font-size: 0.82rem;">Aspect Explorer</div>
                         <div style="color: #9ca3af; font-size: 0.75rem; line-height: 1.4;">TF-IDF feature weights, n-gram coefficients, and semantic sentiment phrase mapping.</div>
                     </div>
                 </div>
                 <div style="display: flex; gap: 0.75rem; align-items: flex-start;">
-                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #6b7280; font-weight: 600; min-width: 18px; padding-top: 2px;">05</span>
+                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #6b7280; font-weight: 600; min-width: 18px; padding-top: 2px;">04</span>
                     <div>
                         <div style="color: #ffffff; font-weight: 500; font-size: 0.82rem;">Benchmark Zoo</div>
                         <div style="color: #9ca3af; font-size: 0.75rem; line-height: 1.4;">Head-to-head performance across models, confusion matrices, and latency comparisons.</div>
                     </div>
                 </div>
                 <div style="display: flex; gap: 0.75rem; align-items: flex-start;">
-                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #6b7280; font-weight: 600; min-width: 18px; padding-top: 2px;">06</span>
+                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #6b7280; font-weight: 600; min-width: 18px; padding-top: 2px;">05</span>
                     <div>
                         <div style="color: #ffffff; font-weight: 500; font-size: 0.82rem;">Product Insights</div>
                         <div style="color: #9ca3af; font-size: 0.75rem; line-height: 1.4;">ASIN-level deep dive with Semicircular Purchase Confidence Meter and Aspect Vibe Donut.</div>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 0.75rem; align-items: flex-start;">
+                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #6b7280; font-weight: 600; min-width: 18px; padding-top: 2px;">06</span>
+                    <div>
+                        <div style="color: #ffffff; font-weight: 500; font-size: 0.82rem;">System Overview</div>
+                        <div style="color: #9ca3af; font-size: 0.75rem; line-height: 1.4;">Executive architecture, system benchmarks, SLA targets, and engineering telemetry.</div>
                     </div>
                 </div>
             </div>

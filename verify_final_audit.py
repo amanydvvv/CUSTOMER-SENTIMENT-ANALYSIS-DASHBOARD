@@ -140,6 +140,24 @@ def run_audit():
         except Exception as e:
             failures.append(f"Failed to load {name}: {e}")
 
+    # Navigation routing sequence & default landing page verification
+    try:
+        from frontend.streamlit_app import PAGES
+        expected_pages = [
+            "01 · Historical Pulse",
+            "02 · Live Inference",
+            "03 · Aspect Explorer",
+            "04 · Benchmark Zoo",
+            "05 · Product Insights",
+            "06 · System Overview",
+        ]
+        actual_pages = list(PAGES.keys())
+        assert actual_pages == expected_pages, f"Navigation mismatch: {actual_pages} != {expected_pages}"
+        assert actual_pages[0] == "01 · Historical Pulse", f"Default landing page must be '01 · Historical Pulse', got {actual_pages[0]}"
+        print(f"   [PASS] Navigation order verified: 1–6 sequence matches specification (Default: {actual_pages[0]})")
+    except Exception as e:
+        failures.append(f"Navigation routing verification failed: {e}")
+
     # Components
     components = [
         "frontend.components.aspect_analyzer",

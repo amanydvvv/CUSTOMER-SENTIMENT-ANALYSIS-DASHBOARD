@@ -28,6 +28,10 @@ def _star_icons(rating: float) -> str:
     return "★" * r + "☆" * (5 - r)
 
 
+def _rating_label(rating: float) -> str:
+    return _star_icons(rating)
+
+
 @st.cache_data(show_spinner=False)
 def _get_product_catalog(df_raw: pd.DataFrame):
     if df_raw.empty or "product" not in df_raw.columns:

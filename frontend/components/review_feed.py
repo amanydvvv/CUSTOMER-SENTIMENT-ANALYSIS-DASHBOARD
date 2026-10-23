@@ -12,16 +12,21 @@ from frontend.ui_utils import render_html
 from frontend.components.aspect_analyzer import extract_aspects_and_issues
 
 
-def _star_icons(rating: float) -> str:
+def _rating_label(rating) -> str:
+    """Format numeric star rating into stars and fraction safely."""
     try:
-        r = int(round(float(rating)))
-    except Exception:
-        r = 5
-    r = max(1, min(5, r))
-    return "★" * r + "☆" * (5 - r)
+        val = int(round(float(rating)))
+        val = max(1, min(5, val))
+    except (ValueError, TypeError):
+        val = 5
+    return f"{'★' * val}{'☆' * (5 - val)} {val}/5"
 
 
-def render_review_feed(df: pd.DataFrame):
+def _star_icons(rating: float) -> str:
+    return _rating_label(rating)
+
+
+def render_review_feed(df: pd.DataFrame, key_prefix: str = "feed"):
     """Renders the analytical Customer Review Feed."""
     if len(df) == 0:
         st.info("No reviews match the selected filter criteria.")
@@ -48,7 +53,7 @@ def render_review_feed(df: pd.DataFrame):
         sort_by = st.selectbox(
             "Sort Reviews",
             ["Most Recent", "Highest Rating", "Lowest Rating", "Most Helpful", "Mismatch Cases Only"],
-            key="feed_sort",
+            key=f"{key_prefix}_sort",
         )
 
     with col_aspect:
@@ -56,11 +61,11 @@ def render_review_feed(df: pd.DataFrame):
             "Filter Aspect",
             ["All Aspects", "Product Quality", "Delivery", "Packaging",
              "Customer Service", "Price & Value", "Performance", "Usability & Application"],
-            key="feed_aspect_filter",
+            key=f"{key_prefix}_aspect_filter",
         )
 
     with col_size:
-        page_size = st.selectbox("Reviews per page", [10, 25, 50], index=0, key="feed_page_size")
+        page_size = st.selectbox("Reviews per page", [10, 25, 50], index=0, key=f"{key_prefix}_page_size")
 
     df_feed = df.copy()
     if "helpful_votes" not in df_feed.columns:
@@ -159,7 +164,6 @@ def render_review_feed(df: pd.DataFrame):
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
                 <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
                     <span style="color:#f59e0b;font-size:13px;letter-spacing:1px;">{_rating_label(row['rating'])}</span>
-                    <span style="color:#ffffff;font-weight:700;font-size:13px;">{row['rating']:.0f}/5</span>
                     <span style="background:{badge_bg};color:{badge_color};border:1px solid {badge_border};padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:0.04em;">
                         {sentiment_str}
                     </span>

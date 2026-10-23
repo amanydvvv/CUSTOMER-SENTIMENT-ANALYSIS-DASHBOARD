@@ -322,4 +322,4 @@ def render_live_places_section():
     st.markdown("<div style='height:16px;'></div>", unsafe_allow_html=True)
     render_mismatch_section(df_live)
     st.markdown("<div style='height:16px;'></div>", unsafe_allow_html=True)
-    render_review_feed(df_live)
+    render_review_feed(df_live, key_prefix="live_places_feed")

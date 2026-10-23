@@ -139,7 +139,7 @@ DARK_THEME_CSS = """
     [data-testid="stSidebarUserContent"],
     [data-testid="stSidebar"] > div:first-child,
     [data-testid="stSidebar"] .block-container {
-        padding-top: 24px !important;
+        padding-top: 16px !important;
         padding-bottom: 24px !important;
         padding-left: 16px !important;
         padding-right: 16px !important;
@@ -152,58 +152,6 @@ DARK_THEME_CSS = """
 
     [data-testid="stSidebar"] * {
         box-sizing: border-box;
-    }
-
-    /* ── Sidebar Branding ─────────────────────────────────────────────────── */
-    .sidebar-brand {
-        padding-bottom: 18px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-        margin-bottom: 18px;
-    }
-
-    .sidebar-brand-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-
-    .sidebar-brand-left {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .sidebar-brand-badge {
-        width: 16px;
-        height: 16px;
-        border-radius: 4px;
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-    }
-
-    .sidebar-brand-title {
-        font-size: 13px;
-        font-weight: 700;
-        letter-spacing: 0.08em;
-        color: #f3f4f6;
-        text-transform: uppercase;
-        line-height: 1.2;
-    }
-
-    .sidebar-env-pill {
-        font-size: 10px;
-        font-weight: 500;
-        color: #6b7280;
-        background: rgba(255, 255, 255, 0.04);
-        border-radius: 4px;
-        padding: 2px 6px;
-        letter-spacing: 0.02em;
-        line-height: 1.2;
-        border: 1px solid rgba(255, 255, 255, 0.04);
     }
 
     .nav-label {
@@ -492,33 +440,17 @@ DARK_THEME_CSS = """
 render_html(DARK_THEME_CSS)
 
 PAGES = {
-    "01 · System Overview": about,
-    "02 · Historical Pulse": overview,
-    "03 · Live Inference": live_prediction,
-    "04 · Aspect Explorer": keyword_insights,
-    "05 · Benchmark Zoo": model_comparison,
-    "06 · Product Insights": product_intelligence,
+    "01 · Historical Pulse": overview,
+    "02 · Live Inference": live_prediction,
+    "03 · Aspect Explorer": keyword_insights,
+    "04 · Benchmark Zoo": model_comparison,
+    "05 · Product Insights": product_intelligence,
+    "06 · System Overview": about,
 }
 
 
 def render_sidebar():
     with st.sidebar:
-        render_html("""
-        <div class="sidebar-brand">
-            <div class="sidebar-brand-row">
-                <div class="sidebar-brand-left">
-                    <div class="sidebar-brand-badge">
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#f3f4f6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-                        </svg>
-                    </div>
-                    <span class="sidebar-brand-title">SENTIMENT CORE</span>
-                </div>
-                <span class="sidebar-env-pill">v1.0-prod</span>
-            </div>
-        </div>
-        """)
-
         st.markdown('<div class="nav-label">Navigation</div>', unsafe_allow_html=True)
 
         for page_name in PAGES.keys():
@@ -561,20 +493,33 @@ def render_sidebar():
 
 
 def main():
+    if "current_page" not in st.session_state:
+        st.session_state["current_page"] = "01 · Historical Pulse"
+
     # Backwards compatibility for session state
     current = st.session_state.get("current_page", "")
     if current not in PAGES:
         old_mapping = {
-            "Executive Overview": "01 · System Overview",
-            "Overview": "01 · System Overview",
-            "Overall Analysis": "02 · Historical Pulse",
-            "Historical": "02 · Historical Pulse",
-            "Live": "03 · Live Inference",
-            "Inference": "03 · Live Inference",
-            "Keyword": "04 · Aspect Explorer",
-            "Aspect": "04 · Aspect Explorer",
-            "Benchmark": "05 · Benchmark Zoo",
-            "Product": "06 · Product Insights",
+            "Executive Overview": "06 · System Overview",
+            "System Overview": "06 · System Overview",
+            "Overview": "06 · System Overview",
+            "About": "06 · System Overview",
+            "Overall Analysis": "01 · Historical Pulse",
+            "Historical Pulse": "01 · Historical Pulse",
+            "Historical": "01 · Historical Pulse",
+            "Live Inference": "02 · Live Inference",
+            "Live": "02 · Live Inference",
+            "Inference": "02 · Live Inference",
+            "Aspect Explorer": "03 · Aspect Explorer",
+            "Keyword Insights": "03 · Aspect Explorer",
+            "Keyword": "03 · Aspect Explorer",
+            "Aspect": "03 · Aspect Explorer",
+            "Benchmark Zoo": "04 · Benchmark Zoo",
+            "Model Comparison": "04 · Benchmark Zoo",
+            "Benchmark": "04 · Benchmark Zoo",
+            "Product Insights": "05 · Product Insights",
+            "Product Intelligence": "05 · Product Insights",
+            "Product": "05 · Product Insights",
         }
         for old_sub, new_key in old_mapping.items():
             if old_sub.lower() in current.lower():
@@ -586,7 +531,7 @@ def main():
                     st.session_state["current_page"] = page_key
                     break
             else:
-                st.session_state["current_page"] = list(PAGES.keys())[0]
+                st.session_state["current_page"] = "01 · Historical Pulse"
 
     render_sidebar()
 
