@@ -2,12 +2,11 @@
 1_overview.py
 ─────────────
 Customer Feedback Intelligence page ("Historical Pulse").
-Structured around the 5-tier production layout:
+Structured around the 4-tier production layout:
 1. Hero Centerpiece (Customer Sentiment Pulse Donut + Sentiment Composition)
 2. Historical Quarterly Trajectory Area Graph (with sparsified x-axis)
 3. Top Customer Concerns (7 Aspects) & Action Intelligence Cards
-4. Rating × Sentiment Mismatch Diagnostics
-5. Full Customer Review Feed & Filters
+4. Full Customer Review Feed & Filters
 """
 
 import textwrap
@@ -20,13 +19,11 @@ try:
     from frontend.data_loader import load_historical_dataset
     from frontend.components.review_feed import render_review_feed
     from frontend.components.pain_point_section import render_pain_point_section
-    from frontend.components.mismatch_section import render_mismatch_section
 except ImportError:
     from ui_utils import render_html
     from data_loader import load_historical_dataset
     from components.review_feed import render_review_feed
     from components.pain_point_section import render_pain_point_section
-    from components.mismatch_section import render_mismatch_section
 
 
 def _get_sentiment_metrics(df):
@@ -331,10 +328,6 @@ def _render_historical(df=None):
     st.markdown("<div style='height:16px;'></div>", unsafe_allow_html=True)
 
     # 4. Review Feed & Diagnostics (Bottom Position)
-    render_mismatch_section(df)
-
-    st.markdown("<div style='height:16px;'></div>", unsafe_allow_html=True)
-
     render_review_feed(df)
 
 
