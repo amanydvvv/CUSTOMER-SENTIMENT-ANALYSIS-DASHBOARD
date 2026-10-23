@@ -127,7 +127,6 @@ def run_audit():
         ("0_about", "frontend.pages.0_about"),
         ("1_overview", "frontend.pages.1_overview"),
         ("2_live_prediction", "frontend.pages.2_live_prediction"),
-        ("3_keyword_insights", "frontend.pages.3_keyword_insights"),
         ("4_model_comparison", "frontend.pages.4_model_comparison"),
         ("5_product_intelligence", "frontend.pages.5_product_intelligence"),
     ]
@@ -144,17 +143,16 @@ def run_audit():
     try:
         from frontend.streamlit_app import PAGES
         expected_pages = [
-            "01 · Historical Pulse",
-            "02 · Live Inference",
-            "03 · Aspect Explorer",
-            "04 · Benchmark Zoo",
-            "05 · Product Insights",
-            "06 · System Overview",
+            "Historical Pulse",
+            "Live Inference",
+            "Benchmark Zoo",
+            "Product Insights",
+            "System Overview",
         ]
         actual_pages = list(PAGES.keys())
         assert actual_pages == expected_pages, f"Navigation mismatch: {actual_pages} != {expected_pages}"
-        assert actual_pages[0] == "01 · Historical Pulse", f"Default landing page must be '01 · Historical Pulse', got {actual_pages[0]}"
-        print(f"   [PASS] Navigation order verified: 1–6 sequence matches specification (Default: {actual_pages[0]})")
+        assert actual_pages[0] == "Historical Pulse", f"Default landing page must be 'Historical Pulse', got {actual_pages[0]}"
+        print(f"   [PASS] Navigation order verified: clean 5-page titles match specification (Default: {actual_pages[0]})")
     except Exception as e:
         failures.append(f"Navigation routing verification failed: {e}")
 

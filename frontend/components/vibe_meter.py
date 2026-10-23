@@ -185,12 +185,21 @@ def render_aspect_donut(
     while len(colors) < len(labels):
         colors.append("#6b7280")
 
+    # Split multi-word aspects across lines if long to avoid donut text overflow
+    if len(dominant_aspect) > 9 and " " in dominant_aspect:
+        words = dominant_aspect.split(" ")
+        mid = len(words) // 2
+        formatted_aspect = " ".join(words[:mid]) + "<br>" + " ".join(words[mid:])
+    else:
+        formatted_aspect = dominant_aspect
+
     fig = go.Figure(
         data=[
             go.Pie(
                 labels=labels,
                 values=values,
-                hole=0.68,
+                hole=0.72,
+                domain=dict(x=[0.0, 0.84], y=[0.0, 1.0]),
                 marker=dict(
                     colors=colors,
                     line=dict(color="#111317", width=2),
@@ -211,7 +220,9 @@ def render_aspect_donut(
             bgcolor="rgba(0,0,0,0)",
             bordercolor="rgba(0,0,0,0)",
             orientation="v",
-            x=1.02, y=0.5,
+            x=0.86, y=0.5,
+            xanchor="left",
+            yanchor="middle",
         ),
         height=height,
         margin=dict(l=10, r=10, t=25, b=10),
@@ -220,10 +231,10 @@ def render_aspect_donut(
         annotations=[
             dict(
                 text=(
-                    "<span style='font-size:10px;color:#6b7280;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;'>Top Aspect</span><br>"
-                    f"<b><span style='font-size:15px;color:#ffffff;'>"
-                    f"{dominant_aspect}</span></b><br>"
-                    f"<span style='font-size:13px;color:{dominant_color};font-weight:600;font-family:JetBrains Mono,monospace;'>"
+                    "<span style='font-size:9px;color:#9ca3af;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;'>Top Aspect</span><br>"
+                    f"<b><span style='font-size:13px;color:#ffffff;line-height:1.25;'>"
+                    f"{formatted_aspect}</span></b><br>"
+                    f"<span style='font-size:12px;color:{dominant_color};font-weight:600;font-family:JetBrains Mono,monospace;'>"
                     f"{dominant_pct:.1f}%</span>"
                 ),
                 x=0.42, y=0.5,
@@ -231,6 +242,7 @@ def render_aspect_donut(
                 showarrow=False,
                 align="center",
                 xanchor="center",
+                yanchor="middle",
             )
         ],
     )

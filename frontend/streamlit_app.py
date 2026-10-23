@@ -1,6 +1,6 @@
 import streamlit as st
 from frontend.ui_utils import render_html
-from frontend.pages import about, overview, product_intelligence, live_prediction, keyword_insights, model_comparison
+from frontend.pages import about, overview, product_intelligence, live_prediction, model_comparison
 
 st.set_page_config(
     page_title="Sentiment Core Intelligence",
@@ -440,12 +440,11 @@ DARK_THEME_CSS = """
 render_html(DARK_THEME_CSS)
 
 PAGES = {
-    "01 · Historical Pulse": overview,
-    "02 · Live Inference": live_prediction,
-    "03 · Aspect Explorer": keyword_insights,
-    "04 · Benchmark Zoo": model_comparison,
-    "05 · Product Insights": product_intelligence,
-    "06 · System Overview": about,
+    "Historical Pulse": overview,
+    "Live Inference": live_prediction,
+    "Benchmark Zoo": model_comparison,
+    "Product Insights": product_intelligence,
+    "System Overview": about,
 }
 
 
@@ -494,32 +493,37 @@ def render_sidebar():
 
 def main():
     if "current_page" not in st.session_state:
-        st.session_state["current_page"] = "01 · Historical Pulse"
+        st.session_state["current_page"] = "Historical Pulse"
 
     # Backwards compatibility for session state
     current = st.session_state.get("current_page", "")
     if current not in PAGES:
         old_mapping = {
-            "Executive Overview": "06 · System Overview",
-            "System Overview": "06 · System Overview",
-            "Overview": "06 · System Overview",
-            "About": "06 · System Overview",
-            "Overall Analysis": "01 · Historical Pulse",
-            "Historical Pulse": "01 · Historical Pulse",
-            "Historical": "01 · Historical Pulse",
-            "Live Inference": "02 · Live Inference",
-            "Live": "02 · Live Inference",
-            "Inference": "02 · Live Inference",
-            "Aspect Explorer": "03 · Aspect Explorer",
-            "Keyword Insights": "03 · Aspect Explorer",
-            "Keyword": "03 · Aspect Explorer",
-            "Aspect": "03 · Aspect Explorer",
-            "Benchmark Zoo": "04 · Benchmark Zoo",
-            "Model Comparison": "04 · Benchmark Zoo",
-            "Benchmark": "04 · Benchmark Zoo",
-            "Product Insights": "05 · Product Insights",
-            "Product Intelligence": "05 · Product Insights",
-            "Product": "05 · Product Insights",
+            "01 · Historical Pulse": "Historical Pulse",
+            "Overall Analysis": "Historical Pulse",
+            "Historical Pulse": "Historical Pulse",
+            "Historical": "Historical Pulse",
+            "02 · Live Inference": "Live Inference",
+            "Live Inference": "Live Inference",
+            "Live": "Live Inference",
+            "Inference": "Live Inference",
+            "03 · Benchmark Zoo": "Benchmark Zoo",
+            "04 · Benchmark Zoo": "Benchmark Zoo",
+            "Benchmark Zoo": "Benchmark Zoo",
+            "Model Comparison": "Benchmark Zoo",
+            "Benchmark": "Benchmark Zoo",
+            "04 · Product Insights": "Product Insights",
+            "05 · Product Insights": "Product Insights",
+            "Product Insights": "Product Insights",
+            "Product Intelligence": "Product Insights",
+            "Product": "Product Insights",
+            "05 · System Overview": "System Overview",
+            "06 · System Overview": "System Overview",
+            "Executive Overview": "System Overview",
+            "System Overview": "System Overview",
+            "About": "System Overview",
+            "Aspect Explorer": "Historical Pulse",
+            "Keyword Insights": "Historical Pulse",
         }
         for old_sub, new_key in old_mapping.items():
             if old_sub.lower() in current.lower():
@@ -531,7 +535,7 @@ def main():
                     st.session_state["current_page"] = page_key
                     break
             else:
-                st.session_state["current_page"] = "01 · Historical Pulse"
+                st.session_state["current_page"] = "Historical Pulse"
 
     render_sidebar()
 
