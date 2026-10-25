@@ -246,12 +246,3 @@ python verify_final_audit.py
 - **Secrets:** Never commit `.env` or `secrets.toml`. Use `.env.example` and `secrets.toml.example` as templates
 - **Gitignored:** `.env`, `secrets.toml`, `*.joblib` model files, `app.db`, `backend/data/raw/`
 
----
-
-## 👥 Project Team
-
-| Member | Role | Contribution |
-| :--- | :--- | :--- |
-| **Aman** | ML, Architecture & Security Lead (40%) | NLP pipeline, TF-IDF + Classical ML (Balanced LR, LinearSVC, Standard LR), DistilBERT transformer, KeyBERT aspect extraction, JWT auth with bcrypt & RBAC, system orchestration |
-| **Pasha** | Frontend Lead (30%) | Streamlit 5-page dark dashboard, multi-model selection, visual analytics (180° Purchase Confidence Meter, Aspect Donut), CSV session export |
-| **Guru** | Backend Lead (30%) | FastAPI async REST gateway, Google Places API integration with mock fallbacks, SQLite + SQLAlchemy schema, 60-test automated verification suite |
