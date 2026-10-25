@@ -2,12 +2,12 @@
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
-[![Streamlit](https://img.shields.io/badge/Streamlit-1.40+-FF4B4B.svg?logo=streamlit&logoColor=white)](https://streamlit.io)
+[![Streamlit](https://img.shields.io/badge/Streamlit-1.59+-FF4B4B.svg?logo=streamlit&logoColor=white)](https://streamlit.io)
 [![Scikit-Learn](https://img.shields.io/badge/Scikit--Learn-1.5+-F7931E.svg?logo=scikit-learn&logoColor=white)](https://scikit-learn.org)
 [![DistilBERT](https://img.shields.io/badge/DistilBERT-Multilingual-FFD700.svg?logo=huggingface)](https://huggingface.co/lxyuan/distilbert-base-multilingual-cased-sentiments-student)
 [![Tests](https://img.shields.io/badge/Tests-60%20Passed-22C55E.svg)](./pytest.ini)
 
-A production-grade, 3-tier NLP intelligence system for customer sentiment analysis, aspect-based pain-point extraction, and automated decision support. Built on **FastAPI**, **SQLite**, **Scikit-Learn**, **DistilBERT Transformer**, and **Streamlit** using real **Amazon Reviews 2023** data and live **Google Places API** review ingestion.
+A production-grade, 3-tier NLP intelligence system for customer sentiment analysis, aspect-based pain-point extraction, and automated decision support. Built on **FastAPI**, **SQLite**, **Scikit-Learn**, **DistilBERT Transformer**, and **Streamlit** — trained and evaluated on real **Amazon All Beauty Reviews 2023** data (81,700 reviews) with live **Google Places API** review ingestion.
 
 ---
 
@@ -42,8 +42,8 @@ mini/
 │   ├── data/
 │   │   └── processed/
 │   │       ├── amazon_all_beauty_reviews.csv   # 81.7K preprocessed genuine customer reviews
-│   │       ├── dataset_info.json               # Class distribution & metadata
-│   │       └── app.db                          # SQLite database
+│   │       └── dataset_info.json               # Class distribution & metadata
+│   ├── data/raw/                        # Raw downloaded files — gitignored
 │   ├── models/                         # Serialized ML artifacts (.joblib)
 │   │   ├── tfidf_vectorizer.joblib
 │   │   ├── logistic_regression.joblib
@@ -76,9 +76,8 @@ mini/
 │   │   └── live_places_section.py      # Google Places live analysis component
 │   └── pages/                          # Multi-page dashboard modules
 │       ├── 0_about.py                  # Executive Overview & system architecture
-│       ├── 1_overview.py               # Overall Analysis & historical explorer
+│       ├── 1_overview.py               # Historical Pulse & overall analysis
 │       ├── 2_live_prediction.py        # Live single & batch review inference
-│       ├── 3_keyword_insights.py       # Aspect, TF-IDF & KeyBERT vocabulary explorer
 │       ├── 4_model_comparison.py       # Model benchmark & evaluation matrices
 │       └── 5_product_intelligence.py   # ASIN-level product intelligence
 ├── .streamlit/
@@ -90,6 +89,16 @@ mini/
 ├── pytest.ini                          # Test configuration & path setup
 └── README.md
 ```
+
+---
+
+## 📦 Dataset
+
+- **Source:** Amazon Reviews 2023 — All Beauty category
+- **Size:** 81,700 preprocessed genuine customer reviews
+- **Split:** 80% train / 20% held-out test (stratified) — **16,336 test reviews**
+- **Class Distribution:** ~70% Positive · ~21.6% Negative · ~8.4% Neutral
+- **Preprocessing:** Negation-aware cleaning, contraction expansion, 21-token stopword whitelist, deduplication
 
 ---
 
@@ -135,12 +144,18 @@ cd CUSTOMER-SENTIMENT-ANALYSIS-DASHBOARD
 pip install -r backend/requirements.txt
 ```
 
-#### 3. Initialize the database
+#### 3. Train the ML models
+```bash
+python backend/app/ml/train.py
+```
+> **Note:** `.joblib` model files are **not included** in the repo (gitignored due to size). You must run this step before starting the backend.
+
+#### 4. Initialize the database
 ```bash
 python backend/init_db.py
 ```
 
-#### 4. Run the Backend API (Terminal 1)
+#### 5. Run the Backend API (Terminal 1)
 ```bash
 cd backend
 python -m uvicorn app.main:app --port 8000
@@ -148,7 +163,7 @@ python -m uvicorn app.main:app --port 8000
 * Interactive Swagger Docs → **[http://localhost:8000/docs](http://localhost:8000/docs)**
 * Alternative ReDoc → **[http://localhost:8000/redoc](http://localhost:8000/redoc)**
 
-#### 5. Run the Frontend Dashboard (Terminal 2)
+#### 6. Run the Frontend Dashboard (Terminal 2)
 ```bash
 streamlit run frontend/streamlit_app.py
 ```
@@ -169,6 +184,18 @@ Run independent smoke and integrity checks:
 python smoke_test_unseen.py
 python verify_final_audit.py
 ```
+
+---
+
+## 🗂️ Dashboard Pages
+
+| Page | Description |
+| :--- | :--- |
+| **About / Overview** (`0_about.py`) | Executive summary, system architecture, tech stack |
+| **Historical Pulse** (`1_overview.py`) | Aggregate sentiment trends, rating distributions, time-series explorer |
+| **Live Prediction** (`2_live_prediction.py`) | Real-time single & batch review inference with confidence scores |
+| **Model Comparison** (`4_model_comparison.py`) | Side-by-side benchmark metrics, confusion matrices, classification reports |
+| **Product Intelligence** (`5_product_intelligence.py`) | ASIN-level deep dives — aspect breakdown, pain points, vibe meter |
 
 ---
 
@@ -193,8 +220,38 @@ python verify_final_audit.py
 
 ---
 
-## 👥 Project Team & Work Share
+## 📦 Key Dependencies
 
-* **🧠 Aman (ML, Architecture & Security Lead — 40%)**: NLP pipeline engineering, TF-IDF + Classical ML models (Balanced LR, LinearSVC), DistilBERT transformer integration, KeyBERT aspect extraction, JWT authentication with bcrypt & RBAC, and system orchestration.
-* **🎨 Pasha (Frontend Lead — 30%)**: Streamlit 6-page dark minimalist dashboard, multi-model selection interfaces, Moctale visual analytics (180° Semicircular Purchase Confidence Meter, Aspect Donut), and CSV session export.
-* **⚙️ Guru (Backend Lead — 30%)**: FastAPI async REST gateway, Google Places API live review ingestion with resilient mock fallbacks, SQLite SQLAlchemy relational models, and 60-test automated verification suite.
+| Package | Version | Purpose |
+| :--- | :--- | :--- |
+| `fastapi` | 0.115.12 | Async REST API framework |
+| `uvicorn` | 0.34.3 | ASGI server |
+| `streamlit` | 1.59.2 | Dashboard frontend |
+| `scikit-learn` | 1.7.2 | ML models (LR, LinearSVC, TF-IDF) |
+| `transformers` | ≥4.30.0 | DistilBERT multilingual inference |
+| `torch` | ≥2.0.0 | PyTorch backend for transformer |
+| `keybert` | ≥0.7.0 | Semantic keyphrase extraction |
+| `sentence-transformers` | ≥2.2.2 | all-MiniLM-L6-v2 embeddings |
+| `sqlalchemy` | 2.0.41 | ORM & SQLite integration |
+| `python-jose` | 3.3.0 | JWT token generation & validation |
+| `bcrypt` | 4.0.1 | Password hashing |
+| `plotly` | 5.24.1 | Interactive charts |
+| `nltk` | 3.10.3 | NLP preprocessing |
+
+---
+
+## 🔒 Security & Configuration
+
+- **JWT Authentication:** HS256 signed tokens, bcrypt password hashing, RBAC-ready
+- **Secrets:** Never commit `.env` or `secrets.toml`. Use `.env.example` and `secrets.toml.example` as templates
+- **Gitignored:** `.env`, `secrets.toml`, `*.joblib` model files, `app.db`, `backend/data/raw/`
+
+---
+
+## 👥 Project Team
+
+| Member | Role | Contribution |
+| :--- | :--- | :--- |
+| **Aman** | ML, Architecture & Security Lead (40%) | NLP pipeline, TF-IDF + Classical ML (Balanced LR, LinearSVC, Standard LR), DistilBERT transformer, KeyBERT aspect extraction, JWT auth with bcrypt & RBAC, system orchestration |
+| **Pasha** | Frontend Lead (30%) | Streamlit 5-page dark dashboard, multi-model selection, visual analytics (180° Purchase Confidence Meter, Aspect Donut), CSV session export |
+| **Guru** | Backend Lead (30%) | FastAPI async REST gateway, Google Places API integration with mock fallbacks, SQLite + SQLAlchemy schema, 60-test automated verification suite |
